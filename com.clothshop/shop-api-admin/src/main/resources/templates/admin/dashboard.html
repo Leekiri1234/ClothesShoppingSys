@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Dashboard</title>
+</head>
+<body>
+    <!-- Page Title -->
+    <div layout:fragment="page-title">
+        <h1 class="h2">
+            <i class="fas fa-tachometer-alt"></i> Dashboard
+        </h1>
+    </div>
+
+    <!-- Page Content -->
+    <div layout:fragment="content">
+        <!-- Summary Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Total Products
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalProducts ?: 0}">0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-box fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    Total Orders
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalOrders ?: 0}">0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-info shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                    Total Customers
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalCustomers ?: 0}">0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-users fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-4">
+                <div class="card border-left-warning shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                    Revenue (This Month)
+                                </div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${revenue ?: '$0'}">$0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="row">
+            <div class="col-lg-8 mb-4">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-chart-line"></i> Recent Orders
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:if="${recentOrders == null or recentOrders.isEmpty()}">
+                                        <td colspan="5" class="text-center text-muted">
+                                            <i class="fas fa-inbox"></i> No recent orders
+                                        </td>
+                                    </tr>
+                                    <tr th:each="order : ${recentOrders}">
+                                        <td th:text="${order.orderId}">#ORD-001</td>
+                                        <td th:text="${order.customerName}">John Doe</td>
+                                        <td th:text="${order.amount}">$100.00</td>
+                                        <td>
+                                            <span class="badge bg-success" th:text="${order.status}">Completed</span>
+                                        </td>
+                                        <td th:text="${order.createdAt}">2026-02-27</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4 mb-4">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-exclamation-triangle"></i> Low Stock Alert
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            <div th:if="${lowStockProducts == null or lowStockProducts.isEmpty()}" class="text-center text-muted py-3">
+                                <i class="fas fa-check-circle"></i> All products in stock
+                            </div>
+                            <a href="#" th:each="product : ${lowStockProducts}"
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1" th:text="${product.name}">Product Name</h6>
+                                    <small class="text-danger" th:text="${product.stock}">5 left</small>
+                                </div>
+                                <small class="text-muted" th:text="${product.sku}">SKU-001</small>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">
+                            <i class="fas fa-bolt"></i> Quick Actions
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <a th:href="@{/admin/products/create}" class="btn btn-primary me-2">
+                            <i class="fas fa-plus"></i> Add New Product
+                        </a>
+                        <a th:href="@{/admin/orders}" class="btn btn-success me-2">
+                            <i class="fas fa-shopping-cart"></i> View All Orders
+                        </a>
+                        <a th:href="@{/admin/customers}" class="btn btn-info me-2">
+                            <i class="fas fa-users"></i> Manage Customers
+                        </a>
+                        <a th:href="@{/admin/reports}" class="btn btn-warning">
+                            <i class="fas fa-chart-bar"></i> View Reports
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .border-left-primary {
+            border-left: 4px solid #4e73df !important;
+        }
+        .border-left-success {
+            border-left: 4px solid #1cc88a !important;
+        }
+        .border-left-info {
+            border-left: 4px solid #36b9cc !important;
+        }
+        .border-left-warning {
+            border-left: 4px solid #f6c23e !important;
+        }
+    </style>
+</body>
+</html>
