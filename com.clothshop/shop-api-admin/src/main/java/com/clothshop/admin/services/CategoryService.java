@@ -1,6 +1,6 @@
 package com.clothshop.admin.services;
 
-import com.clothshop.admin.dtos.response.CategorySimpleResponse;
+import com.clothshop.admin.dtos.response.products.CategorySimpleResponse;
 import com.clothshop.domain.repositories.product.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

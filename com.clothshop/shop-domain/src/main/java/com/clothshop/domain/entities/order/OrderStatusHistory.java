@@ -4,6 +4,7 @@ import com.clothshop.domain.entities.base.BaseEntity;
 import com.clothshop.domain.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -12,7 +13,7 @@ import org.hibernate.annotations.SQLRestriction;
 @SQLDelete(sql = "UPDATE order_status_history SET is_active = false WHERE id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "history_id"))
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class OrderStatusHistory extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -1,8 +1,8 @@
 package com.clothshop.admin.controllers;
 
-import com.clothshop.admin.dtos.request.ProductCreateRequest;
-import com.clothshop.admin.dtos.request.ProductUpdateRequest;
-import com.clothshop.admin.dtos.response.ProductAdminResponse;
+import com.clothshop.admin.dtos.request.products.ProductCreateRequest;
+import com.clothshop.admin.dtos.request.products.ProductUpdateRequest;
+import com.clothshop.admin.dtos.response.products.ProductAdminResponse;
 import com.clothshop.admin.services.CategoryService;
 import com.clothshop.admin.services.ProductAdminService;
 import com.clothshop.common.dtos.request.PagingRequest;

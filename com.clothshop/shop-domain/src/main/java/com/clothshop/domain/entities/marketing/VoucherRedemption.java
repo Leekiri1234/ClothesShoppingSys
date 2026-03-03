@@ -5,6 +5,7 @@ import com.clothshop.domain.entities.order.Order;
 import com.clothshop.domain.entities.auth.Customer;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -15,7 +16,7 @@ import java.math.BigDecimal;
 @SQLDelete(sql = "UPDATE voucher_redemptions SET is_active = false WHERE id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "redemption_id"))
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class VoucherRedemption extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

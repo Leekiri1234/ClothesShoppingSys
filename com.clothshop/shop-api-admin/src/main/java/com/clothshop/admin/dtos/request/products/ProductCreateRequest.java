@@ -1,4 +1,4 @@
-package com.clothshop.admin.dtos.request;
+package com.clothshop.admin.dtos.request.products;
 
 import jakarta.validation.constraints.*;
 import lombok.*;

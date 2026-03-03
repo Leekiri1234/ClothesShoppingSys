@@ -3,6 +3,7 @@ package com.clothshop.domain.entities.cms;
 import com.clothshop.domain.entities.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -13,7 +14,7 @@ import java.time.LocalDate;
 @SQLDelete(sql = "UPDATE banners SET is_active = false WHERE id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "banner_id"))
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class Banner extends BaseEntity {
 
     @Column(name = "title", length = 200)

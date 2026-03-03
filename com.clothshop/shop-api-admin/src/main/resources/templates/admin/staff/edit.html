@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Chỉnh sửa nhân viên</title>
+</head>
+<body>
+<div layout:fragment="page-title">
+    <h1 class="h2">
+        <i class="fas fa-user-edit"></i> Chỉnh sửa nhân viên
+    </h1>
+</div>
+
+<div layout:fragment="content">
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Cập nhật thông tin: <span class="text-primary" th:text="${staffRequest.fullName}"></span></h5>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/admin/staff/edit/{id}(id=${staffRequest.id})}"
+                  th:object="${staffRequest}"
+                  method="post"
+                  class="needs-validation"
+                  novalidate>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Tên đăng nhập</label>
+                        <input type="text" class="form-control bg-light"
+                               th:value="*{username}" readonly>
+                        <small class="text-muted">Tên đăng nhập không thể thay đổi.</small>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Mật khẩu</label>
+                        <input type="text" class="form-control bg-light"
+                               value="********" readonly>
+                        <small class="text-muted">Vui lòng dùng chức năng "Đổi mật khẩu" riêng nếu cần.</small>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="fullName" class="form-label fw-bold">Họ và tên <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="fullName" th:field="*{fullName}"
+                               th:classappend="${#fields.hasErrors('fullName')} ? 'is-invalid'" required>
+                        <div class="invalid-feedback" th:errors="*{fullName}">Lỗi họ tên</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="email" th:field="*{email}"
+                               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'" required>
+                        <div class="invalid-feedback" th:errors="*{email}">Lỗi email</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="phone" class="form-label fw-bold">Số điện thoại <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" id="phone" th:field="*{phone}"
+                               th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid'" required>
+                        <div class="invalid-feedback" th:errors="*{phone}">Lỗi số điện thoại</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="roleId" class="form-label fw-bold">Chức vụ <span class="text-danger">*</span></label>
+                        <select class="form-select" id="roleId" th:field="*{roleId}"
+                                th:classappend="${#fields.hasErrors('roleId')} ? 'is-invalid'" required>
+                            <option value="">-- Chọn chức vụ --</option>
+                            <option th:each="role : ${roles}"
+                                    th:value="${role.id}"
+                                    th:text="${role.staffRole}"></option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{roleId}">Vui lòng chọn chức vụ</div>
+                    </div>
+
+                    <div class="col-md-12 mb-4">
+                        <label for="avatar" class="form-label fw-bold">Link ảnh đại diện</label>
+                        <div class="input-group">
+                            <input type="url" class="form-control" id="avatar" th:field="*{avatar}">
+                            <button class="btn btn-outline-secondary" type="button"
+                                    th:if="*{avatar != null}"
+                                    th:onclick="window.open([[*{avatar}]], '_blank')">
+                                <i class="fas fa-eye"></i> Xem ảnh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div class="text-muted small">
+                        <i class="fas fa-clock"></i> Ngày tạo: <span th:text="${#temporals.format(staffRequest.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                    </div>
+                    <div class="gap-2 d-flex">
+                        <a th:href="@{/admin/staff}" class="btn btn-light border">Hủy bỏ</a>
+                        <button type="submit" class="btn btn-primary px-4">
+                            <i class="fas fa-save"></i> Cập nhật ngay
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mt-4 p-3 bg-light border rounded">
+        <h6><i class="fas fa-shield-alt"></i> Trạng thái tài khoản</h6>
+        <div class="mt-2">
+                <span th:class="${staffRequest.accountStatus.name() == 'ACTIVE' ? 'badge bg-success' : 'badge bg-danger'}"
+                      th:text="${staffRequest.accountStatus.displayName}"></span>
+            <span class="ms-2 text-muted small" th:text="'ID: #' + ${staffRequest.id}"></span>
+        </div>
+    </div>
+</div>
+</body>
+</html>

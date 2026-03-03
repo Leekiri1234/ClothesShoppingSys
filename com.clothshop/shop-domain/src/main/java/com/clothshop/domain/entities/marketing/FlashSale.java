@@ -3,6 +3,7 @@ package com.clothshop.domain.entities.marketing;
 import com.clothshop.domain.entities.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -17,7 +18,7 @@ import java.util.List;
 @SQLDelete(sql = "UPDATE flash_sales SET is_active = false WHERE id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "flash_sale_id"))
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class FlashSale extends BaseEntity {
 
     @Column(name = "name", nullable = false, length = 100)

@@ -1,4 +1,4 @@
-package com.clothshop.admin.dtos.response;
+package com.clothshop.admin.dtos.response.products;
 
 import com.clothshop.domain.enums.ProductStatus;
 import lombok.*;

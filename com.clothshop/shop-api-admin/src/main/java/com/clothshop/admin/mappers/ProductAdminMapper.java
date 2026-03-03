@@ -1,8 +1,8 @@
 package com.clothshop.admin.mappers;
 
-import com.clothshop.admin.dtos.request.ProductCreateRequest;
-import com.clothshop.admin.dtos.request.ProductUpdateRequest;
-import com.clothshop.admin.dtos.response.ProductAdminResponse;
+import com.clothshop.admin.dtos.request.products.ProductCreateRequest;
+import com.clothshop.admin.dtos.request.products.ProductUpdateRequest;
+import com.clothshop.admin.dtos.response.products.ProductAdminResponse;
 import com.clothshop.domain.entities.product.Product;
 import org.mapstruct.*;
 

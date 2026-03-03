@@ -3,6 +3,7 @@ package com.clothshop.domain.entities.auth;
 import com.clothshop.domain.entities.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -12,10 +13,8 @@ import org.hibernate.annotations.SQLRestriction;
  */
 @Entity
 @Table(name = "staffs")
-@SQLDelete(sql = "UPDATE staffs SET is_active = false WHERE id = ?")
-@SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "staff_id"))
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class Staff extends BaseEntity {
 
     @Column(name = "full_name", nullable = false)
@@ -27,10 +26,14 @@ public class Staff extends BaseEntity {
     @Column(name = "avatar", length = 255)
     private String avatar;
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id", nullable = false)
     private Role role;
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "account_id", unique = true)
     private Account account;

@@ -1,14 +1,17 @@
 package com.clothshop.domain.entities.base;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import lombok.experimental.SuperBuilder; // Import này quan trọng
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 @MappedSuperclass
 public abstract class BaseEntity {
     @Id
@@ -24,8 +27,9 @@ public abstract class BaseEntity {
     private LocalDateTime updatedAt;
 
     @Column(name = "created_by", length = 50)
-    private String createdBy; // Username hoặc System
+    private String createdBy;
 
+    @Builder.Default // Giúp Builder nhận giá trị mặc định này
     @Column(name = "is_active", nullable = false)
-    private Boolean isActive = true; // Hỗ trợ Soft Delete
+    private Boolean isActive = true;
 }

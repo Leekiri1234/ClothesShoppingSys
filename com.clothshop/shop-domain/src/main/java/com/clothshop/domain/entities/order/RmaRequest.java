@@ -5,6 +5,7 @@ import com.clothshop.domain.entities.auth.Customer;
 import com.clothshop.domain.enums.RmaStatus;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 @SQLDelete(sql = "UPDATE rma_requests SET is_active = false WHERE id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "rma_id"))
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class RmaRequest extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

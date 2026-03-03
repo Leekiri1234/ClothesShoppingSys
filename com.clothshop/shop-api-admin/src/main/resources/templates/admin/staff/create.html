@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Thêm mới nhân viên</title>
+</head>
+<body>
+<div layout:fragment="page-title">
+    <h1 class="h2">
+        <i class="fas fa-user-plus"></i> Thêm mới nhân viên
+    </h1>
+</div>
+
+<div layout:fragment="content">
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle"></i>
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0"><i class="fas fa-edit"></i> Thông tin tài khoản & Cá nhân</h5>
+        </div>
+        <div class="card-body">
+            <form th:action="@{/admin/staff/create}"
+                  th:object="${staffRequest}"
+                  method="post"
+                  class="needs-validation"
+                  novalidate>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="username" class="form-label fw-bold">Tên đăng nhập <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="username" th:field="*{username}"
+                               th:classappend="${#fields.hasErrors('username')} ? 'is-invalid'"
+                               placeholder="Nhập username..." required>
+                        <div class="invalid-feedback" th:errors="*{username}">Lỗi username</div>
+                        <small class="text-muted">Dùng để đăng nhập, tối thiểu 5 ký tự.</small>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="password" class="form-label fw-bold">Mật khẩu <span class="text-danger">*</span></label>
+                        <input type="password" class="form-control" id="password" th:field="*{password}"
+                               th:classappend="${#fields.hasErrors('password')} ? 'is-invalid'"
+                               placeholder="Nhập mật khẩu..." required>
+                        <div class="invalid-feedback" th:errors="*{password}">Lỗi mật khẩu</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="fullName" class="form-label fw-bold">Họ và tên <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="fullName" th:field="*{fullName}"
+                               th:classappend="${#fields.hasErrors('fullName')} ? 'is-invalid'"
+                               placeholder="Nguyễn Văn A..." required>
+                        <div class="invalid-feedback" th:errors="*{fullName}">Lỗi họ tên</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="email" class="form-label fw-bold">Email <span class="text-danger">*</span></label>
+                        <input type="email" class="form-control" id="email" th:field="*{email}"
+                               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'"
+                               placeholder="example@clothshop.com" required>
+                        <div class="invalid-feedback" th:errors="*{email}">Lỗi email</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="phone" class="form-label fw-bold">Số điện thoại <span class="text-danger">*</span></label>
+                        <input type="tel" class="form-control" id="phone" th:field="*{phone}"
+                               th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid'"
+                               placeholder="09xxx..." required>
+                        <div class="invalid-feedback" th:errors="*{phone}">Lỗi số điện thoại</div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label for="roleId" class="form-label fw-bold">Chức vụ <span class="text-danger">*</span></label>
+                        <select class="form-select" id="roleId" th:field="*{roleId}"
+                                th:classappend="${#fields.hasErrors('roleId')} ? 'is-invalid'" required>
+                            <option value="">-- Chọn chức vụ --</option>
+                            <option th:each="role : ${roles}"
+                                    th:value="${role.id}"
+                                    th:text="${role.staffRole}">
+                            </option>
+                        </select>
+                        <div class="invalid-feedback" th:errors="*{roleId}">Vui lòng chọn chức vụ</div>
+                    </div>
+
+                    <div class="col-md-12 mb-4">
+                        <label for="avatar" class="form-label fw-bold">Link ảnh đại diện</label>
+                        <input type="url" class="form-control" id="avatar" th:field="*{avatar}"
+                               placeholder="https://...">
+                    </div>
+                </div>
+
+                <hr class="my-4">
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a th:href="@{/admin/staff}" class="btn btn-light border">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="fas fa-save"></i> Lưu nhân viên
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="scripts">
+    <script>
+        (function () {
+            'use strict';
+            var forms = document.querySelectorAll('.needs-validation');
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (event) {
+                    if (!form.checkValidity()) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                    }
+                    form.classList.add('was-validated');
+                }, false);
+            });
+        })();
+    </script>
+</div>
+</body>
+</html>

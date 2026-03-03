@@ -7,8 +7,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum AccountStatus {
     ACTIVE("Đang hoạt động"),
-    LOCKED("Đã khóa"),
-    DELETED("Đã xóa");
+    LOCKED("Đã khóa");
 
     private final String displayName;
 }
