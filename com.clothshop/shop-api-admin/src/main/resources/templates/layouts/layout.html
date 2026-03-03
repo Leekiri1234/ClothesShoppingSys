@@ -34,43 +34,43 @@
                     <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/admin/dashboard}"
-                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/admin/dashboard')} ? 'active' : ''">
+                               th:classappend="${currentPath != null and #strings.contains(currentPath, '/dashboard')} ? 'active' : ''">
                                 <i class="fas fa-home"></i> Dashboard
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/admin/products}"
-                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/admin/products')} ? 'active' : ''">
+                               th:classappend="${currentPath != null and #strings.contains(currentPath, '/products')} ? 'active' : ''">
                                 <i class="fas fa-box"></i> Products
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/admin/categories}"
-                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/admin/categories')} ? 'active' : ''">
+                               th:classappend="${currentPath != null and #strings.contains(currentPath, '/categories')} ? 'active' : ''">
                                 <i class="fas fa-tags"></i> Categories
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/admin/orders}"
-                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/admin/orders')} ? 'active' : ''">
+                               th:classappend="${currentPath != null and #strings.contains(currentPath, '/orders')} ? 'active' : ''">
                                 <i class="fas fa-shopping-cart"></i> Orders
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/admin/customers}"
-                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/admin/customers')} ? 'active' : ''">
+                               th:classappend="${currentPath != null and #strings.contains(currentPath, '/customers')} ? 'active' : ''">
                                 <i class="fas fa-users"></i> Customers
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/admin/vouchers}"
-                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/admin/vouchers')} ? 'active' : ''">
+                               th:classappend="${currentPath != null and #strings.contains(currentPath, '/vouchers')} ? 'active' : ''">
                                 <i class="fas fa-ticket-alt"></i> Vouchers
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" th:href="@{/admin/users}"
-                               th:classappend="${#strings.contains(#httpServletRequest.requestURI, '/admin/users')} ? 'active' : ''">
+                               th:classappend="${currentPath != null and #strings.contains(currentPath, '/users')} ? 'active' : ''">
                                 <i class="fas fa-user-shield"></i> Users
                             </a>
                         </li>

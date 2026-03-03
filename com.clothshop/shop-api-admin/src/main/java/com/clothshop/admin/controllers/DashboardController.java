@@ -1,5 +1,6 @@
 package com.clothshop.admin.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -22,8 +23,11 @@ public class DashboardController {
      * GET /admin/dashboard
      */
     @GetMapping("/dashboard")
-    public String showDashboard(Model model) {
+    public String showDashboard(Model model, HttpServletRequest request) {
         log.info("Accessing admin dashboard");
+
+        // Add current path for active menu highlighting
+        model.addAttribute("currentPath", request.getRequestURI());
 
         // TODO: These will be populated by actual services in future tasks
         model.addAttribute("totalProducts", 0);
