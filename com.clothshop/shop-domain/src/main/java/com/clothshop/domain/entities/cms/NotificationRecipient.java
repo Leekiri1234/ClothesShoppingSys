@@ -4,6 +4,7 @@ import com.clothshop.domain.entities.auth.Account;
 import com.clothshop.domain.entities.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -15,7 +16,7 @@ import java.time.LocalDateTime;
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "nr_id"))
 @Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class NotificationRecipient extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

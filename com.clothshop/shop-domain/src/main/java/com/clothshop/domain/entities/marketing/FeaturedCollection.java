@@ -3,6 +3,7 @@ package com.clothshop.domain.entities.marketing;
 import com.clothshop.domain.entities.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @SQLDelete(sql = "UPDATE featured_collections SET is_active = false WHERE id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "featured_collection_id"))
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class FeaturedCollection extends BaseEntity {
 
 

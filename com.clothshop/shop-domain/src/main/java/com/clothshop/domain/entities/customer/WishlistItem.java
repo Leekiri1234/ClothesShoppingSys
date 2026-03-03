@@ -4,6 +4,7 @@ import com.clothshop.domain.entities.base.BaseEntity;
 import com.clothshop.domain.entities.product.Product;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -16,7 +17,7 @@ import java.time.LocalDateTime;
 @SQLDelete(sql = "UPDATE wishlist_items SET is_active = false WHERE id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "item_id"))
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class WishlistItem extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

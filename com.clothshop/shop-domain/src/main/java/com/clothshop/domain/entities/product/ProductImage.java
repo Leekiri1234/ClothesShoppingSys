@@ -3,6 +3,7 @@ package com.clothshop.domain.entities.product;
 import com.clothshop.domain.entities.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -11,7 +12,7 @@ import org.hibernate.annotations.SQLRestriction;
 @SQLDelete(sql = "UPDATE product_images SET is_active = false WHERE id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "image_id"))
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class ProductImage extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

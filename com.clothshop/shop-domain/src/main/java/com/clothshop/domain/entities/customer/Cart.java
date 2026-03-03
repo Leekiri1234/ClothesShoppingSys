@@ -4,6 +4,7 @@ import com.clothshop.domain.entities.auth.Customer;
 import com.clothshop.domain.entities.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -14,7 +15,7 @@ import java.util.List;
 @SQLDelete(sql = "UPDATE carts SET is_active = false WHERE id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "cart_id"))
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class Cart extends BaseEntity {
 
     @OneToOne(fetch = FetchType.LAZY)

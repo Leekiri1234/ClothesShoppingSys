@@ -4,6 +4,7 @@ import com.clothshop.domain.entities.base.BaseEntity;
 import com.clothshop.domain.enums.StaffRole;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -21,7 +22,7 @@ import org.hibernate.annotations.SQLRestriction;
 @SQLDelete(sql = "UPDATE roles SET is_active = false WHERE id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "role_id"))
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class Role extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
@@ -35,6 +36,8 @@ public class Role extends BaseEntity {
     @Column(name = "description")
     private String description;
 
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
     @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
     private java.util.List<Staff> staffs;
 }

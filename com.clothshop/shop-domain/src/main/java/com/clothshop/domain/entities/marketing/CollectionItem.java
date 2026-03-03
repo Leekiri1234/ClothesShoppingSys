@@ -4,6 +4,7 @@ import com.clothshop.domain.entities.base.BaseEntity;
 import com.clothshop.domain.entities.product.Product;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -18,7 +19,7 @@ import org.hibernate.annotations.SQLRestriction;
 @SQLDelete(sql = "UPDATE collection_items SET is_active = false WHERE id = ?")
 @SQLRestriction("is_active = true")
 @Getter @Setter
-@NoArgsConstructor @AllArgsConstructor @Builder
+@NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class CollectionItem extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

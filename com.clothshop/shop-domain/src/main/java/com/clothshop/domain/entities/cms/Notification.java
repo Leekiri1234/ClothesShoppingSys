@@ -4,6 +4,7 @@ import com.clothshop.domain.entities.base.BaseEntity;
 import com.clothshop.domain.enums.NotificationType;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -16,7 +17,7 @@ import java.util.List;
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "notification_id"))
 @Getter @Setter
-@NoArgsConstructor @AllArgsConstructor
+@NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class Notification extends BaseEntity {
 
     @Column(name = "title", nullable = false, length = 200)

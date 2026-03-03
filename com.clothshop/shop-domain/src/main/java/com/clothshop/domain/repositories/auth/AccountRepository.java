@@ -2,9 +2,11 @@ package com.clothshop.domain.repositories.auth;
 
 import com.clothshop.domain.entities.auth.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -50,4 +52,16 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
             "AND a.isActive = true " +
             "AND a.accountType = com.clothshop.domain.enums.AccountType.CUSTOMER") // Ép kiểu luôn
     Optional<Account> findByEmailWithCustomer(@Param("email") String email);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE accounts SET account_status = 'LOCKED', is_active = 0 WHERE account_id = :id", nativeQuery = true)
+    void updateStatusToLockedNative(@Param("id") Long id);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE accounts SET is_active = 0, account_status = 'LOCKED' " +
+            "WHERE account_id = (SELECT s.account_id FROM staffs s WHERE s.staff_id = :staffId)",
+            nativeQuery = true)
+    void lockAccountByStaffIdNative(@Param("staffId") Long staffId);
 }

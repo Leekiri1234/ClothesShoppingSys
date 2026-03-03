@@ -3,6 +3,7 @@ package com.clothshop.domain.entities.product;
 import com.clothshop.domain.entities.base.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -13,7 +14,7 @@ import java.math.BigDecimal;
 @SQLDelete(sql = "UPDATE product_variants SET is_active = false WHERE id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "variant_id"))
-@Getter @Setter
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class ProductVariant extends BaseEntity {
 
     @Column(name = "sku", unique = true, nullable = false, length = 50)

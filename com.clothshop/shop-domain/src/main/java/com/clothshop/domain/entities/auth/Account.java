@@ -5,15 +5,14 @@ import com.clothshop.domain.enums.AccountStatus;
 import com.clothshop.domain.enums.AccountType;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "accounts", indexes = @Index(name = "idx_account_email", columnList = "email"))
-@SQLDelete(sql = "UPDATE accounts SET is_active = false WHERE id = ?")
-@SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "account_id"))
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class Account extends BaseEntity {
 
     @Column(unique = true, nullable = false, length = 50)
@@ -33,9 +32,13 @@ public class Account extends BaseEntity {
     @Column(name = "account_status", nullable = false)
     private AccountStatus accountStatus;
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @OneToOne(mappedBy = "account", orphanRemoval = true, fetch = FetchType.LAZY)
     private Customer customer;
 
-    @OneToOne(mappedBy = "account", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @OneToOne(mappedBy = "account", orphanRemoval = true, fetch = FetchType.LAZY)
     private Staff staff;
 }
