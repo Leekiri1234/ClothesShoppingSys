@@ -82,3 +82,4 @@ replay_pid*
 # Git commands guide (không push lên GitHub)
 GIT_COMMANDS.md
 
+.github/
