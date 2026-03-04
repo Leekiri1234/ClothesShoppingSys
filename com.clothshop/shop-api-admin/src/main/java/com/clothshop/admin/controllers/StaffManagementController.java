@@ -33,7 +33,7 @@ import com.clothshop.domain.enums.AccountStatus;
 // --- Exceptions ---
 import com.clothshop.common.exceptions.BusinessException;
 
-import java.util.Arrays;
+import java.security.Principal;
 
 @Controller
 @RequestMapping("/admin/staff")
@@ -48,6 +48,7 @@ public class StaffManagementController {
     @GetMapping
     public String listStaff(StaffFilterRequest filter,
                             @PageableDefault(size = 10, sort = "id") Pageable pageable,
+                            Principal principal,
                             Model model) {
 
         if (filter.getStatus() == null && filter.getKeyword() == null && filter.getRoleId() == null) {
@@ -60,6 +61,7 @@ public class StaffManagementController {
         model.addAttribute("roles", roleRepository.findAll());
         model.addAttribute("allStatus", AccountStatus.values());
         model.addAttribute("filter", filter);
+        model.addAttribute("currentUsername", principal.getName());
 
         return "admin/staff/list";
     }
