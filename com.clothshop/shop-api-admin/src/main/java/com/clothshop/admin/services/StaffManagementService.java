@@ -16,7 +16,6 @@ import com.clothshop.domain.enums.AccountType;
 import com.clothshop.domain.repositories.auth.AccountRepository;
 import com.clothshop.domain.repositories.auth.RoleRepository;
 import com.clothshop.domain.repositories.auth.StaffRepository;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -131,7 +130,14 @@ public class StaffManagementService {
         }
 
         // 3. Cập nhật Role
+        // CONSTRAINT: Không cho phép thay đổi role của SUPER_ADMIN
         if (!staff.getRole().getId().equals(request.getRoleId())) {
+            // Kiểm tra role hiện tại có phải SUPER_ADMIN không
+            if (staff.getRole().getStaffRole() == com.clothshop.domain.enums.StaffRole.SUPER_ADMIN) {
+                throw new BusinessException(ErrorCode.OPERATION_NOT_ALLOWED,
+                    "Không thể thay đổi role của tài khoản SUPER_ADMIN");
+            }
+
             Role newRole = roleRepository.findById(request.getRoleId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Role không tồn tại"));
             staff.setRole(newRole);

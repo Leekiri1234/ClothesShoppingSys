@@ -20,6 +20,7 @@ public enum ErrorCode {
 
     // Validation errors
     VALIDATION_ERROR(400, "Validation failed", HttpStatus.BAD_REQUEST),
+    OPERATION_NOT_ALLOWED(403, "Operation not allowed", HttpStatus.FORBIDDEN),
 
     // Resource errors
     RESOURCE_NOT_FOUND(404, "Resource not found", HttpStatus.NOT_FOUND),
