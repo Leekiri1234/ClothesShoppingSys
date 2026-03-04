@@ -1,6 +1,7 @@
 package com.clothshop.admin.controllers;
 
 // --- Spring Web & MVC ---
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -37,6 +38,7 @@ import java.util.Arrays;
 @Controller
 @RequestMapping("/admin/staff")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('SUPER_ADMIN')")
 public class StaffManagementController {
 
     private final StaffManagementService staffService;

@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/admin")
 @RequiredArgsConstructor
 @Slf4j
-public class DashboardController {
+public class    DashboardController {
 
     /**
      * Display admin dashboard with summary statistics.

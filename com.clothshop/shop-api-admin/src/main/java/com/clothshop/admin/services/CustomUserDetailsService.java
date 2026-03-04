@@ -3,10 +3,12 @@ package com.clothshop.admin.services;
 import com.clothshop.domain.entities.auth.Account;
 import com.clothshop.domain.entities.auth.Role;
 import com.clothshop.domain.entities.auth.Staff;
+import com.clothshop.domain.enums.AccountStatus;
 import com.clothshop.domain.enums.AccountType;
 import com.clothshop.domain.enums.StaffRole;
 import com.clothshop.domain.repositories.auth.AccountRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -53,18 +55,18 @@ public class CustomUserDetailsService implements UserDetailsService {
                     "Access denied: Only staff accounts can access admin portal");
         }
 
-        // Build authorities based on StaffRole enum from Role entity
-        List<GrantedAuthority> authorities = new ArrayList<>();
+        if (account.getAccountStatus() == AccountStatus.LOCKED) {
+            throw new DisabledException("Tài khoản của bạn đã bị khóa. Vui lòng liên hệ Super Admin.");
+        }
 
-        // Add STAFF authority
+        // 2. Build authorities
+        List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_STAFF"));
 
-        // Add specific staff role from Role entity's staffRole enum
-        Staff staff = account.getStaff();
-        if (staff != null && staff.getRole() != null) {
-            Role role = staff.getRole();
-            StaffRole staffRole = role.getStaffRole();
+        if (account.getStaff() != null && account.getStaff().getRole() != null) {
+            StaffRole staffRole = account.getStaff().getRole().getStaffRole();
             if (staffRole != null) {
+                // Nếu DB là SUPER_ADMIN -> Authority sẽ là ROLE_SUPER_ADMIN
                 authorities.add(new SimpleGrantedAuthority("ROLE_" + staffRole.name()));
             }
         }

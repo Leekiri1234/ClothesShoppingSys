@@ -3,6 +3,7 @@ package com.clothshop.admin.config;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -30,6 +31,7 @@ import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final UserDetailsService userDetailsService;
@@ -60,14 +62,13 @@ public class SecurityConfig {
             .csrf(csrf -> csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             )
-
-            // Authorization Rules
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/admin/login", "/css/**", "/js/**", "/images/**").permitAll()
-                .requestMatchers("/admin/**").hasAnyRole("STAFF", "SUPER_ADMIN", "MARKETING_STAFF",
-                                                         "SALE_PRODUCT_STAFF", "CUSTOMER_SERVICE")
-                .anyRequest().authenticated()
-            )
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/admin/login", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/admin/staff/**").hasRole("SUPER_ADMIN")
+                        .requestMatchers("/admin/**").hasAnyRole("STAFF", "SUPER_ADMIN", "MARKETING_STAFF",
+                                "SALE_PRODUCT_STAFF", "CUSTOMER_SERVICE")
+                        .anyRequest().authenticated()
+                )
 
             // Form Login Configuration
             .formLogin(form -> form

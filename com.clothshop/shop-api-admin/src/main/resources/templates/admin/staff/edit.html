@@ -69,13 +69,18 @@
                     <div class="col-md-6 mb-3">
                         <label for="roleId" class="form-label fw-bold">Chức vụ <span class="text-danger">*</span></label>
                         <select class="form-select" id="roleId" th:field="*{roleId}"
-                                th:classappend="${#fields.hasErrors('roleId')} ? 'is-invalid'" required>
+                                th:classappend="${#fields.hasErrors('roleId')} ? 'is-invalid'"
+                                th:disabled="${staffRequest.staffRole?.name() == 'SUPER_ADMIN'}"
+                                required>
                             <option value="">-- Chọn chức vụ --</option>
                             <option th:each="role : ${roles}"
                                     th:value="${role.id}"
                                     th:text="${role.staffRole}"></option>
                         </select>
                         <div class="invalid-feedback" th:errors="*{roleId}">Vui lòng chọn chức vụ</div>
+                        <small th:if="${staffRequest.staffRole?.name() == 'SUPER_ADMIN'}" class="text-warning d-block mt-1">
+                            <i class="fas fa-lock"></i> Không thể thay đổi role của tài khoản SUPER_ADMIN
+                        </small>
                     </div>
 
                     <div class="col-md-12 mb-4">
