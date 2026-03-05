@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Update Variant Price</title>
+</head>
+<body>
+    <div layout:fragment="page-title">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2">Update Variant Price</h1>
+            <a th:href="@{/admin/products/{id}(id=${variant.productId})}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Product
+            </a>
+        </div>
+    </div>
+
+    <div layout:fragment="content">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <!-- Variant Info Card -->
+                <div class="card mb-3">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-cube"></i> Variant Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>SKU:</strong> <code th:text="${variant.sku}">SKU</code></p>
+                                <p><strong>Product:</strong> <span th:text="${variant.productName}">Product Name</span></p>
+                                <p><strong>Stock:</strong> <span th:text="${variant.stockQuantity}">0</span> units</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Color:</strong> <span th:text="${variant.color}">Color</span></p>
+                                <p><strong>Size:</strong> <span th:text="${variant.sizeValue}">Size</span></p>
+                            </div>
+                        </div>
+                        <div class="alert alert-success mt-2">
+                            <i class="fas fa-dollar-sign"></i>
+                            <strong>Current Price:</strong>
+                            <span class="fs-4" th:text="${#numbers.formatDecimal(variant.retailPrice, 0, 'COMMA', 0, 'POINT')} + ' VND'">0 VND</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Update Price Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-edit"></i> Update Retail Price
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/variants/{id}/update-price(id=${variant.variantId})}"
+                              th:object="${priceRequest}"
+                              method="post">
+
+                            <!-- New Price -->
+                            <div class="mb-3">
+                                <label for="price" class="form-label">
+                                    New Retail Price (VND) <span class="text-danger">*</span>
+                                </label>
+                                <input type="number"
+                                       class="form-control form-control-lg"
+                                       th:field="*{price}"
+                                       th:classappend="${#fields.hasErrors('price')} ? 'is-invalid' : ''"
+                                       id="price"
+                                       step="1000"
+                                       min="0"
+                                       placeholder="Enter new price">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('price')}"
+                                     th:errors="*{price}">
+                                </div>
+                                <small class="form-text text-muted">
+                                    Nhập giá bán lẻ mới cho biến thể này
+                                </small>
+                            </div>
+
+                            <!-- Note -->
+                            <div class="alert alert-info mb-3">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Tip:</strong> Mọi thay đổi giá sẽ được ghi log tự động trong hệ thống.
+                            </div>
+
+                            <!-- Price Comparison -->
+                            <div class="card bg-light mb-3">
+                                <div class="card-body">
+                                    <h6 class="card-title">Price Comparison Preview</h6>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <small class="text-muted">Current Price:</small>
+                                            <p class="mb-0 fw-bold" th:text="${#numbers.formatDecimal(variant.retailPrice, 0, 'COMMA', 0, 'POINT')} + ' VND'">
+                                                0 VND
+                                            </p>
+                                        </div>
+                                        <div class="col-6">
+                                            <small class="text-muted">New Price:</small>
+                                            <p class="mb-0 fw-bold text-success" id="newPricePreview">
+                                                -- VND
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Alert Box -->
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>Important:</strong> Thay đổi giá sẽ có hiệu lực ngay lập tức.
+                                Giá của các đơn hàng đã tạo sẽ không bị ảnh hưởng (đã được snapshot).
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex justify-content-between mt-4">
+                                <a th:href="@{/admin/products/{id}(id=${variant.productId})}"
+                                   class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Update Price
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div layout:fragment="scripts">
+        <script>
+            // Update price preview when user types
+            document.getElementById('price').addEventListener('input', function(e) {
+                let value = parseFloat(e.target.value);
+                let preview = document.getElementById('newPricePreview');
+
+                if (isNaN(value) || value <= 0) {
+                    preview.textContent = '-- VND';
+                    preview.className = 'mb-0 fw-bold text-muted';
+                } else {
+                    let formatted = value.toLocaleString('vi-VN') + ' VND';
+                    preview.textContent = formatted;
+                    preview.className = 'mb-0 fw-bold text-success';
+                }
+            });
+        </script>
+    </div>
+</body>
+</html>
+
+
+

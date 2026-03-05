@@ -14,6 +14,7 @@ import com.clothshop.domain.entities.product.Product;
 import com.clothshop.domain.enums.ProductStatus;
 import com.clothshop.domain.repositories.product.CategoryRepository;
 import com.clothshop.domain.repositories.product.ProductRepository;
+import com.clothshop.domain.repositories.product.ProductVariantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -43,6 +45,7 @@ public class ProductAdminService {
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
     private final ProductAdminMapper productMapper;
+    private final ProductVariantRepository productVariantRepository;
 
     /**
      * Create new product with automatic slug generation.
@@ -116,8 +119,14 @@ public class ProductAdminService {
     @Transactional(readOnly = true)
     public ProductAdminResponse getProductById(Long productId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
-        return productMapper.toResponse(product);
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy sản phẩm"));
+
+        ProductAdminResponse response = productMapper.toResponse(product);
+
+        // Logic tự động tính tổng stock dựa vào các variant đang hoạt động
+        response.setStock(calculateTotalStock(product));
+
+        return response;
     }
 
     /**
@@ -136,9 +145,26 @@ public class ProductAdminService {
         // Fetch from database with pagination
         Page<Product> productPage = productRepository.findAll(pageable);
 
-        // Convert to DTOs
+        // Lấy tổng tồn kho cho tất cả sản phẩm trong trang bằng một truy vấn duy nhất (tránh N+1)
+        List<Long> productIds = productPage.getContent().stream()
+                .map(Product::getId)
+                .collect(Collectors.toList());
+
+        Map<Long, Integer> stockByProductId = productVariantRepository
+                .findTotalStockByProductIds(productIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> row[1] != null ? ((Number) row[1]).intValue() : 0
+                ));
+
+        // Convert to DTOs and set total stock from the aggregate map
         List<ProductAdminResponse> content = productPage.getContent().stream()
-                .map(productMapper::toResponse)
+                .map(product -> {
+                    ProductAdminResponse response = productMapper.toResponse(product);
+                    response.setStock(stockByProductId.getOrDefault(product.getId(), 0));
+                    return response;
+                })
                 .collect(Collectors.toList());
 
         return PageResponse.<ProductAdminResponse>builder()
@@ -166,6 +192,19 @@ public class ProductAdminService {
         productRepository.save(product);
 
         log.info("Product soft deleted: {}", productId);
+    }
+
+    /**
+     * Tính tổng số lượng tồn kho từ các variant đang hoạt động của sản phẩm.
+     */
+    private int calculateTotalStock(Product product) {
+        if (product.getVariants() == null) {
+            return 0;
+        }
+        return product.getVariants().stream()
+                .filter(v -> v.getIsActive() != null && v.getIsActive())
+                .mapToInt(v -> v.getStockQuantity() != null ? v.getStockQuantity() : 0)
+                .sum();
     }
 
     /**

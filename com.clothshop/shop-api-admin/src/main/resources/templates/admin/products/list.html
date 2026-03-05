@@ -61,8 +61,10 @@
                                 <td th:text="${product.categoryName}">Category</td>
                                 <td th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' đ'">100,000đ</td>
                                 <td>
-                                    <span th:class="${product.stock > 10} ? 'badge bg-success' : (${product.stock > 0} ? 'badge bg-warning' : 'badge bg-danger')"
-                                          th:text="${product.stock}">100</span>
+                                    <span th:class="${product.stock > 10} ? 'badge bg-success' : (${product.stock > 0} ? 'badge bg-warning text-dark' : 'badge bg-danger')"
+                                          th:text="${product.stock}"
+                                          th:title="'Total stock from all variants'"
+                                          data-bs-toggle="tooltip">100</span>
                                 </td>
                                 <td>
                                     <span th:if="${product.isActive}" class="badge bg-success">

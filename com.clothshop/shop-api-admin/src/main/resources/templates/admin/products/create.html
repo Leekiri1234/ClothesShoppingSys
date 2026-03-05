@@ -75,10 +75,10 @@
 
                             <!-- Price & Stock -->
                             <div class="row">
-                                <div class="col-md-6">
+                                <div class="col-md-12">
                                     <div class="mb-3">
                                         <label for="price" class="form-label">
-                                            Price (VND) <span class="text-danger">*</span>
+                                            Base Price (VND) <span class="text-danger">*</span>
                                         </label>
                                         <input type="number"
                                                class="form-control"
@@ -90,24 +90,18 @@
                                                step="1000">
                                         <div class="invalid-feedback" th:if="${#fields.hasErrors('price')}"
                                              th:errors="*{price}">Error</div>
+                                        <small class="form-text text-muted">
+                                            <i class="fas fa-info-circle"></i>
+                                            Đây là giá gốc. Sau khi tạo sản phẩm, bạn có thể thêm các biến thể (variants) với giá và tồn kho riêng.
+                                        </small>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="stock" class="form-label">
-                                            Stock Quantity <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="number"
-                                               class="form-control"
-                                               id="stock"
-                                               th:field="*{stock}"
-                                               th:classappend="${#fields.hasErrors('stock')} ? 'is-invalid'"
-                                               placeholder="100"
-                                               min="0">
-                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('stock')}"
-                                             th:errors="*{stock}">Error</div>
-                                    </div>
-                                </div>
+                            </div>
+
+                            <!-- Stock Info -->
+                            <div class="alert alert-info">
+                                <i class="fas fa-boxes"></i> <strong>Quản lý tồn kho:</strong>
+                                Sau khi tạo sản phẩm, bạn cần thêm các biến thể (màu sắc, size) để quản lý tồn kho chi tiết.
                             </div>
 
                             <!-- Image URL -->

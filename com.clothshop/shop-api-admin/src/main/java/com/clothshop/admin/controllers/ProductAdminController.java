@@ -3,27 +3,38 @@ package com.clothshop.admin.controllers;
 import com.clothshop.admin.dtos.request.products.ProductCreateRequest;
 import com.clothshop.admin.dtos.request.products.ProductUpdateRequest;
 import com.clothshop.admin.dtos.response.products.ProductAdminResponse;
+import com.clothshop.admin.dtos.response.products.VariantResponse;
 import com.clothshop.admin.services.CategoryService;
 import com.clothshop.admin.services.ProductAdminService;
+import com.clothshop.admin.services.FeaturedCollectionService;
+import com.clothshop.admin.services.ProductVariantService;
 import com.clothshop.common.dtos.request.PagingRequest;
 import com.clothshop.common.dtos.response.PageResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.security.Principal;
+import java.util.List;
+
 @Controller
 @RequestMapping("/admin/products")
 @RequiredArgsConstructor
 @Slf4j
+// Đặt PreAuthorize ở class-level để bảo vệ toàn bộ API bên trong, tránh rủi ro rò rỉ khi mở rộng sau này.
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SALE_PRODUCT_STAFF')")
 public class ProductAdminController {
 
     private final ProductAdminService productAdminService;
     private final CategoryService categoryService;
+    private final FeaturedCollectionService featuredCollectionService;
+    private final ProductVariantService variantService;
 
     @GetMapping
     public String listProducts(
@@ -113,7 +124,23 @@ public class ProductAdminController {
     @GetMapping("/{id}")
     public String viewProduct(@PathVariable Long id, Model model) {
         ProductAdminResponse product = productAdminService.getProductById(id);
+        List<VariantResponse> variants = variantService.getVariantsByProductId(id);
         model.addAttribute("product", product);
+        model.addAttribute("variants", variants);
         return "admin/products/detail";
     }
+
+    @PostMapping("/{id}/add-to-collection")
+    public String addProductToCollection(
+            @PathVariable("id") Long productId,
+            @RequestParam("collectionId") Long collectionId,
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
+
+        featuredCollectionService.addProductToCollection(collectionId, productId, principal.getName());
+
+        redirectAttributes.addFlashAttribute("successMessage", "Sản phẩm đã được thêm vào bộ sưu tập thành công");
+        return "redirect:/admin/products/" + productId;
+    }
+
 }
