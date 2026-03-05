@@ -181,7 +181,7 @@
                         <span th:if="${product.isActive}" class="badge bg-success">Active</span>
                         <span th:unless="${product.isActive}" class="badge bg-secondary">Inactive</span>
                     </p>
-                    <!-- Vinh Lập Chùa Fix: Null-safe cho Stock và Price -->
+                    <!-- Null-safe cho Stock và Price -->
                     <p class="small mb-1">
                         <strong>Current Stock:</strong>
                         <span th:text="${product.stock != null ? product.stock : 0}">0</span> units
