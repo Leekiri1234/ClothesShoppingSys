@@ -23,6 +23,16 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
     @Query(value = "SELECT * FROM staffs WHERE account_id = :accountId LIMIT 1", nativeQuery = true)
     Optional<Staff> findAnyByAccountId(@Param("accountId") Long accountId);
 
+    /**
+     * Lấy Staff by ID với eager fetch Account và Role
+     * Dùng cho update/edit operations để tránh LazyInitializationException
+     */
+    @Query("SELECT s FROM Staff s " +
+            "JOIN FETCH s.account " +
+            "JOIN FETCH s.role " +
+            "WHERE s.id = :id")
+    Optional<Staff> findByIdWithRelations(@Param("id") Long id);
+
     @Query("SELECT s FROM Staff s " +
             "JOIN FETCH s.account a " +
             "JOIN FETCH s.role r " +
