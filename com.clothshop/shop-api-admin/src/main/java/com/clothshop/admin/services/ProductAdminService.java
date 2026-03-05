@@ -121,15 +121,7 @@ public class ProductAdminService {
         ProductAdminResponse response = productMapper.toResponse(product);
 
         // Logic tự động tính tổng stock dựa vào các variant đang hoạt động
-        if (product.getVariants() != null) {
-            int totalStock = product.getVariants().stream()
-                    .filter(v -> v.getIsActive() != null && v.getIsActive())
-                    .mapToInt(v -> v.getStockQuantity() != null ? v.getStockQuantity() : 0)
-                    .sum();
-            response.setStock(totalStock);
-        } else {
-            response.setStock(0);
-        }
+        response.setStock(calculateTotalStock(product));
 
         return response;
     }
@@ -156,15 +148,7 @@ public class ProductAdminService {
                     ProductAdminResponse response = productMapper.toResponse(product);
 
                     // Calculate total stock from all active variants
-                    if (product.getVariants() != null) {
-                        int totalStock = product.getVariants().stream()
-                                .filter(v -> v.getIsActive() != null && v.getIsActive())
-                                .mapToInt(v -> v.getStockQuantity() != null ? v.getStockQuantity() : 0)
-                                .sum();
-                        response.setStock(totalStock);
-                    } else {
-                        response.setStock(0);
-                    }
+                    response.setStock(calculateTotalStock(product));
 
                     return response;
                 })
@@ -195,6 +179,19 @@ public class ProductAdminService {
         productRepository.save(product);
 
         log.info("Product soft deleted: {}", productId);
+    }
+
+    /**
+     * Tính tổng số lượng tồn kho từ các variant đang hoạt động của sản phẩm.
+     */
+    private int calculateTotalStock(Product product) {
+        if (product.getVariants() == null) {
+            return 0;
+        }
+        return product.getVariants().stream()
+                .filter(v -> v.getIsActive() != null && v.getIsActive())
+                .mapToInt(v -> v.getStockQuantity() != null ? v.getStockQuantity() : 0)
+                .sum();
     }
 
     /**
