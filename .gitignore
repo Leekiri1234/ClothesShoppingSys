@@ -74,10 +74,12 @@ replay_pid*
 # Spring Boot DevTools
 .devtools/
 
-# Application-specific (giữ application.yaml cho mục đích học tập)
-# Nếu cần bảo mật sau này, uncomment dòng dưới:
-# **/application.yaml
-# **/application.properties
+# Application configuration (ignore actual config, keep .example files)
+# Chỉ commit file .example (template), không commit file config thật chứa password
+**/application.yaml
+**/application.properties
+!**/application.yaml.example
+!**/application.properties.example
 
 # Git commands guide (không push lên GitHub)
 GIT_COMMANDS.md
