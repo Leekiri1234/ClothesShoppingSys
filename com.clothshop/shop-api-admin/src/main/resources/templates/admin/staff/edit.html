@@ -68,7 +68,13 @@
 
                     <div class="col-md-6 mb-3">
                         <label for="roleId" class="form-label fw-bold">Chức vụ <span class="text-danger">*</span></label>
-                        <select class="form-select" id="roleId" th:field="*{roleId}"
+
+                        <!-- Hidden input để gửi roleId khi select bị disabled -->
+                        <input type="hidden" th:if="${staffRequest.staffRole?.name() == 'SUPER_ADMIN'}"
+                               th:field="*{roleId}">
+
+                        <select class="form-select" id="roleId"
+                                th:field="*{roleId}"
                                 th:classappend="${#fields.hasErrors('roleId')} ? 'is-invalid'"
                                 th:disabled="${staffRequest.staffRole?.name() == 'SUPER_ADMIN'}"
                                 required>
