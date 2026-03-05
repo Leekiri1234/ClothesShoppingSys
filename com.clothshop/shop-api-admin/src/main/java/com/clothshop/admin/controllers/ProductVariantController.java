@@ -1,6 +1,6 @@
 package com.clothshop.admin.controllers;
 
-import com.clothshop.admin.dtos.request.products.ProductUpdateRequest;
+import com.clothshop.admin.dtos.request.products.VariantPriceUpdateRequest;
 import com.clothshop.admin.dtos.request.products.StockUpdateRequest;
 import com.clothshop.admin.dtos.request.products.VariantCreateRequest;
 import com.clothshop.admin.dtos.response.products.VariantResponse;
@@ -102,8 +102,8 @@ public class ProductVariantController {
     public String showUpdatePriceForm(@PathVariable Long id, Model model) {
         VariantResponse variant = variantService.getVariantById(id);
 
-        // Create ProductUpdateRequest with current price (BigDecimal)
-        ProductUpdateRequest priceRequest = new ProductUpdateRequest();
+        // Create VariantPriceUpdateRequest with current price
+        VariantPriceUpdateRequest priceRequest = new VariantPriceUpdateRequest();
         priceRequest.setPrice(variant.getRetailPrice());
 
         model.addAttribute("variant", variant);
@@ -117,7 +117,7 @@ public class ProductVariantController {
     @PostMapping("/{id}/update-price")
     public String updatePrice(
             @PathVariable Long id,
-            @Valid @ModelAttribute("priceRequest") ProductUpdateRequest request,
+            @Valid @ModelAttribute("priceRequest") VariantPriceUpdateRequest request,
             BindingResult bindingResult,
             Principal principal,
             RedirectAttributes redirectAttributes,

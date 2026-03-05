@@ -2,7 +2,7 @@ package com.clothshop.admin.services;
 
 import com.clothshop.admin.dtos.request.products.VariantCreateRequest;
 import com.clothshop.admin.dtos.request.products.StockUpdateRequest;
-import com.clothshop.admin.dtos.request.products.ProductUpdateRequest;
+import com.clothshop.admin.dtos.request.products.VariantPriceUpdateRequest;
 import com.clothshop.admin.dtos.response.products.VariantResponse;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
@@ -124,12 +124,13 @@ public class ProductVariantService {
         variantRepository.save(variant);
 
         // 4. Ghi nhật ký biến động kho
-        // Truyền chính xác delta và newStock để đối soát sau này.
+        // Truyền chính xác delta, newStock, lý do và ghi chú (nếu có) để đối soát sau này.
         inventoryLogService.logChange(
                 variant,
                 delta,
                 newStock,
                 request.getReason(),
+                request.getNote(),
                 username
         );
 
@@ -163,13 +164,12 @@ public class ProductVariantService {
      * Update variant price.
      */
     @Transactional
-    public void updatePrice(Long variantId, ProductUpdateRequest request, String username) {
+    public void updatePrice(Long variantId, VariantPriceUpdateRequest request, String username) {
         log.info("Updating price for variant ID: {}. New price: {}", variantId, request.getPrice());
 
         ProductVariant variant = variantRepository.findById(variantId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy biến thể sản phẩm"));
 
-        // Use BigDecimal directly from ProductUpdateRequest
         if (request.getPrice() != null) {
             variant.setRetailPrice(request.getPrice());
             variant.setUpdatedBy(username);

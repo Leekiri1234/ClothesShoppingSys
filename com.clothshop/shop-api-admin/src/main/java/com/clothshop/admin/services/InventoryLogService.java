@@ -26,7 +26,7 @@ public class InventoryLogService {
 
     /**
      * Ghi lại nhật ký thay đổi kho.
-     * * @param variant Biến thể sản phẩm thay đổi
+     * @param variant Biến thể sản phẩm thay đổi
      * @param delta Số lượng thay đổi (dương là nhập, âm là xuất)
      * @param newStock Số tồn kho sau khi thay đổi
      * @param reason Lý do thay đổi (bắt buộc)
