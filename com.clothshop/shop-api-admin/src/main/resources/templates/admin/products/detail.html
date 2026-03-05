@@ -288,7 +288,7 @@
                     <div class="mb-2">
                         <small class="text-muted">Total Value in Stock</small>
                         <h5 class="mb-0"
-                            th:text="${#numbers.formatDecimal(product.price * product.stock, 0, 'COMMA', 0, 'POINT')} + ' VND'">
+                            th:text="${#numbers.formatDecimal((product.price != null ? product.price : 0) * (product.stock != null ? product.stock : 0), 0, 'COMMA', 0, 'POINT')} + ' VND'">
                             0 VND
                         </h5>
                     </div>
