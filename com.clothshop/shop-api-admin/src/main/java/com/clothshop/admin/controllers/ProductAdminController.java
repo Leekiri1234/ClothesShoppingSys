@@ -10,6 +10,7 @@ import com.clothshop.common.dtos.response.PageResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,6 +21,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @RequestMapping("/admin/products")
 @RequiredArgsConstructor
 @Slf4j
+// Đặt PreAuthorize ở class-level để bảo vệ toàn bộ API bên trong, tránh rủi ro rò rỉ khi mở rộng sau này.
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'SALE_PRODUCT_STAFF')")
 public class ProductAdminController {
 
     private final ProductAdminService productAdminService;
