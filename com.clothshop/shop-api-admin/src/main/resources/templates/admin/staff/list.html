@@ -112,28 +112,50 @@
                         </td>
                         <td th:text="${#temporals.format(staff.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
                         <td class="text-center">
-                            <a th:href="@{/admin/staff/edit/{id}(id=${staff.id})}"
-                               class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
-                                <i class="fas fa-edit"></i>
-                            </a>
+                            <!-- Nút Edit: Chỉ hiển thị nếu:
+                                 1. Staff role khác (không phải SUPER_ADMIN)
+                                 2. HOẶC là chính mình (username khớp với currentUsername) -->
+                            <th:block th:if="${staff.staffRole?.name() != 'SUPER_ADMIN' || staff.username == currentUsername}">
+                                <a th:href="@{/admin/staff/edit/{id}(id=${staff.id})}"
+                                   class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                            </th:block>
 
-                            <button th:if="${staff.accountStatus.name() == 'ACTIVE'}"
-                                    type="button" class="btn btn-sm btn-outline-danger"
-                                    th:data-id="${staff.id}"
-                                    th:data-name="${staff.fullName}"
-                                    th:data-action-text="'khóa'"
-                                    onclick="openToggleModal(this)">
-                                <i class="fas fa-user-slash"></i>
-                            </button>
+                            <!-- Icon bảo vệ nếu là SUPER_ADMIN khác (không phải mình) -->
+                            <span th:if="${staff.staffRole?.name() == 'SUPER_ADMIN' && staff.username != currentUsername}"
+                                  class="text-muted"
+                                  title="Chỉ có thể chỉnh sửa thông tin của chính mình">
+                                <i class="fas fa-user-shield"></i>
+                            </span>
 
-                            <button th:if="${staff.accountStatus.name() == 'LOCKED'}"
-                                    type="button" class="btn btn-sm btn-outline-success"
-                                    th:data-id="${staff.id}"
-                                    th:data-name="${staff.fullName}"
-                                    th:data-action-text="'mở khóa'"
-                                    onclick="openToggleModal(this)">
-                                <i class="fas fa-user-check"></i>
-                            </button>
+                            <!-- Chỉ hiển thị nút toggle nếu KHÔNG phải SUPER_ADMIN -->
+                            <th:block th:if="${staff.staffRole?.name() != 'SUPER_ADMIN'}">
+                                <button th:if="${staff.accountStatus.name() == 'ACTIVE'}"
+                                        type="button" class="btn btn-sm btn-outline-danger"
+                                        th:data-id="${staff.id}"
+                                        th:data-name="${staff.fullName}"
+                                        th:data-action-text="'khóa'"
+                                        onclick="openToggleModal(this)">
+                                    <i class="fas fa-user-slash"></i>
+                                </button>
+
+                                <button th:if="${staff.accountStatus.name() == 'LOCKED'}"
+                                        type="button" class="btn btn-sm btn-outline-success"
+                                        th:data-id="${staff.id}"
+                                        th:data-name="${staff.fullName}"
+                                        th:data-action-text="'mở khóa'"
+                                        onclick="openToggleModal(this)">
+                                    <i class="fas fa-user-check"></i>
+                                </button>
+                            </th:block>
+
+                            <!-- Hiển thị icon shield nếu là SUPER_ADMIN (không thể toggle) -->
+                            <span th:if="${staff.staffRole?.name() == 'SUPER_ADMIN'}"
+                                  class="text-muted ms-1"
+                                  title="SUPER_ADMIN không thể bị khóa">
+                                <i class="fas fa-shield-alt"></i>
+                            </span>
                         </td>
                     </tr>
                     </tbody>

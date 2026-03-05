@@ -19,6 +19,7 @@ import com.clothshop.domain.repositories.auth.StaffRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,6 +36,13 @@ public class StaffManagementService {
     private final StaffMapper staffMapper;
     private final PasswordEncoder passwordEncoder;
     private final RoleRepository roleRepository;
+
+    /**
+     * Helper method: Lấy username của user đang đăng nhập
+     */
+    private String getCurrentUsername() {
+        return SecurityContextHolder.getContext().getAuthentication().getName();
+    }
 
     /**
      * Lấy danh sách nhân viên kèm phân trang và tìm kiếm
@@ -70,7 +78,7 @@ public class StaffManagementService {
      */
     @Transactional(readOnly = true)
     public StaffResponse getStaffById(Long id) {
-        Staff staff = staffRepository.findById(id)
+        Staff staff = staffRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy nhân viên"));
         return staffMapper.toResponse(staff);
     }
@@ -114,14 +122,26 @@ public class StaffManagementService {
      * Cập nhật thông tin nhân viên
      */
     public StaffResponse updateStaff(Long id, StaffUpdateRequest request) {
-        Staff staff = staffRepository.findById(id)
+        Staff staff = staffRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy nhân viên"));
+
+        Role currentRole = staff.getRole();
+        Account account = staff.getAccount();
+
+        // CONSTRAINT: Nếu staff được edit có role SUPER_ADMIN
+        // -> Chỉ cho phép chính người đó edit, không cho SUPER_ADMIN khác edit
+        if (currentRole.getStaffRole() == com.clothshop.domain.enums.StaffRole.SUPER_ADMIN) {
+            String currentUsername = getCurrentUsername();
+            if (!account.getUsername().equals(currentUsername)) {
+                throw new BusinessException(ErrorCode.OPERATION_NOT_ALLOWED,
+                    "Chỉ có thể chỉnh sửa thông tin của chính mình. Không thể chỉnh sửa thông tin SUPER_ADMIN khác.");
+            }
+        }
 
         // 1. Cập nhật thông tin cá nhân (fullName, phone, avatar) thông qua Mapper
         staffMapper.updateEntityFromRequest(request, staff);
 
         // 2. Cập nhật Account (Email)
-        Account account = staff.getAccount();
         if (!account.getEmail().equalsIgnoreCase(request.getEmail())) {
             if (accountRepository.existsByEmail(request.getEmail())) {
                 throw new BusinessException(ErrorCode.DUPLICATE_RESOURCE, "Email đã được sử dụng");
@@ -129,11 +149,10 @@ public class StaffManagementService {
             account.setEmail(request.getEmail());
         }
 
-        // 3. Cập nhật Role
-        // CONSTRAINT: Không cho phép thay đổi role của SUPER_ADMIN
-        if (!staff.getRole().getId().equals(request.getRoleId())) {
-            // Kiểm tra role hiện tại có phải SUPER_ADMIN không
-            if (staff.getRole().getStaffRole() == com.clothshop.domain.enums.StaffRole.SUPER_ADMIN) {
+        // 3. Cập nhật Role (chỉ nếu roleId khác với role hiện tại)
+        if (request.getRoleId() != null && !currentRole.getId().equals(request.getRoleId())) {
+            // CONSTRAINT: Không cho phép thay đổi role của SUPER_ADMIN
+            if (currentRole.getStaffRole() == com.clothshop.domain.enums.StaffRole.SUPER_ADMIN) {
                 throw new BusinessException(ErrorCode.OPERATION_NOT_ALLOWED,
                     "Không thể thay đổi role của tài khoản SUPER_ADMIN");
             }
@@ -151,8 +170,14 @@ public class StaffManagementService {
      */
     @Transactional
     public void toggleStaffStatus(Long id) {
-        Staff staff = staffRepository.findById(id)
+        Staff staff = staffRepository.findByIdWithRelations(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_EXISTED,"Không tìm thấy nhân viên"));
+
+        // CONSTRAINT: SUPER_ADMIN không được deactivate SUPER_ADMIN khác
+        if (staff.getRole().getStaffRole() == com.clothshop.domain.enums.StaffRole.SUPER_ADMIN) {
+            throw new BusinessException(ErrorCode.OPERATION_NOT_ALLOWED,
+                "Không thể khóa/mở khóa tài khoản SUPER_ADMIN");
+        }
 
         Account acc = staff.getAccount();
 
