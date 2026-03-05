@@ -61,6 +61,8 @@ cd ClothesShoppingSys/com.clothshop
 ```
 
 ### Bước 2: Cấu Hình Database
+
+#### 2.1. Tạo Database MySQL
 Tạo database MySQL (hoặc để Spring Boot tự tạo):
 ```sql
 CREATE DATABASE clothshop_db 
@@ -70,19 +72,42 @@ COLLATE utf8mb4_unicode_ci;
 
 **Lưu ý:** Database sẽ tự động được tạo nếu bạn giữ nguyên config `createDatabaseIfNotExist=true` trong `application.yaml`.
 
-### Bước 3: Cập Nhật Thông Tin Kết Nối (Nếu Cần)
+#### 2.2. Cấu Hình Connection String
 
-**File:** `shop-api-admin/src/main/resources/application.yaml` và `shop-api-client/src/main/resources/application.yaml`
+Dự án cung cấp file **template cấu hình mẫu** để bảo mật thông tin database:
+
+**Bước 1:** Copy file `.example` thành `application.yaml`
+
+```bash
+# Với Admin module
+cp shop-api-admin/src/main/resources/application.yaml.example \
+   shop-api-admin/src/main/resources/application.yaml
+
+# Với Client module  
+cp shop-api-client/src/main/resources/application.yaml.example \
+   shop-api-client/src/main/resources/application.yaml
+```
+
+**Bước 2:** Cập nhật thông tin database trong `application.yaml`
+
+Mở file `application.yaml` vừa tạo và thay thế:
+- `DB_USERNAME` → Username MySQL của bạn (mặc định: `root`)
+- `DB_PASSWORD` → Password MySQL của bạn
 
 ```yaml
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/clothshop_db?createDatabaseIfNotExist=true&useSSL=false&serverTimezone=Asia/Ho_Chi_Minh&allowPublicKeyRetrieval=true
-    username: root       # Thay đổi nếu cần
-    password: 123        # Thay đổi nếu cần
+    username: root        # ← Thay đổi nếu khác
+    password: your_password_here  # ← Thay mật khẩu MySQL của bạn
 ```
 
-### Bước 4: Build & Run
+**Lưu ý quan trọng:**
+- ⚠️ File `application.yaml` đã được thêm vào `.gitignore` để **không commit thông tin nhạy cảm** lên Git
+- ✅ Chỉ commit file `application.yaml.example` (template không chứa password thật)
+- 🔒 Mỗi developer cần tự tạo file `application.yaml` riêng trên máy local
+
+### Bước 3: Build & Run
 
 #### Option 1: Chạy Admin Portal
 ```bash
@@ -107,7 +132,7 @@ mvn spring-boot:run
 2. Run `AdminApplication.java` hoặc `ClientApplication.java`
 3. Truy cập URL tương ứng
 
-### Bước 5: Database Seeding (Tự Động)
+### Bước 4: Database Seeding (Tự Động)
 
 Khi chạy lần đầu, hệ thống sẽ **tự động seed dữ liệu mẫu** thông qua `DatabaseSeeder.java`:
 
@@ -240,7 +265,85 @@ Controller → DTO → Service → Repository (Entity) → Mapping (Entity to DT
 4. **MapStruct** convert Entity ↔ DTO
 5. **KHÔNG BAO GIỜ** expose Entity ra View
 
+## 🔐 Git Workflow & Security
+
+### Quản Lý File Cấu Hình
+
+Dự án sử dụng pattern `.example` để bảo mật thông tin nhạy cảm:
+
+#### ✅ Được Commit (Public)
+```
+✓ application.yaml.example    # Template configuration
+✓ .gitignore                   # Ignore rules
+✓ README.md                    # Documentation
+```
+
+#### ❌ Không Commit (Private)
+```
+✗ application.yaml             # Chứa password thật
+✗ application.properties       # Chứa sensitive data
+```
+
+### Quy Trình Làm Việc
+
+#### 1. Clone Project Lần Đầu
+```bash
+git clone <repository-url>
+cd ClothesShoppingSys/com.clothshop
+
+# Tạo file config từ template
+cp shop-api-admin/src/main/resources/application.yaml.example \
+   shop-api-admin/src/main/resources/application.yaml
+
+cp shop-api-client/src/main/resources/application.yaml.example \
+   shop-api-client/src/main/resources/application.yaml
+
+# Cập nhật username/password MySQL trong 2 file vừa tạo
+```
+
+#### 2. Thay Đổi Cấu Hình Cấu Trúc
+Nếu bạn cần thay đổi cấu trúc config (thêm property mới, đổi port, etc.):
+
+```bash
+# 1. Sửa file .example (KHÔNG sửa file application.yaml)
+vim shop-api-admin/src/main/resources/application.yaml.example
+
+# 2. Commit file .example
+git add shop-api-admin/src/main/resources/application.yaml.example
+git commit -m "chore: add new database pool configuration"
+
+# 3. Copy lại từ .example sang application.yaml (local)
+cp application.yaml.example application.yaml
+
+# 4. Cập nhật lại password trong application.yaml
+```
+
+#### 3. Pull Code Mới
+```bash
+git pull origin main
+
+# Nếu có conflict ở file application.yaml → Bỏ qua (file này đã bị ignore)
+# Chỉ cần merge file .example, sau đó copy lại:
+cp application.yaml.example application.yaml
+# Nhớ điền lại password
+```
+
+### Checklist Trước Khi Commit
+
+- [ ] File `application.yaml` KHÔNG xuất hiện trong `git status`
+- [ ] Chỉ commit file `application.yaml.example` nếu có thay đổi cấu trúc
+- [ ] File `.example` KHÔNG chứa password thật (chỉ có `DB_USERNAME`, `DB_PASSWORD`)
+- [ ] Đã test code trên local trước khi push
+
 ## 🔧 Troubleshooting
+
+### Lỗi: "Cannot find application.yaml"
+**Nguyên nhân:** Chưa tạo file config từ template  
+**Giải pháp:** 
+```bash
+cp shop-api-admin/src/main/resources/application.yaml.example \
+   shop-api-admin/src/main/resources/application.yaml
+```
 
 ### Lỗi: "Access denied for user 'root'@'localhost'"
 **Giải pháp:** Kiểm tra username/password MySQL trong `application.yaml`
