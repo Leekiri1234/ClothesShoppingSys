@@ -124,12 +124,13 @@ public class ProductVariantService {
         variantRepository.save(variant);
 
         // 4. Ghi nhật ký biến động kho
-        // Truyền chính xác delta và newStock để đối soát sau này.
+        // Truyền chính xác delta, newStock, lý do và ghi chú (nếu có) để đối soát sau này.
         inventoryLogService.logChange(
                 variant,
                 delta,
                 newStock,
                 request.getReason(),
+                request.getNote(),
                 username
         );
 
