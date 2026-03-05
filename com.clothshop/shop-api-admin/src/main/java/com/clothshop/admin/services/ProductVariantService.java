@@ -1,6 +1,7 @@
 package com.clothshop.admin.services;
 
 import com.clothshop.admin.dtos.request.products.VariantCreateRequest;
+import com.clothshop.admin.dtos.request.products.StockUpdateRequest;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
 import com.clothshop.common.utils.SlugUtils;
@@ -73,7 +74,7 @@ public class ProductVariantService {
         ProductVariant savedVariant = variantRepository.save(variant);
 
         // 6. Ghi log kho lần đầu (Initial Stock)
-        // Vinh Lập Chùa: Dùng luôn stock ban đầu làm delta
+        // Dùng luôn stock ban đầu làm delta
         inventoryLogService.logChange(
                 savedVariant,
                 request.getStock(),
@@ -83,5 +84,52 @@ public class ProductVariantService {
         );
 
         log.info("Variant created successfully with SKU: {}", generatedSku);
+    }
+
+    /**
+     * Cập nhật số lượng tồn kho thủ công từ Admin.
+     * @param variantId ID của biến thể cần cập nhật
+     * @param request DTO chứa số lượng mới và lý do
+     * @param username Người thực hiện
+     */
+    @Transactional
+    public void updateStock(Long variantId, StockUpdateRequest request, String username) {
+        log.info("Updating stock for variant ID: {}. New stock: {}, Reason: {}",
+                variantId, request.getNewStock(), request.getReason());
+
+        // 1. Tìm variant, validate tồn tại
+        ProductVariant variant = variantRepository.findById(variantId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy biến thể sản phẩm"));
+
+        // 2. Tính toán độ chênh lệch (Delta)
+        // Delta = Số mới - Số cũ.
+        // Ví dụ: Đang có 10, cập nhật thành 15 -> delta = +5 (Nhập thêm)
+        // Đang có 10, cập nhật thành 8 -> delta = -2 (Xuất bỏ/Hao hụt)
+        int currentStock = variant.getStockQuantity();
+        int newStock = request.getNewStock();
+        int delta = newStock - currentStock;
+
+        // Nếu không có sự thay đổi, không cần làm gì cả để tiết kiệm CPU và I/O
+        if (delta == 0) {
+            log.warn("Update stock called but no change in quantity for variant ID: {}", variantId);
+            return;
+        }
+
+        // 3. Cập nhật số lượng mới vào Entity
+        variant.setStockQuantity(newStock);
+        variant.setUpdatedBy(username);
+        variantRepository.save(variant);
+
+        // 4. Ghi nhật ký biến động kho
+        // Truyền chính xác delta và newStock để đối soát sau này.
+        inventoryLogService.logChange(
+                variant,
+                delta,
+                newStock,
+                request.getReason(),
+                username
+        );
+
+        log.info("Stock updated successfully for SKU: {}. Delta: {}", variant.getSku(), delta);
     }
 }

@@ -2,7 +2,7 @@ package com.clothshop.domain.entities.base;
 
 import jakarta.persistence.*;
 import lombok.*;
-import lombok.experimental.SuperBuilder; // Import này quan trọng
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
@@ -28,6 +28,9 @@ public abstract class BaseEntity {
 
     @Column(name = "created_by", length = 50)
     private String createdBy;
+
+    @Column(name = "updated_by", length = 50)
+    private String updatedBy;
 
     @Builder.Default // Giúp Builder nhận giá trị mặc định này
     @Column(name = "is_active", nullable = false)
