@@ -30,10 +30,11 @@ public class InventoryLogService {
      * @param delta Số lượng thay đổi (dương là nhập, âm là xuất)
      * @param newStock Số tồn kho sau khi thay đổi
      * @param reason Lý do thay đổi (bắt buộc)
+     * @param note Ghi chú bổ sung (optional)
      * @param username Người thực hiện (lấy từ Security Context)
      */
     @Transactional(propagation = Propagation.REQUIRED)
-    public void logChange(ProductVariant variant, int delta, int newStock, String reason, String username) {
+    public void logChange(ProductVariant variant, int delta, int newStock, String reason, String note, String username) {
         log.debug("Logging stock change for variant SKU: {}, delta: {}, reason: {}", variant.getSku(), delta, reason);
 
         // 1. Tìm thông tin Staff thông qua Account username
@@ -52,11 +53,20 @@ public class InventoryLogService {
                 .changeQty(delta)
                 .newStock(newStock)
                 .reason(reason)
+                .note(note) // Add note field
                 .isActive(true)
                 .createdBy(username)
                 .build();
 
         // 3. Lưu vào database
         inventoryLogRepository.save(inventoryLog);
+    }
+
+    /**
+     * Overloaded method for backward compatibility (without note).
+     */
+    @Transactional(propagation = Propagation.REQUIRED)
+    public void logChange(ProductVariant variant, int delta, int newStock, String reason, String username) {
+        logChange(variant, delta, newStock, reason, null, username);
     }
 }
