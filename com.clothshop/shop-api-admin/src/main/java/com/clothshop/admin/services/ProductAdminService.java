@@ -116,8 +116,22 @@ public class ProductAdminService {
     @Transactional(readOnly = true)
     public ProductAdminResponse getProductById(Long productId) {
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
-        return productMapper.toResponse(product);
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy sản phẩm"));
+
+        ProductAdminResponse response = productMapper.toResponse(product);
+
+        // Logic tự động tính tổng stock dựa vào các variant đang hoạt động
+        if (product.getVariants() != null) {
+            int totalStock = product.getVariants().stream()
+                    .filter(v -> v.getIsActive() != null && v.getIsActive())
+                    .mapToInt(v -> v.getStockQuantity() != null ? v.getStockQuantity() : 0)
+                    .sum();
+            response.setStock(totalStock);
+        } else {
+            response.setStock(0);
+        }
+
+        return response;
     }
 
     /**
@@ -136,9 +150,24 @@ public class ProductAdminService {
         // Fetch from database with pagination
         Page<Product> productPage = productRepository.findAll(pageable);
 
-        // Convert to DTOs
+        // Convert to DTOs and calculate total stock from variants
         List<ProductAdminResponse> content = productPage.getContent().stream()
-                .map(productMapper::toResponse)
+                .map(product -> {
+                    ProductAdminResponse response = productMapper.toResponse(product);
+
+                    // Calculate total stock from all active variants
+                    if (product.getVariants() != null) {
+                        int totalStock = product.getVariants().stream()
+                                .filter(v -> v.getIsActive() != null && v.getIsActive())
+                                .mapToInt(v -> v.getStockQuantity() != null ? v.getStockQuantity() : 0)
+                                .sum();
+                        response.setStock(totalStock);
+                    } else {
+                        response.setStock(0);
+                    }
+
+                    return response;
+                })
                 .collect(Collectors.toList());
 
         return PageResponse.<ProductAdminResponse>builder()

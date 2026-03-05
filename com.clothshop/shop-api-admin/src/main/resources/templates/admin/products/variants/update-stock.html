@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Update Variant Stock</title>
+</head>
+<body>
+    <div layout:fragment="page-title">
+        <div class="d-flex justify-content-between align-items-center">
+            <h1 class="h2">Update Variant Stock</h1>
+            <a th:href="@{/admin/products/{id}(id=${variant.productId})}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Product
+            </a>
+        </div>
+    </div>
+
+    <div layout:fragment="content">
+        <div class="row">
+            <div class="col-md-8 offset-md-2">
+                <!-- Variant Info Card -->
+                <div class="card mb-3">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-cube"></i> Variant Information
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>SKU:</strong> <code th:text="${variant.sku}">SKU</code></p>
+                                <p><strong>Product:</strong> <span th:text="${variant.productName}">Product Name</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Color:</strong> <span th:text="${variant.color}">Color</span></p>
+                                <p><strong>Size:</strong> <span th:text="${variant.sizeValue}">Size</span></p>
+                            </div>
+                        </div>
+                        <div class="alert alert-warning mt-2">
+                            <i class="fas fa-box"></i>
+                            <strong>Current Stock:</strong>
+                            <span class="fs-4" th:text="${variant.stockQuantity}">0</span> units
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Update Stock Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">
+                            <i class="fas fa-edit"></i> Update Stock Quantity
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/variants/{id}/update-stock(id=${variant.variantId})}"
+                              th:object="${stockRequest}"
+                              method="post">
+
+                            <!-- New Stock -->
+                            <div class="mb-3">
+                                <label for="newStock" class="form-label">
+                                    New Stock Quantity <span class="text-danger">*</span>
+                                </label>
+                                <input type="number"
+                                       class="form-control form-control-lg"
+                                       th:field="*{newStock}"
+                                       th:classappend="${#fields.hasErrors('newStock')} ? 'is-invalid' : ''"
+                                       id="newStock"
+                                       min="0"
+                                       placeholder="Enter new stock quantity">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('newStock')}"
+                                     th:errors="*{newStock}">
+                                </div>
+                                <small class="form-text text-muted">
+                                    Nhập số lượng tồn kho mới (hệ thống sẽ tự tính delta)
+                                </small>
+                            </div>
+
+                            <!-- Reason -->
+                            <div class="mb-3">
+                                <label for="reason" class="form-label">
+                                    Reason <span class="text-danger">*</span>
+                                </label>
+                                <select class="form-select"
+                                        th:field="*{reason}"
+                                        th:classappend="${#fields.hasErrors('reason')} ? 'is-invalid' : ''"
+                                        id="reason">
+                                    <option value="">-- Select Reason --</option>
+                                    <option value="RESTOCK">Nhập hàng mới</option>
+                                    <option value="MANUAL_ADJUSTMENT">Điều chỉnh thủ công</option>
+                                    <option value="RETURN">Hàng hoàn trả</option>
+                                    <option value="DAMAGE">Hao hụt/Hư hỏng</option>
+                                    <option value="INVENTORY_CHECK">Kiểm kê</option>
+                                    <option value="OTHER">Khác</option>
+                                </select>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('reason')}"
+                                     th:errors="*{reason}">
+                                </div>
+                            </div>
+
+                            <!-- Note -->
+                            <div class="mb-3">
+                                <label for="note" class="form-label">
+                                    Note (Optional)
+                                </label>
+                                <textarea class="form-control"
+                                          th:field="*{note}"
+                                          id="note"
+                                          rows="3"
+                                          placeholder="Additional notes about this stock update..."></textarea>
+                                <small class="form-text text-muted">
+                                    Ghi chú thêm về lý do thay đổi tồn kho
+                                </small>
+                            </div>
+
+                            <!-- Alert Box -->
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Note:</strong> Mọi thay đổi về tồn kho sẽ được ghi nhật ký tự động
+                                để đảm bảo truy vết và kiểm toán.
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="d-flex justify-content-between mt-4">
+                                <a th:href="@{/admin/products/{id}(id=${variant.productId})}"
+                                   class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-save"></i> Update Stock
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

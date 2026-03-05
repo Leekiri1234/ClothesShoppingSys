@@ -2,6 +2,8 @@ package com.clothshop.admin.services;
 
 import com.clothshop.admin.dtos.request.products.VariantCreateRequest;
 import com.clothshop.admin.dtos.request.products.StockUpdateRequest;
+import com.clothshop.admin.dtos.request.products.ProductUpdateRequest;
+import com.clothshop.admin.dtos.response.products.VariantResponse;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
 import com.clothshop.common.utils.SlugUtils;
@@ -14,7 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * ProductVariantService - Quản lý biến thể sản phẩm.
@@ -131,5 +134,72 @@ public class ProductVariantService {
         );
 
         log.info("Stock updated successfully for SKU: {}. Delta: {}", variant.getSku(), delta);
+    }
+
+    /**
+     * Get all variants for a specific product.
+     */
+    @Transactional(readOnly = true)
+    public List<VariantResponse> getVariantsByProductId(Long productId) {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy sản phẩm"));
+
+        return product.getVariants().stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Get variant by ID.
+     */
+    @Transactional(readOnly = true)
+    public VariantResponse getVariantById(Long variantId) {
+        ProductVariant variant = variantRepository.findById(variantId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy biến thể sản phẩm"));
+        return mapToResponse(variant);
+    }
+
+    /**
+     * Update variant price.
+     */
+    @Transactional
+    public void updatePrice(Long variantId, ProductUpdateRequest request, String username) {
+        log.info("Updating price for variant ID: {}. New price: {}", variantId, request.getPrice());
+
+        ProductVariant variant = variantRepository.findById(variantId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy biến thể sản phẩm"));
+
+        // Use BigDecimal directly from ProductUpdateRequest
+        if (request.getPrice() != null) {
+            variant.setRetailPrice(request.getPrice());
+            variant.setUpdatedBy(username);
+            variantRepository.save(variant);
+
+            log.info("Price updated successfully for SKU: {}. New price: {}", variant.getSku(), request.getPrice());
+        } else {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Giá mới không được để trống");
+        }
+    }
+
+    /**
+     * Map entity to response DTO.
+     */
+    private VariantResponse mapToResponse(ProductVariant variant) {
+        return VariantResponse.builder()
+                .variantId(variant.getId())
+                .sku(variant.getSku())
+                .color(variant.getColor())
+                .sizeValue(variant.getSizeValue())
+                .retailPrice(variant.getRetailPrice())
+                .stockQuantity(variant.getStockQuantity())
+                .imageUrl(variant.getImageUrl())
+                .isActive(variant.getIsActive())
+                .productId(variant.getProduct().getId())
+                .productName(variant.getProduct().getProductName())
+                .createdAt(variant.getCreatedAt())
+                .updatedAt(variant.getUpdatedAt())
+                .createdBy(variant.getCreatedBy())
+                .updatedBy(variant.getUpdatedBy())
+                .build();
     }
 }

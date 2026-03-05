@@ -17,10 +17,12 @@ public interface ProductAdminMapper {
     @Mapping(source = "category.categoryName", target = "categoryName")
     // Map PK của Product
     @Mapping(source = "id", target = "productId")
+    @Mapping(source = "basePrice", target = "price")
     ProductAdminResponse toResponse(Product product);
 
     // 2. Request -> Entity
     @Mapping(source = "description", target = "productDesc")
+    @Mapping(source = "price", target = "basePrice")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "productSlug", ignore = true)
     @Mapping(target = "prodStatus", ignore = true)
@@ -30,10 +32,13 @@ public interface ProductAdminMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "isActive", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
     Product toEntity(ProductCreateRequest request);
 
     // 3. Update Entity
     @Mapping(source = "description", target = "productDesc")
+    @Mapping(source = "price", target = "basePrice")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "productSlug", ignore = true)
     @Mapping(target = "prodStatus", ignore = true)
@@ -43,5 +48,7 @@ public interface ProductAdminMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "isActive", ignore = true)
+    @Mapping(target = "createdBy", ignore = true)
+    @Mapping(target = "updatedBy", ignore = true)
     void updateEntityFromRequest(ProductUpdateRequest request, @MappingTarget Product product);
 }
