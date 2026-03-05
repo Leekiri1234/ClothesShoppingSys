@@ -3,6 +3,7 @@ package com.clothshop.admin.dtos.response.products;
 import com.clothshop.domain.enums.ProductStatus;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -23,7 +24,7 @@ public class ProductAdminResponse {
     private Long categoryId;
     private String categoryName;
     private String description;
-    private Double price;
+    private BigDecimal price;
     private Integer stock;
     private String imageUrl;
     private ProductStatus status;
