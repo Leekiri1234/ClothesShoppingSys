@@ -41,8 +41,8 @@
                                th:text="${product.productName}">Product Name</a>
                         </h5>
                         <p class="text-muted small mb-2" th:text="${product.categoryName}">Category</p>
-                        <p class="card-text text-primary fw-bold mb-2">
-                            <span th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' đ'">100,000đ</span>
+                        <p class="card-text text-danger fw-bold mb-2">
+                            <span th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VND'">100,000 VND</span>
                         </p>
                         <div th:if="${product.available}" class="d-grid">
                             <button class="btn btn-primary btn-sm">

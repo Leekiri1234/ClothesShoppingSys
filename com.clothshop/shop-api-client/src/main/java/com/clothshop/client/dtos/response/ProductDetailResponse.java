@@ -2,6 +2,8 @@ package com.clothshop.client.dtos.response;
 
 import lombok.*;
 
+import java.util.List;
+
 /**
  * Response DTO for Product Detail (Client/Public side).
  * Excludes sensitive administrative data like stock levels.
@@ -22,4 +24,6 @@ public class ProductDetailResponse {
     private Double price;
     private String imageUrl;
     private Boolean available; // Derived from stock > 0, not exposing actual stock count
+    private List<VariantDetailResponse> variants;
+    private List<String> images;
 }

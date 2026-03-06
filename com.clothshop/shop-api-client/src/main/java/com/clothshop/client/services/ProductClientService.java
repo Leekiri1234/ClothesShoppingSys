@@ -51,8 +51,13 @@ public class ProductClientService {
         log.debug("Fetching product detail for slug: {}", slug);
 
         Product product = productRepository.findByProductSlug(slug)
-                .filter(p -> Boolean.TRUE.equals(p.getIsActive())) // Only active products
+                .filter(p -> Boolean.TRUE.equals(p.getIsActive()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
+
+        // Cực kỳ quan trọng: Ép nạp (Initialize) danh sách variants và các thông tin liên quan
+        if (product.getVariants() != null) {
+            product.getVariants().size();
+        }
 
         return productMapper.toDetailResponse(product);
     }
