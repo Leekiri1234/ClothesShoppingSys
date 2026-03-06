@@ -175,16 +175,16 @@ public class DatabaseSeeder implements CommandLineRunner {
         productRepository.save(tshirt);
 
         // Variants for T-Shirt
+        ProductVariant tshirtSizeXS = createVariant(tshirt, "TSHIRT_WHT_XS", "White", "XS",
+            50, new BigDecimal("199000"), "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400");
         ProductVariant tshirtSizeS = createVariant(tshirt, "TSHIRT_WHT_S", "White", "S",
-            50, new BigDecimal("199000"), "/images/products/tshirt-white-s.jpg");
-        ProductVariant tshirtSizeM = createVariant(tshirt, "TSHIRT_WHT_M", "White", "M",
-            100, new BigDecimal("199000"), "/images/products/tshirt-white-m.jpg");
+            100, new BigDecimal("199000"), "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400");
+        productVariantRepository.save(tshirtSizeXS);
         productVariantRepository.save(tshirtSizeS);
-        productVariantRepository.save(tshirtSizeM);
 
         // Image for T-Shirt
         ProductImage tshirtImage = createProductImage(tshirt,
-            "/images/products/tshirt-white-main.jpg", 1, true);
+            "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500", 1, true);
         productImageRepository.save(tshirtImage);
 
         // Product 2: Slim Fit Denim Jeans
@@ -193,13 +193,207 @@ public class DatabaseSeeder implements CommandLineRunner {
             new BigDecimal("599000"), ProductStatus.ACTIVE);
         productRepository.save(jeans);
 
+        // Variants for Jeans
+        ProductVariant jeansM = createVariant(jeans, "JEANS_BLU_M", "Blue", "M",
+            40, new BigDecimal("599000"), "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400");
+        ProductVariant jeansL = createVariant(jeans, "JEANS_BLU_L", "Blue", "L",
+            60, new BigDecimal("599000"), "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400");
+        productVariantRepository.save(jeansM);
+        productVariantRepository.save(jeansL);
+
+        ProductImage jeansImage = createProductImage(jeans,
+            "https://images.unsplash.com/photo-1542272604-787c3835535d?w=500", 1, true);
+        productImageRepository.save(jeansImage);
+
         // Product 3: Floral Summer Dress
         Product dress = createProduct(womenFashion, "Floral Summer Dress",
             "floral-summer-dress", "Light and breezy dress",
             new BigDecimal("450000"), ProductStatus.ACTIVE);
         productRepository.save(dress);
 
-        log.info("Products seeded: 3 products with variants and images");
+        // Variants for Dress
+        ProductVariant dressXS = createVariant(dress, "DRESS_FLO_XS", "Floral Pink", "XS",
+            30, new BigDecimal("450000"), "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400");
+        ProductVariant dressS = createVariant(dress, "DRESS_FLO_S", "Floral Pink", "S",
+            45, new BigDecimal("450000"), "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400");
+        productVariantRepository.save(dressXS);
+        productVariantRepository.save(dressS);
+
+        ProductImage dressImage = createProductImage(dress,
+            "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=500", 1, true);
+        productImageRepository.save(dressImage);
+
+        // Product 4: Black Leather Jacket
+        Product jacket = createProduct(menFashion, "Black Leather Jacket",
+            "black-leather-jacket", "Premium genuine leather jacket",
+            new BigDecimal("1299000"), ProductStatus.ACTIVE);
+        productRepository.save(jacket);
+
+        ProductVariant jacketL = createVariant(jacket, "JKT_BLK_L", "Black", "L",
+            20, new BigDecimal("1299000"), "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400");
+        ProductVariant jacketXL = createVariant(jacket, "JKT_BLK_XL", "Black", "XL",
+            25, new BigDecimal("1299000"), "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400");
+        productVariantRepository.save(jacketL);
+        productVariantRepository.save(jacketXL);
+
+        ProductImage jacketImage = createProductImage(jacket,
+            "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500", 1, true);
+        productImageRepository.save(jacketImage);
+
+        // Product 5: Cotton Polo Shirt
+        Product polo = createProduct(menFashion, "Cotton Polo Shirt",
+            "cotton-polo-shirt", "Classic fit polo shirt",
+            new BigDecimal("299000"), ProductStatus.ACTIVE);
+        productRepository.save(polo);
+
+        ProductVariant poloM = createVariant(polo, "POLO_NVY_M", "Navy Blue", "M",
+            70, new BigDecimal("299000"), "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=400");
+        ProductVariant poloL = createVariant(polo, "POLO_WHT_L", "White", "L",
+            80, new BigDecimal("299000"), "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=400");
+        productVariantRepository.save(poloM);
+        productVariantRepository.save(poloL);
+
+        ProductImage poloImage = createProductImage(polo,
+            "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=500", 1, true);
+        productImageRepository.save(poloImage);
+
+        // Product 6: Casual Chinos
+        Product chinos = createProduct(menFashion, "Casual Chinos",
+            "casual-chinos", "Comfortable slim fit chinos",
+            new BigDecimal("499000"), ProductStatus.ACTIVE);
+        productRepository.save(chinos);
+
+        ProductVariant chinosM = createVariant(chinos, "CHINO_BEG_M", "Beige", "M",
+            50, new BigDecimal("499000"), "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400");
+        ProductVariant chinosL = createVariant(chinos, "CHINO_BEG_L", "Beige", "L",
+            55, new BigDecimal("499000"), "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400");
+        productVariantRepository.save(chinosM);
+        productVariantRepository.save(chinosL);
+
+        ProductImage chinosImage = createProductImage(chinos,
+            "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=500", 1, true);
+        productImageRepository.save(chinosImage);
+
+        // Product 7: Striped Maxi Dress
+        Product maxiDress = createProduct(womenFashion, "Striped Maxi Dress",
+            "striped-maxi-dress", "Elegant long dress for special occasions",
+            new BigDecimal("650000"), ProductStatus.ACTIVE);
+        productRepository.save(maxiDress);
+
+        ProductVariant maxiS = createVariant(maxiDress, "MAXI_STR_S", "Blue Stripe", "S",
+            25, new BigDecimal("650000"), "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400");
+        ProductVariant maxiM = createVariant(maxiDress, "MAXI_STR_M", "Blue Stripe", "M",
+            35, new BigDecimal("650000"), "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400");
+        productVariantRepository.save(maxiS);
+        productVariantRepository.save(maxiM);
+
+        ProductImage maxiImage = createProductImage(maxiDress,
+            "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500", 1, true);
+        productImageRepository.save(maxiImage);
+
+        // Product 8: Knit Cardigan
+        Product cardigan = createProduct(womenFashion, "Knit Cardigan",
+            "knit-cardigan", "Cozy knitted cardigan perfect for layering",
+            new BigDecimal("399000"), ProductStatus.ACTIVE);
+        productRepository.save(cardigan);
+
+        ProductVariant cardiganM = createVariant(cardigan, "CARD_GRY_M", "Gray", "M",
+            40, new BigDecimal("399000"), "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400");
+        ProductVariant cardiganL = createVariant(cardigan, "CARD_BEG_L", "Beige", "L",
+            45, new BigDecimal("399000"), "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400");
+        productVariantRepository.save(cardiganM);
+        productVariantRepository.save(cardiganL);
+
+        ProductImage cardiganImage = createProductImage(cardigan,
+            "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=500", 1, true);
+        productImageRepository.save(cardiganImage);
+
+        // Product 9: Graphic Print T-Shirt
+        Product graphicTee = createProduct(menFashion, "Graphic Print T-Shirt",
+            "graphic-print-t-shirt", "Trendy graphic design t-shirt",
+            new BigDecimal("249000"), ProductStatus.ACTIVE);
+        productRepository.save(graphicTee);
+
+        ProductVariant graphicM = createVariant(graphicTee, "GTEE_BLK_M", "Black", "M",
+            65, new BigDecimal("249000"), "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400");
+        ProductVariant graphicL = createVariant(graphicTee, "GTEE_BLK_L", "Black", "L",
+            70, new BigDecimal("249000"), "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400");
+        productVariantRepository.save(graphicM);
+        productVariantRepository.save(graphicL);
+
+        ProductImage graphicImage = createProductImage(graphicTee,
+            "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500", 1, true);
+        productImageRepository.save(graphicImage);
+
+        // Product 10: High-Waist Skinny Jeans
+        Product skinnyJeans = createProduct(womenFashion, "High-Waist Skinny Jeans",
+            "high-waist-skinny-jeans", "Flattering high-rise skinny jeans",
+            new BigDecimal("549000"), ProductStatus.ACTIVE);
+        productRepository.save(skinnyJeans);
+
+        ProductVariant skinnyM = createVariant(skinnyJeans, "SKNY_BLK_M", "Black", "M",
+            38, new BigDecimal("549000"), "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400");
+        ProductVariant skinnyL = createVariant(skinnyJeans, "SKNY_BLK_L", "Black", "L",
+            42, new BigDecimal("549000"), "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400");
+        productVariantRepository.save(skinnyM);
+        productVariantRepository.save(skinnyL);
+
+        ProductImage skinnyImage = createProductImage(skinnyJeans,
+            "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=500", 1, true);
+        productImageRepository.save(skinnyImage);
+
+        // Product 11: Hooded Sweatshirt
+        Product hoodie = createProduct(menFashion, "Hooded Sweatshirt",
+            "hooded-sweatshirt", "Warm and comfortable hoodie",
+            new BigDecimal("399000"), ProductStatus.ACTIVE);
+        productRepository.save(hoodie);
+
+        ProductVariant hoodieXL = createVariant(hoodie, "HOOD_GRY_XL", "Gray", "XL",
+            55, new BigDecimal("399000"), "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400");
+        ProductVariant hoodieXXL = createVariant(hoodie, "HOOD_BLK_XXL", "Black", "XXL",
+            60, new BigDecimal("399000"), "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400");
+        productVariantRepository.save(hoodieXL);
+        productVariantRepository.save(hoodieXXL);
+
+        ProductImage hoodieImage = createProductImage(hoodie,
+            "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500", 1, true);
+        productImageRepository.save(hoodieImage);
+
+        // Product 12: Casual Blazer
+        Product blazer = createProduct(womenFashion, "Casual Blazer",
+            "casual-blazer", "Professional yet comfortable blazer",
+            new BigDecimal("799000"), ProductStatus.ACTIVE);
+        productRepository.save(blazer);
+
+        ProductVariant blazerS = createVariant(blazer, "BLZR_NVY_S", "Navy", "S",
+            28, new BigDecimal("799000"), "https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=400");
+        ProductVariant blazerM = createVariant(blazer, "BLZR_NVY_M", "Navy", "M",
+            32, new BigDecimal("799000"), "https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=400");
+        productVariantRepository.save(blazerS);
+        productVariantRepository.save(blazerM);
+
+        ProductImage blazerImage = createProductImage(blazer,
+            "https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=500", 1, true);
+        productImageRepository.save(blazerImage);
+
+        // Product 13: Linen Shorts
+        Product shorts = createProduct(menFashion, "Linen Shorts",
+            "linen-shorts", "Breathable summer shorts",
+            new BigDecimal("349000"), ProductStatus.ACTIVE);
+        productRepository.save(shorts);
+
+        ProductVariant shortsM = createVariant(shorts, "SHRT_KHK_M", "Khaki", "M",
+            48, new BigDecimal("349000"), "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400");
+        ProductVariant shortsL = createVariant(shorts, "SHRT_KHK_L", "Khaki", "L",
+            52, new BigDecimal("349000"), "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400");
+        productVariantRepository.save(shortsM);
+        productVariantRepository.save(shortsL);
+
+        ProductImage shortsImage = createProductImage(shorts,
+            "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=500", 1, true);
+        productImageRepository.save(shortsImage);
+
+        log.info("Products seeded: 13 products with variants and images");
     }
 
     // ==================== Helper Methods ====================
