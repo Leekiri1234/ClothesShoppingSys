@@ -8,18 +8,20 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-/**
- * CollectionItem - Bảng trung gian giữa Collection và Product
- * Theo ERD có thêm added_by và display_order
- */
 @Entity
-@Table(name = "collection_items", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"collection_id", "product_id"})
-})
+// Thêm UniqueConstraint để DB tự động chặn rác dữ liệu nếu có 2 luồng cùng gán 1 SP.
+@Table(name = "collection_items",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_collection_product", columnNames = {"collection_id", "product_id"})
+        })
 @SQLDelete(sql = "UPDATE collection_items SET is_active = false WHERE id = ?")
 @SQLRestriction("is_active = true")
-@Getter @Setter
-@NoArgsConstructor @AllArgsConstructor @SuperBuilder
+// No @AttributeOverride needed - table uses 'id' column directly
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 public class CollectionItem extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -30,9 +32,10 @@ public class CollectionItem extends BaseEntity {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @Column(name = "display_order")
-    private Integer displayOrder;
+    @Column(name = "display_order", nullable = false)
+    @Builder.Default
+    private Integer displayOrder = 0;
 
     @Column(name = "added_by", length = 50)
-    private String addedBy; // Staff username
+    private String addedBy; // Lưu username người gán
 }
