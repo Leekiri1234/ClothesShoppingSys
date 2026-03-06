@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title th:text="${pageTitle}">Form Bộ Sưu Tập</title>
+</head>
+<body>
+    <div layout:fragment="page-title">
+        <h1 class="h2">
+            <i th:class="${collectionDTO.id == null ? 'fas fa-plus-circle' : 'fas fa-edit'}"></i>
+            <span th:text="${pageTitle}">Form Bộ Sưu Tập</span>
+        </h1>
+    </div>
+
+    <div layout:fragment="content">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">
+                    <i class="fas fa-box-open"></i>
+                    <span th:text="${collectionDTO.id == null ? 'Thông tin bộ sưu tập mới' : 'Cập nhật thông tin bộ sưu tập'}">
+                        Thông tin bộ sưu tập
+                    </span>
+                </h5>
+            </div>
+            <div class="card-body">
+                <form th:action="@{/admin/collections/save}"
+                      th:object="${collectionDTO}"
+                      method="post"
+                      class="needs-validation"
+                      novalidate>
+
+                    <!-- Hidden ID field for update mode -->
+                    <input type="hidden" th:field="*{id}">
+
+                    <div class="row">
+                        <!-- Collection Name -->
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label fw-bold">
+                                Tên Bộ Sưu Tập <span class="text-danger">*</span>
+                            </label>
+                            <input type="text"
+                                   class="form-control"
+                                   id="name"
+                                   th:field="*{name}"
+                                   th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'"
+                                   placeholder="VD: Bộ sưu tập mùa hè 2026"
+                                   required
+                                   maxlength="100">
+                            <div class="invalid-feedback" th:errors="*{name}">Lỗi tên bộ sưu tập</div>
+                            <small class="text-muted">Tối đa 100 ký tự, phải là duy nhất</small>
+                        </div>
+
+                        <!-- Status -->
+                        <div class="col-md-6 mb-3">
+                            <label for="isActive" class="form-label fw-bold">Trạng thái</label>
+                            <select class="form-select" id="isActive" th:field="*{isActive}">
+                                <option th:value="true">
+                                    <i class="fas fa-check-circle"></i> Hoạt động
+                                </option>
+                                <option th:value="false">
+                                    <i class="fas fa-ban"></i> Tắt
+                                </option>
+                            </select>
+                            <small class="text-muted">
+                                Chỉ bộ sưu tập đang hoạt động mới hiển thị ở trang khách hàng
+                            </small>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="col-md-12 mb-3">
+                            <label for="description" class="form-label fw-bold">Mô tả</label>
+                            <textarea class="form-control"
+                                      id="description"
+                                      th:field="*{description}"
+                                      th:classappend="${#fields.hasErrors('description')} ? 'is-invalid'"
+                                      rows="4"
+                                      maxlength="500"
+                                      placeholder="Nhập mô tả chi tiết về bộ sưu tập (tối đa 500 ký tự)..."></textarea>
+                            <div class="invalid-feedback" th:errors="*{description}">Lỗi mô tả</div>
+                            <small class="text-muted">
+                                Tối đa 500 ký tự. Mô tả ngắn gọn về bộ sưu tập giúp khách hàng hiểu rõ hơn.
+                            </small>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <!-- Information Alert -->
+                    <div class="alert alert-info d-flex align-items-center" role="alert">
+                        <i class="fas fa-info-circle me-2 fa-lg"></i>
+                        <div>
+                            <strong>Lưu ý:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li th:if="${collectionDTO.id == null}">
+                                    Sau khi tạo bộ sưu tập, bạn có thể gán sản phẩm vào bộ sưu tập này.
+                                </li>
+                                <li th:if="${collectionDTO.id != null}">
+                                    Để gán hoặc xóa sản phẩm khỏi bộ sưu tập, vui lòng sử dụng chức năng
+                                    <strong>"Gán sản phẩm"</strong> từ danh sách bộ sưu tập.
+                                </li>
+                                <li>Tên bộ sưu tập phải là duy nhất trong hệ thống.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a th:href="@{/admin/collections}" class="btn btn-light border">
+                            <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                        </a>
+                        <div class="d-flex gap-2">
+                            <button type="reset" class="btn btn-outline-secondary">
+                                <i class="fas fa-undo"></i> Đặt lại
+                            </button>
+                            <button type="submit" class="btn btn-primary">
+                                <i th:class="${collectionDTO.id == null ? 'fas fa-plus' : 'fas fa-save'}"></i>
+                                <span th:text="${collectionDTO.id == null ? 'Tạo mới' : 'Cập nhật'}">Lưu</span>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Quick Link Card (Only show in edit mode) -->
+        <div th:if="${collectionDTO.id != null}" class="card shadow-sm mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="fas fa-link"></i> Hành động liên quan
+                </h6>
+                <p class="card-text text-muted small">
+                    Quản lý sản phẩm trong bộ sưu tập này
+                </p>
+                <a th:href="@{/admin/collections/{id}/assign(id=${collectionDTO.id})}"
+                   class="btn btn-info btn-sm">
+                    <i class="fas fa-link"></i> Gán sản phẩm vào bộ sưu tập
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div layout:fragment="scripts">
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Bootstrap form validation
+                const forms = document.querySelectorAll('.needs-validation');
+                Array.from(forms).forEach(function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (!form.checkValidity()) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+
+                // Character counter for description
+                const descriptionTextarea = document.getElementById('description');
+                if (descriptionTextarea) {
+                    const maxLength = descriptionTextarea.getAttribute('maxlength');
+                    const counterDiv = document.createElement('div');
+                    counterDiv.className = 'text-end text-muted small mt-1';
+                    descriptionTextarea.parentNode.appendChild(counterDiv);
+
+                    function updateCounter() {
+                        const currentLength = descriptionTextarea.value.length;
+                        counterDiv.textContent = currentLength + '/' + maxLength + ' ký tự';
+
+                        if (currentLength > maxLength * 0.9) {
+                            counterDiv.classList.add('text-warning');
+                        } else {
+                            counterDiv.classList.remove('text-warning');
+                        }
+                    }
+
+                    descriptionTextarea.addEventListener('input', updateCounter);
+                    updateCounter();
+                }
+
+                // Auto-trim inputs on submit
+                const form = document.querySelector('form');
+                if (form) {
+                    form.addEventListener('submit', function() {
+                        const nameInput = document.getElementById('name');
+                        if (nameInput) {
+                            nameInput.value = nameInput.value.trim();
+                        }
+                    });
+                }
+            });
+        </script>
+    </div>
+</body>
+</html>
+
