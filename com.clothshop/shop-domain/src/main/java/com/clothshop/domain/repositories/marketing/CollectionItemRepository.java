@@ -29,4 +29,14 @@ public interface CollectionItemRepository extends JpaRepository<CollectionItem, 
     @Modifying
     @Query("UPDATE CollectionItem ci SET ci.isActive = false WHERE ci.collection.id = :collectionId")
     void deactivateAllItemsByCollectionId(@Param("collectionId") Long collectionId);
+
+    // Lấy danh sách CollectionItem với Product (JOIN FETCH để tránh N+1 và LazyInitializationException)
+    // Note: Không thể fetch cả images và variants cùng lúc (MultipleBagFetchException)
+    @Query("SELECT DISTINCT ci FROM CollectionItem ci " +
+           "JOIN FETCH ci.product p " +
+           "LEFT JOIN FETCH p.images " +
+           "LEFT JOIN FETCH p.category " +
+           "WHERE ci.collection.id = :collectionId AND ci.isActive = true " +
+           "ORDER BY ci.displayOrder ASC")
+    List<CollectionItem> findActiveItemsWithProductByCollectionId(@Param("collectionId") Long collectionId);
 }

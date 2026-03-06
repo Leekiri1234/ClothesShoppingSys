@@ -151,20 +151,13 @@ public class CollectionAdminController {
         Collection collection = collectionRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy bộ sưu tập"));
 
-        // Lấy danh sách sản phẩm ĐÃ nằm trong bộ sưu tập (Kèm thông tin Product)
-        // Lưu ý: Ở môi trường thực tế cần query cẩn thận để không bị N+1.
-        List<CollectionItem> currentItems = collection.getItems().stream()
-                .filter(CollectionItem::getIsActive)
-                .sorted((item1, item2) -> item1.getDisplayOrder().compareTo(item2.getDisplayOrder()))
-                .toList();
+        // Lấy danh sách sản phẩm ĐÃ nằm trong bộ sưu tập (JOIN FETCH Product để tránh LazyInitializationException)
+        List<CollectionItem> currentItems = collectionItemRepository.findActiveItemsWithProductByCollectionId(id);
 
         // Lấy danh sách TOÀN BỘ sản phẩm đang kinh doanh để Marketing chọn.
-        // Tối ưu: Chỉ lấy tối đa 100-200 sản phẩm mới nhất, kết hợp Ajax search ở UI sau.
-        Pageable top100 = PageRequest.of(0, 100, Sort.by("createdAt").descending());
-        List<Product> availableProducts = productRepository.findAll(top100).getContent()
-                .stream()
-                .filter(Product::getIsActive)
-                .toList();
+        // JOIN FETCH images, category, variants để tránh LazyInitializationException
+        Pageable top100 = PageRequest.of(0, 100);
+        List<Product> availableProducts = productRepository.findTop100ActiveProductsWithDetails(top100);
 
         model.addAttribute("collection", collection);
         model.addAttribute("currentItems", currentItems);

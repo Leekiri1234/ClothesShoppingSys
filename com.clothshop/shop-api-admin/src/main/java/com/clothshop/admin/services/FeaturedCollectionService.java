@@ -2,6 +2,7 @@ package com.clothshop.admin.services;
 
 import com.clothshop.admin.dtos.request.marketing.CollectionSaveRequest;
 import com.clothshop.admin.dtos.response.marketing.CollectionResponse;
+import com.clothshop.admin.mappers.CollectionMapper;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
 import com.clothshop.common.utils.SlugUtils;
@@ -30,6 +31,7 @@ public class FeaturedCollectionService {
     private final CollectionRepository collectionRepository;
     private final CollectionItemRepository collectionItemRepository;
     private final ProductRepository productRepository;
+    private final CollectionMapper collectionMapper;
 
     /**
      * Tạo mới hoặc Cập nhật Collection (Unified endpoint)
@@ -45,15 +47,15 @@ public class FeaturedCollectionService {
             // Generate base slug from name (chưa có ID)
             String baseSlug = SlugUtils.makeSlug(request.getName());
 
-            collection = Collection.builder()
-                    .name(request.getName())
-                    .slug(baseSlug) // Tạm thời dùng baseSlug, sẽ update sau khi có ID
-                    .description(request.getDescription())
-                    .isActive(request.getIsActive() != null ? request.getIsActive() : true)
-                    .createdBy(username)
-                    .build();
+            // USAGE 1: Dùng Mapper để map Request sang Entity thay vì dùng Builder thủ công
+            collection = collectionMapper.toEntity(request);
+            collection.setSlug(baseSlug); // Tạm thời dùng baseSlug, sẽ update sau khi có ID
 
-            // Save để có ID
+            if (request.getIsActive() == null) {
+                collection.setIsActive(true);
+            }
+
+            // Save lần 1 để DB sinh ra ID
             collection = collectionRepository.save(collection);
 
             // Generate slug với ID (Shopee style): bo-suu-tap-mua-he-c.123
@@ -75,27 +77,14 @@ public class FeaturedCollectionService {
                 log.info("Updated slug from {} to {}", collection.getSlug(), newSlugWithId);
             }
 
-            collection.setName(request.getName());
-            collection.setDescription(request.getDescription());
-
-            if (request.getIsActive() != null) {
-                collection.setIsActive(request.getIsActive());
-            }
-            collection.setUpdatedBy(username);
+            // USAGE 2: Dùng Mapper update các trường (name, description, isActive) từ Request vào Entity
+            collectionMapper.updateEntityFromRequest(request, collection);
         }
 
+        // Save lần 2 (áp dụng cho cả Create để lưu cái finalSlug, và Update)
         Collection saved = collectionRepository.save(collection);
 
-        // Nếu là update, cần đếm lại số lượng item đang có. Nếu tạo mới thì là 0.
-        Long itemCount = request.getId() != null ? collectionItemRepository.countActiveItemsByCollectionId(saved.getId()) : 0L;
-
-        return CollectionResponse.builder()
-                .id(saved.getId())
-                .name(saved.getName())
-                .description(saved.getDescription())
-                .isActive(saved.getIsActive())
-                .itemCount(itemCount)
-                .build();
+        return mapToResponse(saved);
     }
 
     /**
@@ -108,7 +97,6 @@ public class FeaturedCollectionService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy bộ sưu tập"));
 
         collection.setIsActive(false);
-        collection.setUpdatedBy(username);
         collectionRepository.save(collection);
 
         // Tắt toàn bộ sản phẩm bên trong để tránh hiển thị rác
@@ -147,14 +135,13 @@ public class FeaturedCollectionService {
         int currentOrder = maxOrder + 1;
 
         for (Long pId : newProductIds) {
-            //Tối ưu Proxy (Không query xuống DB)
+            // Tối ưu Proxy (Không query xuống DB)
             Product productProxy = productRepository.getReferenceById(pId);
 
             itemsToSave.add(CollectionItem.builder()
                     .collection(collection)
                     .product(productProxy)
                     .displayOrder(currentOrder++)
-                    .addedBy(username)
                     .isActive(true)
                     .build());
         }
@@ -166,21 +153,10 @@ public class FeaturedCollectionService {
 
     /**
      * Thêm 1 sản phẩm vào bộ sưu tập (Wrapper method)
-     *
-     * Convenience method để thêm 1 sản phẩm đơn lẻ, thường dùng từ trang chi tiết sản phẩm.
-     * Internally gọi addProductsToCollection() để tái sử dụng logic (kiểm tra trùng, displayOrder, etc.)
-     *
-     * Note: KHÔNG trùng với addProductsToCollection() - đây là wrapper cho single product.
-     *
-     * @param collectionId ID của bộ sưu tập
-     * @param productId ID của sản phẩm cần thêm
-     * @param username Tên người thực hiện
-     * @see #addProductsToCollection(Long, List, String) Main implementation
      */
     @Transactional
     public void addProductToCollection(Long collectionId, Long productId, String username) {
         log.info("Adding single product {} to collection {}", productId, collectionId);
-        // Delegate to bulk method for code reuse
         addProductsToCollection(collectionId, List.of(productId), username);
     }
 
@@ -204,28 +180,18 @@ public class FeaturedCollectionService {
 
     /**
      * Tìm collection theo slug (Optimized với ID parsing)
-     *
-     * Thay vì query WHERE slug = ?, ta parse ID từ slug và query WHERE id = ?
-     * → Nhanh hơn vì query trực tiếp Primary Key (indexed)
-     *
-     * @param slug Collection slug (VD: "bo-suu-tap-mua-he-c.123")
-     * @return Collection entity
-     * @throws BusinessException nếu không tìm thấy
      */
     @Transactional(readOnly = true)
     public Collection findBySlug(String slug) {
-        // Try parse ID from slug first (fast path)
         Long id = parseIdFromSlug(slug);
 
         if (id != null) {
-            // Query trực tiếp theo ID (Primary Key - siêu nhanh)
             return collectionRepository.findById(id)
                     .orElseThrow(() -> new BusinessException(
                             ErrorCode.RESOURCE_NOT_FOUND,
                             "Không tìm thấy bộ sưu tập với slug: " + slug));
         }
 
-        // Fallback: Query theo slug (cho các slug cũ không có ID)
         return collectionRepository.findBySlug(slug)
                 .orElseThrow(() -> new BusinessException(
                         ErrorCode.RESOURCE_NOT_FOUND,
@@ -236,31 +202,18 @@ public class FeaturedCollectionService {
      * Helper method: Map Collection entity sang CollectionResponse với itemCount
      */
     private CollectionResponse mapToResponse(Collection collection) {
-        Long itemCount = collectionItemRepository.countActiveItemsByCollectionId(collection.getId());
-        return CollectionResponse.builder()
-                .id(collection.getId())
-                .name(collection.getName())
-                .description(collection.getDescription())
-                .isActive(collection.getIsActive())
-                .itemCount(itemCount)
-                .build();
+        // USAGE 3: Dùng Mapper biến Entity thành DTO
+        CollectionResponse response = collectionMapper.toResponse(collection);
+
+        // Count số lượng và set vào
+        Long itemCount = collection.getId() != null ? collectionItemRepository.countActiveItemsByCollectionId(collection.getId()) : 0L;
+        response.setItemCount(itemCount);
+
+        return response;
     }
 
     /**
      * Generate slug với ID suffix (Shopee style)
-     *
-     * Pattern: {base-slug}-c.{id}
-     * Example: "bo-suu-tap-mua-he-c.123"
-     *
-     * Ưu điểm:
-     * - 100% unique (dựa vào Primary Key)
-     * - Query nhanh (parse ID từ slug để tìm trực tiếp)
-     * - Clean & Professional
-     * - SEO friendly
-     *
-     * @param baseSlug Slug gốc từ tên (VD: "bo-suu-tap-mua-he")
-     * @param id Collection ID (VD: 123)
-     * @return Slug hoàn chỉnh (VD: "bo-suu-tap-mua-he-c.123")
      */
     private String generateSlugWithId(String baseSlug, Long id) {
         return baseSlug + "-c." + id;
@@ -268,11 +221,6 @@ public class FeaturedCollectionService {
 
     /**
      * Parse collection ID từ slug (để query nhanh)
-     *
-     * Example: "bo-suu-tap-mua-he-c.123" → 123
-     *
-     * @param slug Slug đầy đủ
-     * @return Collection ID, hoặc null nếu parse fail
      */
     public static Long parseIdFromSlug(String slug) {
         if (slug == null || !slug.contains("-c.")) {

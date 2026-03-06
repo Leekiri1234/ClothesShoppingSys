@@ -36,6 +36,4 @@ public class CollectionItem extends BaseEntity {
     @Builder.Default
     private Integer displayOrder = 0;
 
-    @Column(name = "added_by", length = 50)
-    private String addedBy; // Lưu username người gán
 }
