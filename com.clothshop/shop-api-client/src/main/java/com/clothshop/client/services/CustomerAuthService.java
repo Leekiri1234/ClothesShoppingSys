@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class AuthService {
+public class CustomerAuthService {
 
     private final AccountRepository accountRepository;
     private final CustomerRepository customerRepository;
