@@ -12,7 +12,7 @@ import java.util.List;
 
 @Entity
 @Table(name = "products", indexes = @Index(name = "idx_product_slug", columnList = "product_slug"))
-@SQLDelete(sql = "UPDATE products SET is_active = false WHERE id = ?")
+@SQLDelete(sql = "UPDATE products SET is_active = false WHERE product_id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "product_id"))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder

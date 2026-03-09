@@ -10,27 +10,29 @@ import org.hibernate.annotations.SQLRestriction;
 
 import java.time.LocalDateTime;
 
-/**
- * Featured Products - Sản phẩm nổi bật được hiển thị trên trang chủ.
- */
 @Entity
 @Table(name = "featured_products")
-@SQLDelete(sql = "UPDATE featured_products SET is_active = false WHERE id = ?")
+@SQLDelete(sql = "UPDATE featured_products SET is_active = false WHERE featured_prod_id = ?")
 @SQLRestriction("is_active = true")
-@AttributeOverride(name = "id", column = @Column(name = "featured_product_id"))
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
+@AttributeOverride(name = "id", column = @Column(name = "featured_prod_id"))
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 public class FeaturedProduct extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false, unique = true)
     private Product product;
 
-    @Column(name = "display_order")
-    private Integer displayOrder;
+    @Column(name = "display_order", nullable = false)
+    @Builder.Default
+    private Integer displayOrder = 0;
 
-    @Column(name = "start_at")
-    private LocalDateTime startAt;
+    @Column(name = "start_date")
+    private LocalDateTime startDate;
 
-    @Column(name = "end_at")
-    private LocalDateTime endAt;
+    @Column(name = "end_date")
+    private LocalDateTime endDate;
 }

@@ -7,37 +7,32 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
-import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "collections", indexes = @Index(name = "idx_collection_slug", columnList = "collection_slug"))
-@SQLDelete(sql = "UPDATE collections SET is_active = false WHERE id = ?")
+@Table(name = "collections")
+@SQLDelete(sql = "UPDATE collections SET is_active = false WHERE collection_id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "collection_id"))
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@SuperBuilder
 public class Collection extends BaseEntity {
 
     @Column(name = "collection_name", nullable = false, length = 100)
-    private String collectionName;
+    private String name;
 
-    @Column(name = "collection_slug", unique = true, nullable = false, length = 100)
-    private String collectionSlug;
+    @Column(name = "collection_slug", nullable = false, unique = true, length = 120)
+    private String slug;
 
-    @Lob
-    @Column(name = "description")
+    @Column(name = "description", length = 500)
     private String description;
 
-    @Column(name = "banner_url", length = 500)
-    private String bannerUrl;
-
-    @Column(name = "start_date")
-    private LocalDateTime startDate;
-
-    @Column(name = "end_date")
-    private LocalDateTime endDate;
-
-    // Quan hệ với CollectionItem (bảng trung gian)
-    @OneToMany(mappedBy = "collection", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
-    private List<CollectionItem> collectionItems;
+    //  Dùng LAZY để không kéo cả bảng trung gian lên khi query Collection
+    @OneToMany(mappedBy = "collection", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<CollectionItem> items = new ArrayList<>();
 }
