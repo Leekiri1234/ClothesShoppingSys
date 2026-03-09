@@ -1,7 +1,7 @@
 package com.clothshop.client.controllers;
 
 import com.clothshop.client.dtos.request.RegisterRequest;
-import com.clothshop.client.services.AuthService;
+import com.clothshop.client.services.CustomerAuthService;
 import com.clothshop.common.exceptions.BusinessException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,9 +26,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 @Controller
 @RequiredArgsConstructor
 @Slf4j
-public class AuthController {
+public class CustomerAuthController {
 
-    private final AuthService authService;
+    private final CustomerAuthService authService;
 
     /**
      * Display login page.

@@ -1,341 +1,224 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layouts/layout}">
 <head>
-    <title>Product Detail</title>
+    <title>Chi tiết sản phẩm</title>
 </head>
 <body>
-<div layout:fragment="page-title">
-    <div class="d-flex justify-content-between align-items-center">
-        <h1 class="h2">Product Detail</h1>
-        <div class="btn-group">
-            <a th:href="@{/admin/products/{id}/edit(id=${product.productId})}"
-               class="btn btn-warning">
-                <i class="fas fa-edit"></i> Edit
-            </a>
-            <a th:href="@{/admin/products}" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to List
-            </a>
-        </div>
-    </div>
+
+<h1 layout:fragment="page-title" th:text="${product.productName}">Chi tiết sản phẩm</h1>
+
+<div layout:fragment="page-actions">
+    <a th:href="@{/admin/products/{id}/edit(id=${product.productId})}" class="btn btn-primary">
+        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        Chỉnh sửa
+    </a>
+    <a th:href="@{/admin/products}" class="btn btn-outline">
+        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Quay lại danh sách
+    </a>
 </div>
 
 <div layout:fragment="content">
-    <div class="row">
-        <!-- Main Product Info -->
-        <div class="col-md-8">
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <span th:text="${product.productName}">Product Name</span>
-                        <span th:if="${product.isActive}" class="badge bg-success ms-2">Active</span>
-                        <span th:unless="${product.isActive}" class="badge bg-secondary ms-2">Inactive</span>
-                    </h5>
+
+    <div class="product-form-layout">
+        <!-- LEFT COLUMN -->
+        <div class="product-form-left">
+
+            <!-- THÔNG TIN SẢN PHẨM -->
+            <div class="form-card">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                    <h3 style="margin: 0;">Thông tin sản phẩm</h3>
+                    <span th:if="${product.isActive}" class="badge badge-success">Đang bán</span>
+                    <span th:unless="${product.isActive}" class="badge badge-muted">Ngưng bán</span>
                 </div>
-                <div class="card-body">
-                    <!-- Product Image -->
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <div th:if="${product.imageUrl}">
-                                <img th:src="${product.imageUrl}"
-                                     alt="Product Image"
-                                     class="img-fluid rounded">
-                            </div>
-                            <div th:unless="${product.imageUrl}"
-                                 class="bg-light d-flex align-items-center justify-content-center"
-                                 style="height: 300px;">
-                                <i class="fas fa-image fa-5x text-muted"></i>
-                            </div>
+
+                <div style="display: grid; gap: 16px;">
+                    <div>
+                        <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;">Tên sản phẩm</div>
+                        <div style="font-size: 15px; font-weight: 600;" th:text="${product.productName}">Áo thun cotton nam</div>
+                    </div>
+
+                    <div>
+                        <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;">Slug (URL)</div>
+                        <div style="font-size: 13px; font-family: monospace; color: var(--info);" th:text="${product.productSlug}">ao-thun-cotton-nam</div>
+                    </div>
+
+                    <div>
+                        <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;">Mô tả</div>
+                        <div style="font-size: 13px; line-height: 1.6;" th:text="${product.description}">Áo thun cotton 100% chất lượng cao...</div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div>
+                            <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;">Giá bán</div>
+                            <div style="font-size: 18px; font-weight: 700; color: var(--success);"
+                                 th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + '₫'">299.000₫</div>
                         </div>
-                        <div class="col-md-8">
-                            <table class="table table-borderless">
-                                <tr>
-                                    <th width="30%">Product ID:</th>
-                                    <td><code th:text="${product.productId}">1</code></td>
-                                </tr>
-                                <tr>
-                                    <th>Slug:</th>
-                                    <td>
-                                        <code th:text="${product.productSlug}">slug</code>
-                                        <a th:href="@{/products/{slug}(slug=${product.productSlug})}"
-                                           target="_blank"
-                                           class="btn btn-sm btn-outline-primary ms-2">
-                                            <i class="fas fa-external-link-alt"></i> View Public
-                                        </a>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Category:</th>
-                                    <td>
-                                        <span class="badge bg-primary" th:text="${product.categoryName}">Category</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Price:</th>
-                                    <td>
-                                        <strong class="text-success"
-                                                th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VND'">
-                                            0 VND
-                                        </strong>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Stock:</th>
-                                    <td>
-                                        <span th:class="${product.stock > 10} ? 'badge bg-success' :
-                                              (${product.stock > 0} ? 'badge bg-warning' : 'badge bg-danger')"
-                                              th:text="${product.stock} + ' units'">
-                                            0 units
-                                        </span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th>Status:</th>
-                                    <td>
-                                        <span th:text="${product.status}">ACTIVE</span>
-                                    </td>
-                                </tr>
-                            </table>
+
+                        <div>
+                            <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;">Tồn kho</div>
+                            <div style="font-size: 18px; font-weight: 700;"
+                                 th:classappend="${product.stock < 10} ? 'text-warning' : (${product.stock == 0} ? 'text-danger' : '')"
+                                 th:text="${product.stock}">120</div>
                         </div>
                     </div>
 
-                    <!-- Description -->
-                    <div class="mb-3">
-                        <h6>Description:</h6>
-                        <p class="text-muted" th:text="${product.description}">
-                            Product description goes here...
-                        </p>
-                    </div>
-
-                    <!-- Audit Info -->
-                    <hr>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <small class="text-muted">
-                                <i class="fas fa-calendar-plus"></i>
-                                Created: <strong th:text="${#temporals.format(product.createdAt, 'dd/MM/yyyy HH:mm:ss')}">date</strong>
-                            </small>
-                        </div>
-                        <div class="col-md-6">
-                            <small class="text-muted">
-                                <i class="fas fa-sync-alt"></i>
-                                Updated: <strong th:text="${#temporals.format(product.updatedAt, 'dd/MM/yyyy HH:mm:ss')}">date</strong>
-                            </small>
-                        </div>
+                    <div>
+                        <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;">Danh mục</div>
+                        <div style="font-size: 13px;" th:text="${product.categoryName}">Áo thun</div>
                     </div>
                 </div>
             </div>
 
-            <!-- Variants Section -->
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-cubes"></i> Product Variants
-                    </h5>
-                    <a th:href="@{/admin/variants/create(productId=${product.productId})}"
-                       class="btn btn-sm btn-primary">
-                        <i class="fas fa-plus"></i> Add Variant
+            <!-- DANH SÁCH VARIANTS -->
+            <div class="form-card">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+                    <h3 style="margin: 0;">Biến thể sản phẩm</h3>
+                    <a th:href="@{/admin/products/{id}/variants/create(id=${product.productId})}" class="btn btn-sm btn-primary">
+                        <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24">
+                            <line x1="12" y1="5" x2="12" y2="19"/>
+                            <line x1="5" y1="12" x2="19" y2="12"/>
+                        </svg>
+                        Thêm variant
                     </a>
                 </div>
-                <div class="card-body">
-                    <!-- Variants Table -->
-                    <div th:if="${variants != null and !variants.isEmpty()}">
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead class="table-light">
-                                <tr>
-                                    <th>SKU</th>
-                                    <th>Color</th>
-                                    <th>Size</th>
-                                    <th class="text-end">Price (VND)</th>
-                                    <th class="text-center">Stock</th>
-                                    <th class="text-center">Status</th>
-                                    <th class="text-center">Actions</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                <tr th:each="variant : ${variants}">
-                                    <td>
-                                        <code th:text="${variant.sku}">SKU</code>
-                                    </td>
-                                    <td>
-                                        <span th:text="${variant.color}">Color</span>
-                                    </td>
-                                    <td>
-                                        <span class="badge bg-secondary" th:text="${variant.sizeValue}">Size</span>
-                                    </td>
-                                    <td class="text-end">
-                                        <strong class="text-success"
-                                                th:text="${#numbers.formatDecimal(variant.retailPrice, 0, 'COMMA', 0, 'POINT')}">
-                                            0
-                                        </strong>
-                                    </td>
-                                    <td class="text-center">
-                                        <span th:class="${variant.stockQuantity > 10} ? 'badge bg-success' :
-                                              (${variant.stockQuantity > 0} ? 'badge bg-warning text-dark' : 'badge bg-danger')"
-                                              th:text="${variant.stockQuantity}">
-                                            0
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
-                                        <span th:if="${variant.isActive}" class="badge bg-success">
-                                            <i class="fas fa-check"></i> Active
-                                        </span>
-                                        <span th:unless="${variant.isActive}" class="badge bg-secondary">
-                                            <i class="fas fa-times"></i> Inactive
-                                        </span>
-                                    </td>
-                                    <td class="text-center">
-                                        <div class="btn-group btn-group-sm" role="group">
-                                            <a th:href="@{/admin/variants/{id}/update-stock(id=${variant.variantId})}"
-                                               class="btn btn-outline-primary"
-                                               title="Update Stock">
-                                                <i class="fas fa-boxes"></i>
-                                            </a>
-                                            <a th:href="@{/admin/variants/{id}/update-price(id=${variant.variantId})}"
-                                               class="btn btn-outline-success"
-                                               title="Update Price">
-                                                <i class="fas fa-dollar-sign"></i>
-                                            </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                                </tbody>
-                            </table>
-                        </div>
 
-                        <!-- Variants Summary -->
-                        <div class="row mt-3">
-                            <div class="col-md-4">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <small class="text-muted">Total Variants</small>
-                                        <h4 class="mb-0" th:text="${#lists.size(variants)}">0</h4>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <small class="text-muted">Total Stock</small>
-                                        <h4 class="mb-0" th:text="${#aggregates.sum(variants.![stockQuantity])}">0</h4>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card bg-light">
-                                    <div class="card-body text-center">
-                                        <small class="text-muted">Avg. Price</small>
-                                        <h4 class="mb-0"
-                                            th:text="${#numbers.formatDecimal(#aggregates.avg(variants.![retailPrice]), 0, 'COMMA', 0, 'POINT')}">
-                                            0
-                                        </h4>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div th:if="${variants != null and !#lists.isEmpty(variants)}">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>Màu sắc</th>
+                                <th>Size</th>
+                                <th style="text-align: right;">Giá</th>
+                                <th style="text-align: right;">Tồn kho</th>
+                                <th style="text-align: center;">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="variant : ${variants}">
+                                <td>
+                                    <span class="badge badge-primary" th:text="${variant.color}">Đỏ</span>
+                                </td>
+                                <td>
+                                    <span class="badge badge-muted" th:text="${variant.size}">M</span>
+                                </td>
+                                <td style="text-align: right; font-weight: 600;"
+                                    th:text="${#numbers.formatDecimal(variant.price, 0, 'COMMA', 0, 'POINT')} + '₫'">299.000₫</td>
+                                <td style="text-align: right;">
+                                    <span th:classappend="${variant.stock < 10} ? 'text-warning' : (${variant.stock == 0} ? 'text-danger' : '')"
+                                          th:text="${variant.stock}">100</span>
+                                </td>
+                                <td style="text-align: center;">
+                                    <a th:href="@{/admin/products/{pid}/variants/{vid}/edit-price(pid=${product.productId}, vid=${variant.id})}"
+                                       class="btn btn-xs btn-outline"
+                                       title="Cập nhật giá">
+                                        Giá
+                                    </a>
+                                    <a th:href="@{/admin/products/{pid}/variants/{vid}/edit-stock(pid=${product.productId}, vid=${variant.id})}"
+                                       class="btn btn-xs btn-outline"
+                                       title="Cập nhật tồn kho">
+                                        Kho
+                                    </a>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
 
-                    <!-- No Variants -->
-                    <div th:if="${variants == null or variants.isEmpty()}"
-                         class="text-center text-muted py-5">
-                        <i class="fas fa-box-open fa-3x mb-3"></i>
-                        <p class="mb-3">No variants available for this product.</p>
-                        <a th:href="@{/admin/variants/create(productId=${product.productId})}"
-                           class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Add First Variant
-                        </a>
-                    </div>
+                <div th:if="${variants == null or #lists.isEmpty(variants)}" class="empty-state">
+                    <svg style="width: 48px; height: 48px; margin-bottom: 12px; color: var(--muted);" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    <p>Sản phẩm chưa có biến thể nào</p>
+                    <a th:href="@{/admin/products/{id}/variants/create(id=${product.productId})}"
+                       class="btn btn-primary"
+                       style="margin-top: 12px;">
+                        Thêm variant đầu tiên
+                    </a>
                 </div>
             </div>
+
         </div>
 
-        <!-- Side Panel -->
-        <div class="col-md-4">
-            <!-- Quick Actions -->
-            <div class="card mb-3">
-                <div class="card-header bg-primary text-white">
-                    <i class="fas fa-bolt"></i> Quick Actions
+        <!-- RIGHT COLUMN -->
+        <div class="product-form-right">
+
+            <!-- HÌNH ẢNH -->
+            <div class="form-card">
+                <h3>Hình ảnh sản phẩm</h3>
+
+                <div th:if="${product.imageUrl != null}" style="margin-bottom: 16px;">
+                    <img th:src="${product.imageUrl}"
+                         alt="Product image"
+                         style="width: 100%; border-radius: var(--radius); border: 1px solid var(--border);">
                 </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a th:href="@{/admin/products/{id}/edit(id=${product.productId})}"
-                           class="btn btn-warning">
-                            <i class="fas fa-edit"></i> Edit Product
-                        </a>
-                        <button type="button"
-                                class="btn btn-danger"
-                                data-bs-toggle="modal"
-                                data-bs-target="#deleteModal">
-                            <i class="fas fa-trash"></i> Delete Product
-                        </button>
-                        <a th:href="@{/products/{slug}(slug=${product.productSlug})}"
-                           target="_blank"
-                           class="btn btn-info">
-                            <i class="fas fa-eye"></i> View on Site
-                        </a>
+
+                <div th:if="${product.imageUrl == null}"
+                     style="width: 100%; height: 200px; background: var(--bg); border: 1px dashed var(--border); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 13px;">
+                    Chưa có hình ảnh
+                </div>
+            </div>
+
+            <!-- THỐNG KÊ -->
+            <div class="form-card">
+                <h3>Thống kê</h3>
+
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--bg); border-radius: var(--radius);">
+                        <div style="font-size: 12px; color: var(--muted);">Tổng số variant</div>
+                        <div style="font-size: 16px; font-weight: 700;" th:text="${variants != null ? #lists.size(variants) : 0}">0</div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--bg); border-radius: var(--radius);">
+                        <div style="font-size: 12px; color: var(--muted);">Tổng tồn kho</div>
+                        <div style="font-size: 16px; font-weight: 700;" th:text="${product.stock}">0</div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 10px; background: var(--bg); border-radius: var(--radius);">
+                        <div style="font-size: 12px; color: var(--muted);">Trạng thái</div>
+                        <div>
+                            <span th:if="${product.isActive}" class="badge badge-success">Hoạt động</span>
+                            <span th:unless="${product.isActive}" class="badge badge-muted">Ngưng</span>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Statistics Card -->
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <i class="fas fa-chart-bar"></i> Statistics
-                </div>
-                <div class="card-body">
-                    <div class="mb-2">
-                        <small class="text-muted">Total Value in Stock</small>
-                        <h5 class="mb-0"
-                            th:text="${#numbers.formatDecimal((product.price != null ? product.price : 0) * (product.stock != null ? product.stock : 0), 0, 'COMMA', 0, 'POINT')} + ' VND'">
-                            0 VND
-                        </h5>
+            <!-- THÔNG TIN HỆ THỐNG -->
+            <div class="form-card">
+                <h3>Thông tin hệ thống</h3>
+
+                <div style="font-size: 12px; color: var(--muted); line-height: 1.8;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <strong>ID:</strong>
+                        <span th:text="${product.productId}">1</span>
                     </div>
-                    <hr>
-                    <div class="row text-center">
-                        <div class="col-6">
-                            <small class="text-muted">Views</small>
-                            <p class="mb-0"><strong>N/A</strong></p>
-                        </div>
-                        <div class="col-6">
-                            <small class="text-muted">Orders</small>
-                            <p class="mb-0"><strong>N/A</strong></p>
-                        </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <strong>Ngày tạo:</strong>
+                        <span th:text="${#temporals.format(product.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <strong>Cập nhật:</strong>
+                        <span th:text="${#temporals.format(product.updatedAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span>
                     </div>
                 </div>
             </div>
+
         </div>
     </div>
 
-    <!-- Delete Modal -->
-    <div class="modal fade" id="deleteModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-danger text-white">
-                    <h5 class="modal-title">Confirm Deletion</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <p>Are you sure you want to delete this product?</p>
-                    <div class="alert alert-warning">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <strong>Warning:</strong> This will soft delete the product (set isActive = false).
-                        Data will be retained in the database.
-                    </div>
-                    <p><strong>Product:</strong> <span th:text="${product.productName}">Name</span></p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <form th:action="@{/admin/products/{id}/delete(id=${product.productId})}" method="post">
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash"></i> Delete Product
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 </div>
+
 </body>
 </html>
+
