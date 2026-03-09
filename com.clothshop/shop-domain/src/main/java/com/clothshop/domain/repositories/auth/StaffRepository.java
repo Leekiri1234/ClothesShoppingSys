@@ -33,10 +33,16 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
             "WHERE s.id = :id")
     Optional<Staff> findByIdWithRelations(@Param("id") Long id);
 
+    /**
+     * Find all staff with filters and pagination
+     * Use JOIN FETCH to eagerly load account and role to avoid LazyInitializationException
+     */
     @Query("SELECT s FROM Staff s " +
             "JOIN FETCH s.account a " +
             "JOIN FETCH s.role r " +
-            "WHERE (:keyword IS NULL OR s.fullName LIKE %:keyword% OR a.email LIKE %:keyword% OR a.username LIKE %:keyword%) " +
+            "WHERE (:keyword IS NULL OR LOWER(s.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "   OR LOWER(a.email) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "   OR LOWER(a.username) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
             "AND (:roleId IS NULL OR r.id = :roleId) " +
             "AND (:status IS NULL OR a.accountStatus = :status)")
     Page<Staff> findAllWithFilter(@Param("keyword") String keyword,

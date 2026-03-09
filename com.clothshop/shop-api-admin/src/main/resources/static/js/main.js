@@ -1,285 +1,422 @@
 /**
- * ClothShop Admin - Utility JavaScript Functions
- * Provides common utility functions for admin panel
+ * ClothShop Admin - Main JavaScript
+ * Handles all interactive UI behaviors for admin dashboard
  */
 
-// Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', function() {
-    initializeAutoHideAlerts();
-    initializeConfirmDelete();
-    initializeFormValidation();
-    initializeTooltips();
+// ============================================================
+// 1. GLOBAL STATE
+// ============================================================
+const APP_STATE = {
+  currentPage: 'dashboard',
+  sidebarOpen: false,
+  modalStack: []
+};
+
+// ============================================================
+// 2. DOM READY INITIALIZATION
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  initSidebarNav();
+  initHamburger();
+  initSidebarOverlay();
+  initModals();
+  initToasts();
+  initTables();
+  initForms();
+  initConfirmDelete();
+  console.log('✅ Admin Dashboard JS Initialized');
 });
 
-/**
- * Auto-hide success/error alerts after 5 seconds
- */
-function initializeAutoHideAlerts() {
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(alert);
-            bsAlert.close();
-        }, 5000);
+// ============================================================
+// 3. SIDEBAR NAVIGATION (SPA-like routing)
+// ============================================================
+function initSidebarNav() {
+  const navLinks = document.querySelectorAll('.nav-link');
+  const pages = document.querySelectorAll('.admin-page');
+  const pageTitle = document.querySelector('.page-title');
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', (e) => {
+      const targetPage = link.getAttribute('data-page');
+
+      if (!targetPage) return; // Skip if no data-page
+
+      e.preventDefault();
+
+      // Update active nav
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+
+      // Show target page
+      pages.forEach(p => p.classList.remove('active'));
+      const targetPageEl = document.getElementById(`page-${targetPage}`);
+      if (targetPageEl) {
+        targetPageEl.classList.add('active');
+      }
+
+      // Update header title
+      if (pageTitle) {
+        pageTitle.textContent = link.textContent.trim();
+      }
+
+      // Store state
+      APP_STATE.currentPage = targetPage;
+
+      // Close sidebar on mobile
+      if (window.innerWidth <= 768) {
+        closeSidebar();
+      }
     });
+  });
 }
 
-/**
- * Add confirmation dialog for delete actions
- */
-function initializeConfirmDelete() {
-    const deleteForms = document.querySelectorAll('form[action*="/delete"]');
-    deleteForms.forEach(form => {
-        form.addEventListener('submit', function(e) {
-            if (!confirm('Are you sure you want to delete this item? This action cannot be undone.')) {
-                e.preventDefault();
-                return false;
-            }
-        });
+// ============================================================
+// 4. HAMBURGER MENU (Mobile)
+// ============================================================
+function initHamburger() {
+  const hamburger = document.querySelector('.hamburger-btn');
+  if (!hamburger) return;
+
+  hamburger.addEventListener('click', () => {
+    toggleSidebar();
+  });
+}
+
+function initSidebarOverlay() {
+  const overlay = document.querySelector('.sidebar-overlay');
+  if (!overlay) return;
+
+  overlay.addEventListener('click', () => {
+    closeSidebar();
+  });
+}
+
+function toggleSidebar() {
+  const sidebar = document.querySelector('.admin-sidebar');
+  const overlay = document.querySelector('.sidebar-overlay');
+
+  if (!sidebar) return;
+
+  APP_STATE.sidebarOpen = !APP_STATE.sidebarOpen;
+
+  if (APP_STATE.sidebarOpen) {
+    sidebar.classList.add('open');
+    if (overlay) overlay.classList.add('show');
+  } else {
+    sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('show');
+  }
+}
+
+function closeSidebar() {
+  const sidebar = document.querySelector('.admin-sidebar');
+  const overlay = document.querySelector('.sidebar-overlay');
+
+  if (!sidebar) return;
+
+  APP_STATE.sidebarOpen = false;
+  sidebar.classList.remove('open');
+  if (overlay) overlay.classList.remove('show');
+}
+
+// ============================================================
+// 5. MODALS
+// ============================================================
+function initModals() {
+  // Auto-bind modal triggers
+  document.querySelectorAll('[data-modal]').forEach(trigger => {
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      const modalId = trigger.getAttribute('data-modal');
+      openModal(modalId);
     });
-}
+  });
 
-/**
- * Client-side form validation
- */
-function initializeFormValidation() {
-    const forms = document.querySelectorAll('.needs-validation');
-    forms.forEach(form => {
-        form.addEventListener('submit', function(event) {
-            if (!form.checkValidity()) {
-                event.preventDefault();
-                event.stopPropagation();
-            }
-            form.classList.add('was-validated');
-        }, false);
+  // Close buttons
+  document.querySelectorAll('.modal-close').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const modal = btn.closest('.modal-overlay');
+      if (modal) closeModal(modal.id);
     });
-}
+  });
 
-/**
- * Initialize Bootstrap tooltips
- */
-function initializeTooltips() {
-    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+  // Click outside to close
+  document.querySelectorAll('.modal-overlay').forEach(overlay => {
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        closeModal(overlay.id);
+      }
     });
+  });
 }
 
-/**
- * Format currency value
- * @param {number} value - The numeric value to format
- * @param {string} currency - Currency code (default: USD)
- * @returns {string} Formatted currency string
- */
-function formatCurrency(value, currency = 'USD') {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: currency
-    }).format(value);
+function openModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+
+  modal.classList.add('open');
+  APP_STATE.modalStack.push(modalId);
+  document.body.style.overflow = 'hidden';
 }
 
-/**
- * Format date to localized string
- * @param {Date|string} date - The date to format
- * @returns {string} Formatted date string
- */
-function formatDate(date) {
-    const d = new Date(date);
-    return d.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    });
+function closeModal(modalId) {
+  const modal = document.getElementById(modalId);
+  if (!modal) return;
+
+  modal.classList.remove('open');
+  APP_STATE.modalStack = APP_STATE.modalStack.filter(id => id !== modalId);
+
+  if (APP_STATE.modalStack.length === 0) {
+    document.body.style.overflow = '';
+  }
 }
 
-/**
- * Format datetime to localized string
- * @param {Date|string} datetime - The datetime to format
- * @returns {string} Formatted datetime string
- */
-function formatDateTime(datetime) {
-    const d = new Date(datetime);
-    return d.toLocaleString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+// ============================================================
+// 6. TOAST NOTIFICATIONS
+// ============================================================
+function initToasts() {
+  // Auto-dismiss existing toasts
+  document.querySelectorAll('.toast').forEach(toast => {
+    setTimeout(() => toast.remove(), 5000);
+  });
 }
 
-/**
- * Show loading spinner
- * @param {string} elementId - ID of element to show spinner in
- */
-function showLoading(elementId) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.innerHTML = `
-            <div class="text-center p-4">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-            </div>
-        `;
-    }
-}
-
-/**
- * Hide loading spinner
- * @param {string} elementId - ID of element to hide spinner from
- * @param {string} content - Content to replace spinner with
- */
-function hideLoading(elementId, content = '') {
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.innerHTML = content;
-    }
-}
-
-/**
- * Show toast notification
- * @param {string} message - Message to display
- * @param {string} type - Toast type (success, error, warning, info)
- */
 function showToast(message, type = 'info') {
-    const toastHTML = `
-        <div class="toast align-items-center text-white bg-${type === 'error' ? 'danger' : type} border-0" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body">
-                    ${message}
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        </div>
-    `;
+  const container = document.querySelector('.toast-container') || createToastContainer();
 
-    // Create toast container if it doesn't exist
-    let toastContainer = document.getElementById('toastContainer');
-    if (!toastContainer) {
-        toastContainer = document.createElement('div');
-        toastContainer.id = 'toastContainer';
-        toastContainer.className = 'toast-container position-fixed top-0 end-0 p-3';
-        document.body.appendChild(toastContainer);
-    }
+  const toast = document.createElement('div');
+  toast.className = `toast toast-${type}`;
+  toast.textContent = message;
 
-    // Add toast to container
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = toastHTML;
-    const toastElement = tempDiv.firstElementChild;
-    toastContainer.appendChild(toastElement);
+  container.appendChild(toast);
 
-    // Show toast
-    const toast = new bootstrap.Toast(toastElement);
-    toast.show();
+  setTimeout(() => toast.remove(), 5000);
+}
 
-    // Remove toast after it's hidden
-    toastElement.addEventListener('hidden.bs.toast', function() {
-        toastElement.remove();
+function createToastContainer() {
+  const container = document.createElement('div');
+  container.className = 'toast-container';
+  document.body.appendChild(container);
+  return container;
+}
+
+// ============================================================
+// 7. TABLE INTERACTIONS
+// ============================================================
+function initTables() {
+  initTableSort();
+  initTableRowSelect();
+  initExpandableRows();
+}
+
+function initTableSort() {
+  document.querySelectorAll('.admin-table th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const table = th.closest('table');
+      const column = th.getAttribute('data-sort');
+      sortTable(table, column);
     });
+  });
 }
 
-/**
- * Copy text to clipboard
- * @param {string} text - Text to copy
- */
-function copyToClipboard(text) {
-    navigator.clipboard.writeText(text).then(function() {
-        showToast('Copied to clipboard!', 'success');
-    }, function(err) {
-        showToast('Failed to copy: ' + err, 'error');
+function sortTable(table, column) {
+  // Simple client-side sort - can be replaced with server-side
+  const tbody = table.querySelector('tbody');
+  const rows = Array.from(tbody.querySelectorAll('tr'));
+
+  rows.sort((a, b) => {
+    const aVal = a.querySelector(`td[data-col="${column}"]`)?.textContent || '';
+    const bVal = b.querySelector(`td[data-col="${column}"]`)?.textContent || '';
+    return aVal.localeCompare(bVal);
+  });
+
+  rows.forEach(row => tbody.appendChild(row));
+}
+
+function initTableRowSelect() {
+  document.querySelectorAll('.admin-table tbody tr').forEach(row => {
+    row.addEventListener('click', (e) => {
+      if (e.target.tagName === 'BUTTON' || e.target.tagName === 'A') return;
+      row.classList.toggle('selected-row');
     });
+  });
 }
 
-/**
- * Debounce function to limit rate of function calls
- * @param {Function} func - Function to debounce
- * @param {number} wait - Wait time in milliseconds
- * @returns {Function} Debounced function
- */
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
+function initExpandableRows() {
+  document.querySelectorAll('.order-expand-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tr = btn.closest('tr');
+      const detailRow = tr.nextElementSibling;
+
+      if (detailRow && detailRow.classList.contains('order-detail-row')) {
+        detailRow.style.display = detailRow.style.display === 'none' ? 'table-row' : 'none';
+        btn.classList.toggle('open');
+      }
+    });
+  });
 }
 
-/**
- * Sanitize HTML to prevent XSS
- * @param {string} html - HTML string to sanitize
- * @returns {string} Sanitized HTML
- */
-function sanitizeHTML(html) {
-    const div = document.createElement('div');
-    div.textContent = html;
-    return div.innerHTML;
+// ============================================================
+// 8. FORMS & INPUT HANDLING
+// ============================================================
+function initForms() {
+  initFormValidation();
+  initToggleSwitches();
+  initChipInputs();
+  initFileUploads();
 }
 
-/**
- * Get CSRF token from meta tag or form
- * @returns {string|null} CSRF token value
- */
-function getCsrfToken() {
-    const tokenMeta = document.querySelector('meta[name="_csrf"]');
-    if (tokenMeta) {
-        return tokenMeta.getAttribute('content');
-    }
-
-    const tokenInput = document.querySelector('input[name="_csrf"]');
-    if (tokenInput) {
-        return tokenInput.value;
-    }
-
-    return null;
+function initFormValidation() {
+  document.querySelectorAll('form[data-validate]').forEach(form => {
+    form.addEventListener('submit', (e) => {
+      if (!form.checkValidity()) {
+        e.preventDefault();
+        showToast('Vui lòng điền đầy đủ thông tin', 'warning');
+      }
+    });
+  });
 }
 
-/**
- * Make AJAX request with CSRF token
- * @param {string} url - Request URL
- * @param {string} method - HTTP method
- * @param {Object} data - Request data
- * @returns {Promise} Fetch promise
- */
-function ajaxRequest(url, method = 'GET', data = null) {
-    const headers = {
-        'Content-Type': 'application/json'
-    };
-
-    const csrfToken = getCsrfToken();
-    if (csrfToken) {
-        headers['X-CSRF-TOKEN'] = csrfToken;
-    }
-
-    const options = {
-        method: method,
-        headers: headers
-    };
-
-    if (data && method !== 'GET') {
-        options.body = JSON.stringify(data);
-    }
-
-    return fetch(url, options);
+function initToggleSwitches() {
+  document.querySelectorAll('.toggle-switch input[type="checkbox"]').forEach(input => {
+    input.addEventListener('change', () => {
+      console.log(`Toggle changed: ${input.checked}`);
+      // Implement your logic here (e.g., AJAX call to update status)
+    });
+  });
 }
 
-// Export functions for use in other scripts
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        formatCurrency,
-        formatDate,
-        formatDateTime,
-        showLoading,
-        hideLoading,
-        showToast,
-        copyToClipboard,
-        debounce,
-        sanitizeHTML,
-        getCsrfToken,
-        ajaxRequest
-    };
+function initChipInputs() {
+  document.querySelectorAll('.chip-input-row').forEach(row => {
+    const input = row.querySelector('input');
+    const container = row.nextElementSibling;
+
+    if (!input || !container) return;
+
+    input.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const value = input.value.trim();
+        if (value) {
+          addChip(container, value);
+          input.value = '';
+        }
+      }
+    });
+  });
 }
+
+function addChip(container, value) {
+  const chip = document.createElement('div');
+  chip.className = 'chip';
+  chip.innerHTML = `
+    <span>${value}</span>
+    <button type="button" class="chip-remove" onclick="this.parentElement.remove()">×</button>
+  `;
+  container.appendChild(chip);
+}
+
+function initFileUploads() {
+  document.querySelectorAll('.upload-zone, .image-thumb-zone').forEach(zone => {
+    zone.addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          handleFileUpload(zone, file);
+        }
+      };
+      input.click();
+    });
+  });
+}
+
+function handleFileUpload(zone, file) {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    zone.style.backgroundImage = `url(${e.target.result})`;
+    zone.style.backgroundSize = 'cover';
+    zone.style.backgroundPosition = 'center';
+    zone.textContent = '';
+    showToast(`Đã tải lên: ${file.name}`, 'success');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ============================================================
+// 9. CONFIRM DELETE
+// ============================================================
+function initConfirmDelete() {
+  document.querySelectorAll('[data-confirm-delete]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      if (!confirm('Bạn có chắc chắn muốn xóa? Hành động này không thể hoàn tác.')) {
+        e.preventDefault();
+      }
+    });
+  });
+}
+
+// ============================================================
+// 10. UTILITY FUNCTIONS (Public API)
+// ============================================================
+window.AdminUI = {
+  openModal,
+  closeModal,
+  showToast,
+  toggleSidebar,
+  closeSidebar
+};
+
+// ============================================================
+// 11. CHART RENDERING (Simple SVG Bar Chart)
+// ============================================================
+function renderBarChart(containerId, data) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  const width = container.clientWidth;
+  const height = 200;
+  const maxValue = Math.max(...data.map(d => d.value));
+  const barWidth = width / data.length;
+
+  let svg = `<svg width="${width}" height="${height}" style="display: block;">`;
+
+  data.forEach((item, i) => {
+    const barHeight = (item.value / maxValue) * (height - 30);
+    const x = i * barWidth + barWidth * 0.2;
+    const y = height - barHeight - 20;
+
+    svg += `<rect class="chart-bar" x="${x}" y="${y}" width="${barWidth * 0.6}" height="${barHeight}" fill="var(--primary)" rx="2"/>`;
+  });
+
+  svg += '</svg>';
+  container.innerHTML = svg;
+}
+
+// Note: Call renderBarChart() from your page-specific scripts with actual data from backend
+// Example: renderBarChart('revenueChart', chartDataFromBackend);
+
+// ============================================================
+// 12. FILTER TABS
+// ============================================================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    // Implement filter logic here
+  });
+});
+
+// ============================================================
+// 13. DATE RANGE SELECTOR
+// ============================================================
+document.querySelectorAll('.range-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    // Implement date range logic here
+  });
+});
+

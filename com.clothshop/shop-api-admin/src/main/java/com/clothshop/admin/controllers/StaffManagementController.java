@@ -104,7 +104,8 @@ public class StaffManagementController {
         StaffResponse staff = staffService.getStaffById(id);
 
         // Đưa dữ liệu vào form (Lưu ý: Thymeleaf sẽ map các field tương ứng)
-        model.addAttribute("staffRequest", staff);
+        model.addAttribute("staff", staff); // For display in template
+        model.addAttribute("staffRequest", staff); // For form binding
         model.addAttribute("roles", roleRepository.findAll());
         return "admin/staff/edit";
     }
