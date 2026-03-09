@@ -6,12 +6,8 @@
     <title th:text="${pageTitle}">Form Bộ Sưu Tập</title>
 </head>
 <body>
-    <div layout:fragment="page-title">
-        <h1 class="h2">
-            <i th:class="${collectionDTO.id == null ? 'fas fa-plus-circle' : 'fas fa-edit'}"></i>
-            <span th:text="${pageTitle}">Form Bộ Sưu Tập</span>
-        </h1>
-    </div>
+
+<h1 layout:fragment="page-title" th:text="${pageTitle}">Form Bộ Sưu Tập</h1>
 
     <div layout:fragment="content">
         <div class="card shadow-sm">

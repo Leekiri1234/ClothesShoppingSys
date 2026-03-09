@@ -32,9 +32,9 @@ public interface CollectionItemRepository extends JpaRepository<CollectionItem, 
 
     // Lấy danh sách CollectionItem với Product (JOIN FETCH để tránh N+1 và LazyInitializationException)
     // Note: Không thể fetch cả images và variants cùng lúc (MultipleBagFetchException)
+    // Solution: Fetch category first, images will be loaded lazily if needed
     @Query("SELECT DISTINCT ci FROM CollectionItem ci " +
            "JOIN FETCH ci.product p " +
-           "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.category " +
            "WHERE ci.collection.id = :collectionId AND ci.isActive = true " +
            "ORDER BY ci.displayOrder ASC")

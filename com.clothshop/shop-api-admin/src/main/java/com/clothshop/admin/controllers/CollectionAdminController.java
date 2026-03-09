@@ -11,6 +11,7 @@ import com.clothshop.domain.entities.product.Product;
 import com.clothshop.domain.repositories.marketing.CollectionItemRepository;
 import com.clothshop.domain.repositories.marketing.CollectionRepository;
 import com.clothshop.domain.repositories.product.ProductRepository;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -146,6 +147,7 @@ public class CollectionAdminController {
      * Màn hình Gán Sản Phẩm (Hiển thị 2 bảng: Sản phẩm đang có và Sản phẩm có thể thêm)
      */
     @GetMapping("/{id}/assign")
+    @Transactional
     public String showAssignPage(@PathVariable Long id, Model model) {
         // Lấy thông tin Collection
         Collection collection = collectionRepository.findById(id)
@@ -154,10 +156,35 @@ public class CollectionAdminController {
         // Lấy danh sách sản phẩm ĐÃ nằm trong bộ sưu tập (JOIN FETCH Product để tránh LazyInitializationException)
         List<CollectionItem> currentItems = collectionItemRepository.findActiveItemsWithProductByCollectionId(id);
 
+        // Initialize lazy collections (images and variants) to avoid LazyInitializationException
+        currentItems.forEach(item -> {
+            Product product = item.getProduct();
+            if (product != null) {
+                // Force initialization of images collection
+                if (product.getImages() != null) {
+                    product.getImages().size();
+                }
+                // Force initialization of variants collection
+                if (product.getVariants() != null) {
+                    product.getVariants().size();
+                }
+            }
+        });
+
         // Lấy danh sách TOÀN BỘ sản phẩm đang kinh doanh để Marketing chọn.
         // JOIN FETCH images, category, variants để tránh LazyInitializationException
         Pageable top100 = PageRequest.of(0, 100);
         List<Product> availableProducts = productRepository.findTop100ActiveProductsWithDetails(top100);
+
+        // Initialize lazy collections for available products
+        availableProducts.forEach(product -> {
+            if (product.getImages() != null) {
+                product.getImages().size();
+            }
+            if (product.getVariants() != null) {
+                product.getVariants().size();
+            }
+        });
 
         model.addAttribute("collection", collection);
         model.addAttribute("currentItems", currentItems);

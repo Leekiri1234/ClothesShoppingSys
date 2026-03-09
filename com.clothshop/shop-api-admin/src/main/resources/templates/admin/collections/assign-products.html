@@ -4,6 +4,10 @@
       layout:decorate="~{layouts/layout}">
 <head>
     <title>Gán sản phẩm vào Bộ Sưu Tập</title>
+</head>
+<body>
+
+<div layout:fragment="styles">
     <style>
         .product-card {
             border: 1px solid #dee2e6;
@@ -73,13 +77,9 @@
             margin-bottom: 20px;
         }
     </style>
-</head>
-<body>
-<div layout:fragment="page-title">
-    <h1 class="h2">
-        <i class="fas fa-link"></i> Gán Sản Phẩm vào Bộ Sưu Tập
-    </h1>
 </div>
+
+<h1 layout:fragment="page-title">Gán Sản Phẩm vào Bộ Sưu Tập</h1>
 
 <!-- KHỐI CONTENT CHÍNH -->
 <div layout:fragment="content">
@@ -158,7 +158,7 @@
                         <td>
                             <!-- VINH LẬP CHÙA FIX: Smart Image Src cho Bảng 1 -->
                             <img th:if="${not #lists.isEmpty(item.product.images) and item.product.images[0].imageUrl != null and item.product.images[0].imageUrl != 'undefined'}"
-                                 th:src="${#strings.startsWith(item.product.images[0].imageUrl, 'http')} ? ${item.product.images[0].imageUrl} : @{'/images/' + ${item.product.images[0].imageUrl}}"
+                                 th:src="${#strings.startsWith(item.product.images[0].imageUrl, 'http') ? item.product.images[0].imageUrl : '/images/' + item.product.images[0].imageUrl}"
                                  alt="Product Image"
                                  class="rounded"
                                  style="width: 60px; height: 60px; object-fit: cover;">
@@ -254,17 +254,14 @@
                                        type="checkbox"
                                        name="productIds"
                                        th:value="${product.id}"
-                                       th:id="'product-' + ${product.id}"
-                                       th:disabled="${#lists.contains(currentItems.![product.id], product.id)}">
+                                       th:id="'product-' + ${product.id}">
                                 <label class="form-check-label fw-bold" th:for="'product-' + ${product.id}">
-                                        <span th:if="${#lists.contains(currentItems.![product.id], product.id)}"
-                                              class="badge bg-secondary">Đã có</span>
                                 </label>
                             </div>
 
                             <!-- Smart Image Src cho Bảng 2 -->
                             <img th:if="${not #lists.isEmpty(product.images) and product.images[0].imageUrl != null and product.images[0].imageUrl != 'undefined'}"
-                                 th:src="${#strings.startsWith(product.images[0].imageUrl, 'http')} ? ${product.images[0].imageUrl} : @{'/images/' + ${product.images[0].imageUrl}}"
+                                 th:src="${#strings.startsWith(product.images[0].imageUrl, 'http') ? product.images[0].imageUrl : '/images/' + product.images[0].imageUrl}"
                                  alt="Product Image"
                                  class="product-image mb-2">
 
@@ -338,8 +335,10 @@
             </div>
         </div>
     </div>
+</div>
 
-    <!-- VINH LẬP CHÙA FIX: Di chuyển <script> vào thẳng trong khối content để đảm bảo nó luôn được Load -->
+<!-- Scripts Fragment -->
+<div layout:fragment="scripts">
     <script th:inline="javascript">
         document.addEventListener('DOMContentLoaded', function() {
             // Handle checkbox selection
@@ -439,5 +438,6 @@
         });
     </script>
 </div>
+
 </body>
 </html>

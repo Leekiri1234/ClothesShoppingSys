@@ -23,10 +23,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.variants")
     List<Product> findAllProductsWithVariants();
 
-    // Query với JOIN FETCH để load images và category (tránh N+1 và LazyInitializationException)
-    // Note: Không thể fetch cả images và variants cùng lúc (MultipleBagFetchException - Hibernate limitation)
+    // Query với JOIN FETCH category (tránh N+1)
+    // Note: Không fetch images và variants ở đây để tránh MultipleBagFetchException
+    // Controller sẽ initialize lazy collections khi cần
     @Query("SELECT DISTINCT p FROM Product p " +
-           "LEFT JOIN FETCH p.images " +
            "LEFT JOIN FETCH p.category " +
            "WHERE p.isActive = true " +
            "ORDER BY p.createdAt DESC")
