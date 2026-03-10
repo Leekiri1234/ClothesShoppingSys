@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+  <title th:text="${collection.name} + ' - ClothShop'"></title>
+</head>
+<body>
+<div layout:fragment="content" class="container py-5">
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
+      <li class="breadcrumb-item"><a th:href="@{/collections}">Collections</a></li>
+      <li class="breadcrumb-item active" aria-current="page" th:text="${collection.name}">Collection Name</li>
+    </ol>
+  </nav>
+
+  <div class="text-center mb-5">
+    <h1 class="display-4 fw-bold" th:text="${collection.name}">Collection Name</h1>
+    <p class="lead text-muted mx-auto" style="max-width: 700px;" th:text="${collection.description}"></p>
+    <hr class="short-hr mx-auto" style="width: 50px; border-top: 3px solid #333;">
+  </div>
+
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+    <div class="col" th:each="product : ${collection.products}">
+      <div class="card h-100 border-0 shadow-sm product-card">
+        <a th:href="@{/products/{slug}(slug=${product.slug})}" class="text-decoration-none">
+          <div class="position-relative overflow-hidden">
+                        <span th:if="${!product.available}"
+                              class="badge bg-danger position-absolute top-0 end-0 m-2" style="z-index: 1;">
+                            Out of Stock
+                        </span>
+
+            <img th:src="${product.thumbnail != null ? product.thumbnail : '/images/no-image.png'}"
+                 class="card-img-top img-fluid"
+                 th:alt="${product.name}"
+                 style="height: 300px; object-fit: cover; transition: transform 0.3s ease;">
+          </div>
+
+          <div class="card-body text-center pt-3">
+            <p class="text-uppercase text-muted small mb-1" th:text="${product.categoryName}">Category</p>
+            <h5 class="card-title text-dark fw-bold mb-2" th:text="${product.name}">Product Name</h5>
+
+            <div class="product-price">
+                            <span class="text-danger fw-bold"
+                                  th:text="${#numbers.formatDecimal(product.minPrice, 0, 'COMMA', 0, 'POINT')} + ' VND'">
+                                0 VND
+                            </span>
+              <small th:if="${product.originalPrice > product.minPrice}"
+                     class="text-muted text-decoration-line-through ms-1"
+                     th:text="${#numbers.formatDecimal(product.originalPrice, 0, 'COMMA', 0, 'POINT')}">
+              </small>
+            </div>
+          </div>
+        </a>
+        <div class="card-footer bg-transparent border-0 pb-3 text-center">
+          <a th:href="@{/products/{slug}(slug=${product.slug})}"
+             class="btn btn-outline-dark btn-sm px-4 rounded-pill">
+            View Details
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div th:if="${#lists.isEmpty(collection.products)}" class="text-center py-5">
+    <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+    <p class="lead text-muted">No products found in this collection.</p>
+    <a th:href="@{/products}" class="btn btn-dark">Shop All Products</a>
+  </div>
+</div>
+
+<th:block layout:fragment="scripts">
+  <style>
+    .product-card:hover img {
+      transform: scale(1.05);
+    }
+    .product-card {
+      transition: all 0.3s ease;
+    }
+    .product-card:hover {
+      transform: translateY(-5px);
+    }
+  </style>
+</th:block>
+</body>
+</html>
