@@ -279,6 +279,11 @@ function initFormValidation() {
 
 function initToggleSwitches() {
   document.querySelectorAll('.toggle-switch input[type="checkbox"]').forEach(input => {
+    // Skip if element already has an onchange handler
+    if (input.hasAttribute('onchange')) {
+      return;
+    }
+
     input.addEventListener('change', () => {
       console.log(`Toggle changed: ${input.checked}`);
       // Implement your logic here (e.g., AJAX call to update status)

@@ -171,7 +171,8 @@
                         <label class="toggle-switch">
                             <input type="checkbox"
                                    th:checked="${staff.accountStatus?.name() == 'ACTIVE'}"
-                                   onchange="toggleStaffStatus(this, [[${staff.id}]])"
+                                   th:data-staff-id="${staff.id}"
+                                   th:onchange="'toggleStaffStatus(this, ' + ${staff.id} + ')'"
                                    sec:authorize="hasRole('SUPER_ADMIN')">
                             <span class="toggle-slider"></span>
                         </label>
@@ -189,16 +190,7 @@
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                 </svg>
                             </a>
-                            <button class="btn btn-xs btn-danger"
-                                    data-confirm-delete
-                                    onclick="deleteStaff([[${staff.id}]])"
-                                    title="Xóa"
-                                    sec:authorize="hasRole('SUPER_ADMIN')">
-                                <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24">
-                                    <polyline points="3 6 5 6 21 6"/>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                </svg>
-                            </button>
+                            <!-- Delete button removed - Use toggle switch above to deactivate instead -->
                         </div>
                     </td>
                 </tr>
@@ -233,6 +225,14 @@
 
 <div layout:fragment="scripts">
 <script>
+// Helper function to read cookie value
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
 // Debounce timer for search
 let searchDebounceTimer;
 
@@ -287,61 +287,84 @@ function goToPage(page) {
     window.location.href = url.toString();
 }
 
-// Toggle staff status
+// Toggle staff status (from toggle switch in list)
 function toggleStaffStatus(checkbox, staffId) {
-    const isActive = checkbox.checked;
-    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
+    console.log('🔵 LIST: toggleStaffStatus called');
+    console.log('🔵 checkbox.checked:', checkbox.checked);
+    console.log('🔵 staffId:', staffId);
 
-    fetch(`/admin/staff/${staffId}/toggle-status`, {
+    const isActive = checkbox.checked;
+
+    // Debug: Check all available cookies
+    console.log('🔵 All cookies:', document.cookie);
+
+    // Try to read CSRF token from multiple sources
+    const csrfTokenFromCookie = getCookie('XSRF-TOKEN');
+    const csrfTokenFromMeta = document.querySelector('meta[name="_csrf"]')?.content;
+    const csrfHeaderFromMeta = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+    console.log('🔵 isActive:', isActive);
+    console.log('🔵 CSRF token from cookie (XSRF-TOKEN):', csrfTokenFromCookie || '❌ NULL');
+    console.log('🔵 CSRF token from meta tag:', csrfTokenFromMeta || '❌ NULL');
+    console.log('🔵 CSRF header from meta tag:', csrfHeaderFromMeta || '❌ NULL');
+
+    // Use cookie token first, fallback to meta tag
+    const csrfToken = csrfTokenFromCookie || csrfTokenFromMeta;
+    const csrfHeader = csrfHeaderFromMeta || 'X-XSRF-TOKEN';
+
+    if (!csrfToken) {
+        console.error('❌ CSRF token not found in both cookie and meta tag!');
+        AdminUI.showToast('Lỗi: Không tìm thấy CSRF token!', 'error');
+        checkbox.checked = !isActive;
+        return;
+    }
+
+    const endpoint = `/admin/staff/toggle/${staffId}`;
+    console.log('🔵 Calling endpoint:', endpoint);
+    console.log('🔵 Using CSRF token:', csrfToken);
+    console.log('🔵 Sending via header:', csrfHeader);
+
+    // Prepare headers
+    const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    };
+    headers[csrfHeader] = csrfToken;
+
+    console.log('🔵 Request headers:', headers);
+
+    fetch(endpoint, {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken
-        },
-        body: JSON.stringify({ isActive: isActive })
+        headers: headers
     })
     .then(response => {
+        console.log('🔵 Response status:', response.status);
+        console.log('🔵 Response ok:', response.ok);
+
         if (response.ok) {
-            AdminUI.showToast(isActive ? 'Đã kích hoạt nhân viên' : 'Đã vô hiệu hóa nhân viên', 'success');
+            const message = isActive
+                ? 'Đã kích hoạt tài khoản nhân viên'
+                : 'Đã vô hiệu hóa tài khoản nhân viên';
+            AdminUI.showToast(message, 'success');
+
+            // Reload to update badge status
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
         } else {
-            checkbox.checked = !isActive; // Revert
+            console.error('❌ Response not OK, status:', response.status);
+            checkbox.checked = !isActive; // Revert on error
+            response.text().then(text => console.error('Response body:', text));
             throw new Error('Failed to toggle status');
         }
     })
     .catch(error => {
-        AdminUI.showToast('Không thể thay đổi trạng thái', 'danger');
-        checkbox.checked = !isActive; // Revert
+        console.error('❌ Fetch error:', error);
+        AdminUI.showToast('Không thể thay đổi trạng thái!', 'error');
+        checkbox.checked = !isActive; // Revert on error
     });
 }
 
-// Delete staff
-function deleteStaff(staffId) {
-    if (!confirm('Bạn có chắc chắn muốn xóa nhân viên này? Hành động này không thể hoàn tác!')) {
-        return;
-    }
-
-    const csrfToken = document.querySelector('meta[name="_csrf"]').content;
-
-    fetch(`/admin/staff/${staffId}`, {
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': csrfToken
-        }
-    })
-    .then(response => {
-        if (response.ok) {
-            AdminUI.showToast('Đã xóa nhân viên thành công', 'success');
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
-        } else {
-            throw new Error('Delete failed');
-        }
-    })
-    .catch(error => {
-        AdminUI.showToast('Không thể xóa nhân viên', 'danger');
-    });
-}
+// deleteStaff function removed - Use toggle switch for deactivation instead
 
 // Select all checkbox
 document.getElementById('selectAll')?.addEventListener('change', function() {
