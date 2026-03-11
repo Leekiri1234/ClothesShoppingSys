@@ -181,22 +181,22 @@ public class FeaturedCollectionService {
     /**
      * Tìm collection theo slug (Optimized với ID parsing)
      */
-    @Transactional(readOnly = true)
-    public Collection findBySlug(String slug) {
-        Long id = parseIdFromSlug(slug);
-
-        if (id != null) {
-            return collectionRepository.findById(id)
-                    .orElseThrow(() -> new BusinessException(
-                            ErrorCode.RESOURCE_NOT_FOUND,
-                            "Không tìm thấy bộ sưu tập với slug: " + slug));
-        }
-
-        return collectionRepository.findBySlug(slug)
-                .orElseThrow(() -> new BusinessException(
-                        ErrorCode.RESOURCE_NOT_FOUND,
-                        "Không tìm thấy bộ sưu tập với slug: " + slug));
-    }
+//    @Transactional(readOnly = true)
+//    public Collection findBySlug(String slug) {
+//        Long id = parseIdFromSlug(slug);
+//
+//        if (id != null) {
+//            return collectionRepository.findById(id)
+//                    .orElseThrow(() -> new BusinessException(
+//                            ErrorCode.RESOURCE_NOT_FOUND,
+//                            "Không tìm thấy bộ sưu tập với slug: " + slug));
+//        }
+//
+////        return collectionRepository.findBySlug(slug)
+////                .orElseThrow(() -> new BusinessException(
+////                        ErrorCode.RESOURCE_NOT_FOUND,
+////                        "Không tìm thấy bộ sưu tập với slug: " + slug));
+//    }
 
     /**
      * Helper method: Map Collection entity sang CollectionResponse với itemCount
