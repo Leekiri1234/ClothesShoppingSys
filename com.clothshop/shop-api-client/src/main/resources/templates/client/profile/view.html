@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Thông tin tài khoản - ClothShop</title>
+</head>
+<body>
+<div layout:fragment="content" class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                <span th:text="${success}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0">Hồ sơ cá nhân</h4>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row mb-3">
+                        <div class="col-sm-3 text-muted">Tên đăng nhập:</div>
+                        <div class="col-sm-9 fw-bold" th:text="${profile.username}">username</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3 text-muted">Email:</div>
+                        <div class="col-sm-9 fw-bold" th:text="${profile.email}">email@domain.com</div>
+                    </div>
+                    <hr>
+                    <div class="row mb-3">
+                        <div class="col-sm-3 text-muted">Họ và tên:</div>
+                        <div class="col-sm-9" th:text="${profile.fullName}">Họ Tên</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-sm-3 text-muted">Số điện thoại:</div>
+                        <div class="col-sm-9" th:text="${profile.phone != null ? profile.phone : 'Chưa cập nhật'}">09xx</div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-sm-3 text-muted">Địa chỉ:</div>
+                        <div class="col-sm-9" th:text="${profile.address != null ? profile.address : 'Chưa cập nhật'}">Địa chỉ</div>
+                    </div>
+
+                    <div class="text-end">
+                        <a th:href="@{/profile/edit}" class="btn btn-dark px-4">Chỉnh sửa thông tin</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
