@@ -1,15 +1,20 @@
 package com.clothshop.client.controllers;
 
+import com.clothshop.client.dtos.request.ProductSearchRequest;
+import com.clothshop.client.dtos.response.CategoryResponse;
 import com.clothshop.client.dtos.response.ProductDetailResponse;
 import com.clothshop.client.dtos.response.ProductListResponse;
+import com.clothshop.client.services.CategoryClientService;
 import com.clothshop.client.services.ProductClientService;
-import com.clothshop.common.dtos.request.PagingRequest;
-import com.clothshop.common.dtos.response.PageResponse;
+import com.clothshop.client.services.ProductSearchService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/products")
@@ -18,98 +23,58 @@ import org.springframework.web.bind.annotation.*;
 public class ProductClientController {
 
     private final ProductClientService productClientService;
+    private final ProductSearchService productSearchService;
+    private final CategoryClientService categoryClientService;
 
-    /**
-     * Danh sách sản phẩm chung.
-     */
+    @ModelAttribute("allCategories")
+    public List<CategoryResponse> populateCategories() {
+        return categoryClientService.getAllActiveCategories();
+    }
+
     @GetMapping
     public String listProducts(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) String collection,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            @RequestParam(defaultValue = "createdAt") String sortBy,
-            @RequestParam(defaultValue = "DESC") String direction,
+            @RequestParam(defaultValue = "12") int size,
             Model model) {
 
-        // Build PagingRequest khớp với các field mới em đã sửa
-        PagingRequest pagingRequest = PagingRequest.builder()
-                .pageNumber(page)
-                .pageSize(size)
-                .sortBy(sortBy)
-                .sortDirection(direction)
+        ProductSearchRequest searchRequest = ProductSearchRequest.builder()
+                .keyword(q != null && !q.isBlank() ? q.trim() : null)
+                .categoryId(categoryId)
+                .collectionSlug(collection)
+                .page(page)
+                .size(size)
                 .build();
 
-        PageResponse<ProductListResponse> products = productClientService.getAllActiveProducts(pagingRequest);
+        Page<ProductListResponse> productPage = productSearchService.search(searchRequest);
 
-        model.addAttribute("products", products);
-        model.addAttribute("pageTitle", "Tất cả sản phẩm");
+        model.addAttribute("products", productPage);
+        model.addAttribute("keyword", q);
+        model.addAttribute("currentCategoryId", categoryId);
+        model.addAttribute("pageTitle", resolvePageTitle(q, categoryId));
 
         return "client/products/list";
     }
 
-    /**
-     * Chi tiết sản phẩm qua Slug (SEO Friendly).
-     */
+    @GetMapping("/category/{id}")
+    public String productsByCategoryId(@PathVariable Long id) {
+        return "redirect:/products?categoryId=" + id;
+    }
+
+    // Trang chi tiết sản phẩm (Giữ nguyên vì đã chuẩn)
     @GetMapping("/{slug}")
     public String productDetail(@PathVariable String slug, Model model) {
         ProductDetailResponse product = productClientService.getProductBySlug(slug);
-
         model.addAttribute("product", product);
         model.addAttribute("pageTitle", product.getProductName());
-
         return "client/products/detail";
     }
 
-    /**
-     * Lọc sản phẩm theo Category.
-     */
-    @GetMapping("/category/{categorySlug}")
-    public String productsByCategory(
-            @PathVariable String categorySlug,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            Model model) {
-
-        PagingRequest pagingRequest = PagingRequest.builder()
-                .pageNumber(page)
-                .pageSize(size)
-                .sortBy("createdAt")
-                .sortDirection("DESC")
-                .build();
-
-        PageResponse<ProductListResponse> products =
-                productClientService.getProductsByCategory(categorySlug, pagingRequest);
-
-        model.addAttribute("products", products);
-        model.addAttribute("categorySlug", categorySlug);
-        model.addAttribute("pageTitle", "Danh mục: " + categorySlug);
-
-        return "client/products/category";
-    }
-
-    /**
-     * Tìm kiếm sản phẩm.
-     */
-    @GetMapping("/search")
-    public String searchProducts(
-            @RequestParam(name = "q") String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size,
-            Model model) {
-
-        PagingRequest pagingRequest = PagingRequest.builder()
-                .pageNumber(page)
-                .pageSize(size)
-                .sortBy("createdAt")
-                .sortDirection("DESC")
-                .build();
-
-        PageResponse<ProductListResponse> products =
-                productClientService.searchProducts(keyword, pagingRequest);
-
-        model.addAttribute("products", products);
-        model.addAttribute("keyword", keyword);
-        model.addAttribute("pageTitle", "Kết quả tìm kiếm: " + keyword);
-
-        return "client/products/search";
+    private String resolvePageTitle(String q, Long categoryId) {
+        if (q != null && !q.isBlank()) return "Kết quả tìm kiếm: " + q;
+        if (categoryId != null) return "Danh mục sản phẩm";
+        return "Tất cả sản phẩm";
     }
 }
