@@ -43,10 +43,18 @@ public interface ProductClientMapper {
 
     @Named("mapPrice")
     default Double mapPrice(Product product) {
-        if (product == null || product.getBasePrice() == null) {
-            return 0.0;
+        if (product == null) return 0.0;
+
+        // Nếu có variants, lấy giá retail nhỏ nhất
+        if (product.getVariants() != null && !product.getVariants().isEmpty()) {
+            return product.getVariants().stream()
+                    .map(v -> v.getRetailPrice() != null ? v.getRetailPrice().doubleValue() : Double.MAX_VALUE)
+                    .min(Double::compare)
+                    .orElse(product.getBasePrice() != null ? product.getBasePrice().doubleValue() : 0.0);
         }
-        return product.getBasePrice().doubleValue();
+
+        // Nếu không có variants, lấy giá base
+        return product.getBasePrice() != null ? product.getBasePrice().doubleValue() : 0.0;
     }
 
     @Named("getFirstImage")

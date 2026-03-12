@@ -31,4 +31,11 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
            "WHERE p.isActive = true " +
            "ORDER BY p.createdAt DESC")
     List<Product> findTop100ActiveProductsWithDetails(Pageable pageable);
+
+    Page<Product> findByProductNameContainingIgnoreCaseAndIsActiveTrue(String name, Pageable pageable);
+
+    Page<Product> findByCategory_IdAndIsActiveTrue(Long categoryId, Pageable pageable);
+
+    @Query("SELECT ci.product FROM CollectionItem ci WHERE ci.collection.slug = :slug AND ci.product.isActive = true")
+    Page<Product> findByCollectionSlug(@Param("slug") String slug, Pageable pageable);
 }
