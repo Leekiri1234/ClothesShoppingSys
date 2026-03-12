@@ -221,39 +221,20 @@ public class DatabaseSeeder implements CommandLineRunner {
     private void seedCategories() {
         log.info("Seeding categories...");
 
-        // === LEVEL 0: ROOT CATEGORIES (parent_id = NULL) ===
-        Category fashion = createCategory("Fashion", "fashion", "ACTIVE", null);
-        categoryRepository.save(fashion);
+        Category menFashion = createCategory("Men Fashion", "men-fashion", "ACTIVE");
+        Category womenFashion = createCategory("Women Fashion", "women-fashion", "ACTIVE");
+        Category accessories = createCategory("Accessories", "accessories", "ACTIVE");
+        Category shoes = createCategory("Shoes", "shoes", "ACTIVE");
+        Category bags = createCategory("Bags", "bags", "ACTIVE");
 
-        // === LEVEL 1: SUB-CATEGORIES (Children of Fashion) ===
-        Category menFashion = createCategory("Men Fashion", "men-fashion", "ACTIVE", fashion);
-        Category womenFashion = createCategory("Women Fashion", "women-fashion", "ACTIVE", fashion);
         categoryRepository.save(menFashion);
         categoryRepository.save(womenFashion);
-
-        // === LEVEL 2: DETAILED CATEGORIES (Grandchildren of Fashion) ===
-        Category menShirts = createCategory("Men Shirts", "men-shirts", "ACTIVE", menFashion);
-        Category menJeans = createCategory("Men Jeans", "men-jeans", "ACTIVE", menFashion);
-        Category womenDresses = createCategory("Women Dresses", "women-dresses", "ACTIVE", womenFashion);
-        Category womenSkirts = createCategory("Women Skirts", "women-skirts", "ACTIVE", womenFashion);
-
-        categoryRepository.save(menShirts);
-        categoryRepository.save(menJeans);
-        categoryRepository.save(womenDresses);
-        categoryRepository.save(womenSkirts);
-
-        // === OTHER ROOT CATEGORIES ===
-        Category accessories = createCategory("Accessories", "accessories", "ACTIVE", null);
-        Category shoes = createCategory("Shoes", "shoes", "ACTIVE", null);
-        Category bags = createCategory("Bags", "bags", "ACTIVE", null);
-
         categoryRepository.save(accessories);
         categoryRepository.save(shoes);
         categoryRepository.save(bags);
 
-        log.info("Categories seeded: 4 root + 2 level-1 + 4 level-2 = 10 categories");
+        log.info("Categories seeded: 5 categories");
     }
-
 
     /**
      * 4. Seed Products (with Variants and Images)
@@ -591,12 +572,11 @@ public class DatabaseSeeder implements CommandLineRunner {
         return account;
     }
 
-    private Category createCategory(String name, String slug, String status, Category parent) {
+    private Category createCategory(String name, String slug, String status) {
         Category category = new Category();
         category.setCategoryName(name);
         category.setCategorySlug(slug);
         category.setCatStatus(status);
-        category.setParent(parent);
         category.setCreatedBy("admin");
         return category;
     }
