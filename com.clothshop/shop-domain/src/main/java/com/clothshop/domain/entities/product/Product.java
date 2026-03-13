@@ -35,7 +35,7 @@ public class Product extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private ProductStatus prodStatus = ProductStatus.ACTIVE;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "category_id")
     private Category category;
 

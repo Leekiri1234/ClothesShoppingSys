@@ -33,4 +33,21 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findByParentIsNull();
     boolean existsByCategorySlug(String slug);
     List<Category> findByParentId(Long parentId);
+
+    @Query(value = "SELECT * FROM categories", nativeQuery = true)
+    List<Category> findAllIncludingInactive();
+
+    /**
+     * Bypass @SQLRestriction — tìm category theo ID kể cả đã bị soft-delete.
+     * Dùng cho thao tác toggle-status (restore) trên các danh mục đã ẩn.
+     */
+    @Query(value = "SELECT * FROM categories WHERE category_id = :id", nativeQuery = true)
+    Optional<Category> findByIdIncludingInactive(@Param("id") Long id);
+
+    /**
+     * Bypass @SQLRestriction — lấy tất cả children kể cả đã bị ẩn.
+     * Dùng khi cascade restore để recover toàn bộ cây danh mục.
+     */
+    @Query(value = "SELECT * FROM categories WHERE parent_id = :parentId", nativeQuery = true)
+    List<Category> findChildrenByParentIdIncludingInactive(@Param("parentId") Long parentId);
 }

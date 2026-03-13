@@ -64,7 +64,7 @@ public class ProductAdminController {
     @GetMapping("/create")
     public String showCreateForm(Model model) {
         model.addAttribute("product", new ProductCreateRequest());
-        model.addAttribute("categories", categoryService.getAllCategoriesForDropdown());
+        model.addAttribute("categories", categoryService.getAllCategories());
         return "admin/products/create";
     }
 
@@ -77,7 +77,7 @@ public class ProductAdminController {
 
         if (bindingResult.hasErrors()) {
             // Cần add lại categories nếu form lỗi để dropdown không bị trống
-            model.addAttribute("categories", categoryService.getAllCategoriesForDropdown());
+            model.addAttribute("categories", categoryService.getAllCategories());
             return "admin/products/create";
         }
 
@@ -91,7 +91,7 @@ public class ProductAdminController {
     public String showEditForm(@PathVariable Long id, Model model) {
         ProductAdminResponse product = productAdminService.getProductById(id);
         model.addAttribute("product", product);
-        model.addAttribute("categories", categoryService.getAllCategoriesForDropdown());
+        model.addAttribute("categories", categoryService.getAllCategories());
         return "admin/products/edit";
     }
 
@@ -104,7 +104,7 @@ public class ProductAdminController {
             Model model) {
 
         if (bindingResult.hasErrors()) {
-            model.addAttribute("categories", categoryService.getAllCategoriesForDropdown());
+            model.addAttribute("categories", categoryService.getAllCategories());
             return "admin/products/edit";
         }
 

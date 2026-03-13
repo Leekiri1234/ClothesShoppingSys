@@ -1,6 +1,7 @@
 package com.clothshop.domain.entities.product;
 
 import com.clothshop.domain.entities.base.BaseEntity;
+import com.clothshop.domain.enums.CategoryStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -23,8 +24,9 @@ public class Category extends BaseEntity {
     @Column(name = "category_slug", unique = true, nullable = false, length = 100)
     private String categorySlug;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "cat_status", length = 20)
-    private String catStatus;
+    private CategoryStatus catStatus;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")

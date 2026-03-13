@@ -221,11 +221,11 @@ public class DatabaseSeeder implements CommandLineRunner {
     private void seedCategories() {
         log.info("Seeding categories...");
 
-        Category menFashion = createCategory("Men Fashion", "men-fashion", "ACTIVE");
-        Category womenFashion = createCategory("Women Fashion", "women-fashion", "ACTIVE");
-        Category accessories = createCategory("Accessories", "accessories", "ACTIVE");
-        Category shoes = createCategory("Shoes", "shoes", "ACTIVE");
-        Category bags = createCategory("Bags", "bags", "ACTIVE");
+        Category menFashion = createCategory("Men Fashion", "men-fashion", CategoryStatus.ACTIVE);
+        Category womenFashion = createCategory("Women Fashion", "women-fashion", CategoryStatus.ACTIVE);
+        Category accessories = createCategory("Accessories", "accessories", CategoryStatus.ACTIVE);
+        Category shoes = createCategory("Shoes", "shoes", CategoryStatus.ACTIVE);
+        Category bags = createCategory("Bags", "bags", CategoryStatus.ACTIVE);
 
         categoryRepository.save(menFashion);
         categoryRepository.save(womenFashion);
@@ -572,11 +572,13 @@ public class DatabaseSeeder implements CommandLineRunner {
         return account;
     }
 
-    private Category createCategory(String name, String slug, String status) {
+    private Category createCategory(String name, String slug, CategoryStatus status) {
+
         Category category = new Category();
         category.setCategoryName(name);
         category.setCategorySlug(slug);
         category.setCatStatus(status);
+        category.setIsActive(true);
         category.setCreatedBy("admin");
         return category;
     }
