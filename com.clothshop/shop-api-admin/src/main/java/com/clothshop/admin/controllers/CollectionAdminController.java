@@ -1,6 +1,7 @@
 package com.clothshop.admin.controllers;
 
 import com.clothshop.admin.dtos.request.marketing.CollectionSaveRequest;
+import com.clothshop.admin.dtos.response.marketing.BulkAssignResult;
 import com.clothshop.admin.dtos.response.marketing.CollectionResponse;
 import com.clothshop.admin.services.FeaturedCollectionService;
 import com.clothshop.common.exceptions.BusinessException;
@@ -195,23 +196,69 @@ public class CollectionAdminController {
 
     /**
      * Xử lý khi Admin chọn nhiều sản phẩm và nhấn "Thêm vào Bộ Sưu Tập"
+     * HOẶC khi kéo thả để cập nhật thứ tự hiển thị
      */
     @PostMapping("/{id}/assign")
+    @Transactional
     public String processAssignProducts(
             @PathVariable Long id,
             @RequestParam(value = "productIds", required = false) List<Long> productIds,
+            @RequestParam(value = "itemIds[]", required = false) List<Long> itemIds,
+            @RequestParam(value = "orders[]", required = false) List<Integer> orders,
             Principal principal,
             RedirectAttributes redirectAttributes) {
 
-        if (productIds == null || productIds.isEmpty()) {
-            redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng chọn ít nhất 1 sản phẩm!");
+        // TH1: Thêm sản phẩm mới vào bộ sưu tập
+        if (productIds != null && !productIds.isEmpty()) {
+            BulkAssignResult result = featuredCollectionService.addProductsToCollection(id, productIds, principal.getName());
+
+            if (result.isAllDuplicates()) {
+                // Tất cả sản phẩm đã có trong bộ sưu tập
+                redirectAttributes.addFlashAttribute("warningMessage",
+                    "Tất cả " + result.getDuplicateCount() + " sản phẩm đã có trong bộ sưu tập rồi!");
+                redirectAttributes.addFlashAttribute("duplicateProductNames", result.getDuplicateProductNames());
+            } else if (result.hasAnyDuplicates()) {
+                // Một số sản phẩm bị trùng, một số được thêm
+                redirectAttributes.addFlashAttribute("successMessage",
+                    "Đã gán " + result.getAddedCount() + " sản phẩm mới vào bộ sưu tập!");
+                redirectAttributes.addFlashAttribute("warningMessage",
+                    result.getDuplicateCount() + " sản phẩm đã có sẵn nên bị bỏ qua.");
+                redirectAttributes.addFlashAttribute("duplicateProductNames", result.getDuplicateProductNames());
+            } else {
+                // Tất cả đều mới
+                redirectAttributes.addFlashAttribute("successMessage",
+                    "Đã gán " + result.getAddedCount() + " sản phẩm vào bộ sưu tập!");
+            }
             return "redirect:/admin/collections/" + id + "/assign";
         }
 
-        // Gọi Service xử lý Bulk Insert
-        featuredCollectionService.addProductsToCollection(id, productIds, principal.getName());
+        // TH2: Cập nhật thứ tự hiển thị sau khi kéo thả
+        if (itemIds != null && orders != null && !itemIds.isEmpty() && !orders.isEmpty()) {
+            if (itemIds.size() != orders.size()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Dữ liệu không hợp lệ!");
+                return "redirect:/admin/collections/" + id + "/assign";
+            }
 
-        redirectAttributes.addFlashAttribute("successMessage", "Đã gán " + productIds.size() + " sản phẩm vào bộ sưu tập!");
+            // Update display order for each item
+            for (int i = 0; i < itemIds.size(); i++) {
+                Long itemId = itemIds.get(i);
+                Integer newOrder = orders.get(i);
+
+                CollectionItem item = collectionItemRepository.findById(itemId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy item"));
+
+                item.setDisplayOrder(newOrder);
+                item.setUpdatedBy(principal.getName());
+                collectionItemRepository.save(item);
+            }
+
+            log.info("Updated display orders for {} items in collection {}", itemIds.size(), id);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật thứ tự hiển thị!");
+            return "redirect:/admin/collections/" + id + "/assign";
+        }
+
+        // TH3: Không có dữ liệu gì
+        redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng chọn ít nhất 1 sản phẩm!");
         return "redirect:/admin/collections/" + id + "/assign";
     }
 
