@@ -28,6 +28,17 @@ public class CategoryService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Fetch ALL categories including soft-deleted ones.
+     * Used by Admin list page to provide full visibility.
+     */
+    @Transactional(readOnly = true)
+    public List<CategoryAdminResponse> getAllCategoriesIncludingInactive() {
+        return categoryRepository.findAllIncludingInactive().stream()
+                .map(categoryMapper::toResponse)
+                .collect(Collectors.toList());
+    }
+
     @Transactional(readOnly = true)
     public CategoryAdminResponse getCategoryById(Long id) {
         return categoryRepository.findById(id)
@@ -59,36 +70,42 @@ public class CategoryService {
         categoryRepository.save(category);
     }
 
+    /**
+     * Toggle trạng thái danh mục (ẩn ↔ hiện).
+     * - Nếu đang ACTIVE   → chuyển sang isActive=false, catStatus=INACTIVE (ẩn).
+     * - Nếu đang INACTIVE → chuyển sang isActive=true,  catStatus=ACTIVE   (khôi phục).
+     * Cascade toggle xuống toàn bộ danh mục con theo cùng chiều.
+     */
     @Transactional
-    public void deleteCategory(Long id) {
-        Category category = categoryRepository.findById(id)
+    public String toggleCategoryStatus(Long id) {
+        Category category = categoryRepository.findByIdIncludingInactive(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
 
-        // Soft delete this category
-        category.setIsActive(false);
-        category.setCatStatus(CategoryStatus.INACTIVE);  // Use enum constant
+        boolean activate = !category.getIsActive(); // true = đang ẩn → cần khôi phục
 
-        // Cascade soft delete all children categories
-        if (category.getChildren() != null && !category.getChildren().isEmpty()) {
-            softDeleteChildren(category.getChildren());
-        }
+        applyStatusToCategory(category, activate);
+        cascadeToggleToChildren(category, activate);
 
         categoryRepository.save(category);
+
+        return activate ? "Đã khôi phục danh mục thành công!" : "Đã ẩn danh mục thành công!";
+    }
+
+    /** Áp dụng trạng thái lên một category */
+    private void applyStatusToCategory(Category category, boolean activate) {
+        category.setIsActive(activate);
+        category.setCatStatus(activate ? CategoryStatus.ACTIVE : CategoryStatus.INACTIVE);
     }
 
     /**
-     * Recursively soft delete all children categories
+     * Đệ quy cascade toggle xuống danh mục con.
+     * Dùng findChildrenByParentIdIncludingInactive (bypass restriction) để lấy cả children đã ẩn khi restore.
      */
-    private void softDeleteChildren(List<Category> children) {
+    private void cascadeToggleToChildren(Category parent, boolean activate) {
+        List<Category> children = categoryRepository.findChildrenByParentIdIncludingInactive(parent.getId());
         for (Category child : children) {
-            child.setIsActive(false);
-            child.setCatStatus(CategoryStatus.INACTIVE);
-
-            // Recursively delete grandchildren
-            if (child.getChildren() != null && !child.getChildren().isEmpty()) {
-                softDeleteChildren(child.getChildren());
-            }
-
+            applyStatusToCategory(child, activate);
+            cascadeToggleToChildren(child, activate);
             categoryRepository.save(child);
         }
     }

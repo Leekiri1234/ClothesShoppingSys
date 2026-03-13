@@ -1814,3 +1814,175 @@ tr.stock-out td { background: #fdecea !important; }
 .rma-type-exchange { color: var(--info); font-weight: 600; }
 .rma-type-return   { color: var(--danger); font-weight: 600; }
 
+/* ============================================================
+   CATEGORY LEVEL BADGES
+   ============================================================ */
+
+.badge-level-root {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.badge-level-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  border-radius: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.inactive-row {
+  opacity: 0.5;
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.inactive-row:hover {
+  opacity: 0.7;
+}
+
+/* ============================================================
+   INFO CARD (for forms)
+   ============================================================ */
+
+.info-card {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
+  border: 1px solid rgba(79, 70, 229, 0.2);
+  border-radius: 8px;
+  padding: 16px;
+  margin-top: 24px;
+}
+
+.info-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: var(--primary);
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+
+.info-card-header svg {
+  width: 16px;
+  height: 16px;
+  color: var(--info);
+}
+
+.info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.info-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 13px;
+  color: var(--muted);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.info-list li:last-child {
+  border-bottom: none;
+}
+
+.info-list li svg {
+  width: 16px;
+  height: 16px;
+  color: var(--success);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.info-list li strong {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ============================================================
+   FORM LABEL REQUIRED INDICATOR
+   ============================================================ */
+
+.form-label.required::after {
+  content: " *";
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/* ============================================================
+   ACTION BUTTONS (for tables)
+   ============================================================ */
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--white);
+  cursor: pointer;
+  transition: all var(--transition);
+  flex-shrink: 0;
+}
+
+.action-btn svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+}
+
+.action-btn:hover {
+  background: var(--bg);
+  transform: translateY(-1px);
+}
+
+.action-btn-edit {
+  color: #f59e0b;
+  border-color: #f59e0b;
+}
+
+.action-btn-edit:hover {
+  background: #fffbeb;
+  border-color: #d97706;
+}
+
+.action-btn-delete {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.action-btn-delete:hover {
+  background: #fef2f2;
+  border-color: #dc2626;
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}

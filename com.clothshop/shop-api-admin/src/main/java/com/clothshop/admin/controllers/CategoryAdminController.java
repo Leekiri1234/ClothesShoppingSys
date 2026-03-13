@@ -2,6 +2,7 @@ package com.clothshop.admin.controllers;
 
 import com.clothshop.admin.dtos.request.products.CategoryCreateRequest;
 import com.clothshop.admin.dtos.request.products.CategoryUpdateRequest;
+import com.clothshop.admin.dtos.response.products.CategoryAdminResponse;
 import com.clothshop.admin.services.CategoryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +12,8 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
 
 @Controller
 @RequestMapping("/admin/categories")
@@ -22,7 +25,20 @@ public class CategoryAdminController {
 
     @GetMapping
     public String listCategories(Model model) {
-        model.addAttribute("categories", categoryService.getAllCategories());
+        List<CategoryAdminResponse> categories = categoryService.getAllCategoriesIncludingInactive();
+
+        long countActive   = categories.stream().filter(c -> Boolean.TRUE.equals(c.getIsActive()) && "ACTIVE".equals(c.getCatStatus())).count();
+        long countInactive = categories.stream().filter(c -> Boolean.TRUE.equals(c.getIsActive()) && "INACTIVE".equals(c.getCatStatus())).count();
+        long countDeleted  = categories.stream().filter(c -> !Boolean.TRUE.equals(c.getIsActive())).count();
+        long countRoot     = categories.stream().filter(c -> c.getParentId() == null).count();
+        long countChild    = categories.stream().filter(c -> c.getParentId() != null).count();
+
+        model.addAttribute("categories", categories);
+        model.addAttribute("countActive", countActive);
+        model.addAttribute("countInactive", countInactive);
+        model.addAttribute("countDeleted", countDeleted);
+        model.addAttribute("countRoot", countRoot);
+        model.addAttribute("countChild", countChild);
         return "admin/categories/list";
     }
 
@@ -67,10 +83,10 @@ public class CategoryAdminController {
         return "redirect:/admin/categories";
     }
 
-    @PostMapping("/{id}/delete")
-    public String deleteCategory(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        categoryService.deleteCategory(id);
-        redirectAttributes.addFlashAttribute("successMessage", "Đã xóa danh mục!");
+    @PostMapping("/{id}/toggle-status")
+    public String toggleCategoryStatus(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        String message = categoryService.toggleCategoryStatus(id);
+        redirectAttributes.addFlashAttribute("successMessage", message);
         return "redirect:/admin/categories";
     }
 }
