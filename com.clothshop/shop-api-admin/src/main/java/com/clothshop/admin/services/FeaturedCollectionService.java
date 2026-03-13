@@ -80,7 +80,7 @@ public class FeaturedCollectionService {
     }
 
     /**
-     * Vinh Lập Chùa Fix: Bulk Assignment chuẩn Enterprise (Chống N+1 và Lỗi Duplicate Key)
+     * Bulk Assignment (Chống N+1 và Lỗi Duplicate Key)
      */
     @Transactional
     public BulkAssignResult addProductsToCollection(Long collectionId, List<Long> productIds, String username) {
