@@ -4,9 +4,9 @@ import com.clothshop.client.dtos.response.CollectionResponse;
 import com.clothshop.client.dtos.response.ProductListResponse;
 import com.clothshop.domain.entities.marketing.Collection;
 import com.clothshop.domain.entities.marketing.CollectionItem;
+import com.clothshop.domain.entities.product.Category; // Import Category
 import com.clothshop.domain.entities.product.Product;
-import com.clothshop.domain.entities.product.ProductImage;
-import com.clothshop.domain.entities.product.ProductVariant;
+import jakarta.persistence.EntityNotFoundException; // Import Exception
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
@@ -18,16 +18,15 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface CollectionMapper {
 
-    // Thay vì map trực tiếp "products", ta map từ "items" của Entity
     @Mapping(source = "items", target = "products", qualifiedByName = "mapItemsToProducts")
     CollectionResponse toCollectionResponse(Collection collection);
 
-    // Hàm chuyển đổi từ List<CollectionItem> sang List<ProductListResponse>
     @Named("mapItemsToProducts")
     default List<ProductListResponse> mapItemsToProducts(List<CollectionItem> items) {
         if (items == null) return new ArrayList<>();
         return items.stream()
-                .map(item -> toProductItemResponse(item.getProduct())) // Lấy product từ trong item ra
+                .map(item -> toProductItemResponse(item.getProduct()))
+                .filter(res -> res != null) // Lọc bỏ các sản phẩm lỗi nếu cần
                 .collect(Collectors.toList());
     }
 
@@ -37,7 +36,7 @@ public interface CollectionMapper {
     @Mapping(source = "productName", target = "productName")
     @Mapping(source = "productSlug", target = "slug")
     @Mapping(source = "productSlug", target = "productSlug")
-    @Mapping(source = "category.categoryName", target = "categoryName")
+    @Mapping(source = "category", target = "categoryName", qualifiedByName = "mapSafeCategoryName")
     @Mapping(source = "product", target = "minPrice", qualifiedByName = "mapMinPrice")
     @Mapping(source = "product", target = "price", qualifiedByName = "mapMinPrice")
     @Mapping(source = "basePrice", target = "originalPrice")
@@ -47,10 +46,23 @@ public interface CollectionMapper {
     @Mapping(target = "available", source = "product", qualifiedByName = "calculateAvailability")
     ProductListResponse toProductItemResponse(Product product);
 
+    // METHOD MỚI: Xử lý an toàn khi Category bị ẩn (is_active = false)
+    @Named("mapSafeCategoryName")
+    default String mapSafeCategoryName(Category category) {
+        if (category == null) return "Chưa phân loại";
+        try {
+            // Hibernate sẽ ném EntityNotFoundException tại đây nếu category bị soft-delete/hidden
+            return category.getCategoryName();
+        } catch (EntityNotFoundException e) {
+            return "Danh mục không khả dụng";
+        }
+    }
+
     @Named("mapMinPrice")
     default Double mapMinPrice(Product product) {
-        if (product == null || product.getVariants() == null || product.getVariants().isEmpty()) {
-            return product != null && product.getBasePrice() != null ? product.getBasePrice().doubleValue() : 0.0;
+        if (product == null) return 0.0;
+        if (product.getVariants() == null || product.getVariants().isEmpty()) {
+            return product.getBasePrice() != null ? product.getBasePrice().doubleValue() : 0.0;
         }
         return product.getVariants().stream()
                 .filter(v -> v.getRetailPrice() != null)
