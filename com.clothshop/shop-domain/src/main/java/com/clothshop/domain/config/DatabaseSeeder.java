@@ -1,9 +1,11 @@
 package com.clothshop.domain.config;
 
 import com.clothshop.domain.entities.auth.*;
+import com.clothshop.domain.entities.marketing.*;
 import com.clothshop.domain.entities.product.*;
 import com.clothshop.domain.enums.*;
 import com.clothshop.domain.repositories.auth.*;
+import com.clothshop.domain.repositories.marketing.*;
 import com.clothshop.domain.repositories.product.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * Database Seeder - Seeds initial data for development/testing.
@@ -46,6 +49,8 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final ProductRepository productRepository;
     private final ProductVariantRepository productVariantRepository;
     private final ProductImageRepository productImageRepository;
+    private final CollectionRepository collectionRepository;
+    private final CollectionItemRepository collectionItemRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
@@ -63,6 +68,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         seedAccounts();
         seedCategories();
         seedProducts();
+        seedCollections();
 
         log.info("Database seeding completed successfully!");
     }
@@ -94,45 +100,119 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     /**
-     * 2. Seed Accounts (Admin + Customer)
-     * Password: admin@123 and customer@123
+     * 2. Seed Accounts (Admin + Staff + Customers)
+     * Password: admin@123, marketing@123, sale@123, support@123, customer@123
      */
     private void seedAccounts() {
         log.info("Seeding accounts...");
 
-        // Admin Account
+        // 1. Super Admin Account
         Account adminAccount = createAccount("admin", "admin@123", "admin@clothshop.com",
             AccountType.STAFF, AccountStatus.ACTIVE);
         accountRepository.save(adminAccount);
 
-        // Create Staff for Admin
         Role superAdminRole = roleRepository.findByStaffRole(StaffRole.SUPER_ADMIN)
             .orElseThrow(() -> new RuntimeException("SUPER_ADMIN role not found"));
 
-        Staff staff = new Staff();
-        staff.setFullName("System Administrator");
-        staff.setPhoneNumber("0901234567");
-        staff.setRole(superAdminRole);
-        staff.setAccount(adminAccount);
-        staff.setCreatedBy("SYSTEM");
-        staffRepository.save(staff);
+        Staff superAdmin = new Staff();
+        superAdmin.setFullName("System Administrator");
+        superAdmin.setPhoneNumber("0901234567");
+        superAdmin.setRole(superAdminRole);
+        superAdmin.setAccount(adminAccount);
+        superAdmin.setCreatedBy("SYSTEM");
+        staffRepository.save(superAdmin);
 
-        // Customer Account
-        Account customerAccount = createAccount("customer", "customer@123", "customer@email.com",
+        // 2. Marketing Staff Account
+        Account marketingAccount = createAccount("marketing", "marketing@123", "marketing@clothshop.com",
+            AccountType.STAFF, AccountStatus.ACTIVE);
+        accountRepository.save(marketingAccount);
+
+        Role marketingRole = roleRepository.findByStaffRole(StaffRole.MARKETING_STAFF)
+            .orElseThrow(() -> new RuntimeException("MARKETING_STAFF role not found"));
+
+        Staff marketingStaff = new Staff();
+        marketingStaff.setFullName("Nguyen Van Marketing");
+        marketingStaff.setPhoneNumber("0902345678");
+        marketingStaff.setRole(marketingRole);
+        marketingStaff.setAccount(marketingAccount);
+        marketingStaff.setCreatedBy("SYSTEM");
+        staffRepository.save(marketingStaff);
+
+        // 3. Sale Product Staff Account
+        Account saleAccount = createAccount("sale", "sale@123", "sale@clothshop.com",
+            AccountType.STAFF, AccountStatus.ACTIVE);
+        accountRepository.save(saleAccount);
+
+        Role saleRole = roleRepository.findByStaffRole(StaffRole.SALE_PRODUCT_STAFF)
+            .orElseThrow(() -> new RuntimeException("SALE_PRODUCT_STAFF role not found"));
+
+        Staff saleStaff = new Staff();
+        saleStaff.setFullName("Tran Thi Sale");
+        saleStaff.setPhoneNumber("0903456789");
+        saleStaff.setRole(saleRole);
+        saleStaff.setAccount(saleAccount);
+        saleStaff.setCreatedBy("SYSTEM");
+        staffRepository.save(saleStaff);
+
+        // 4. Customer Service Staff Account
+        Account supportAccount = createAccount("support", "support@123", "support@clothshop.com",
+            AccountType.STAFF, AccountStatus.ACTIVE);
+        accountRepository.save(supportAccount);
+
+        Role customerServiceRole = roleRepository.findByStaffRole(StaffRole.CUSTOMER_SERVICE)
+            .orElseThrow(() -> new RuntimeException("CUSTOMER_SERVICE role not found"));
+
+        Staff supportStaff = new Staff();
+        supportStaff.setFullName("Le Van Support");
+        supportStaff.setPhoneNumber("0904567890");
+        supportStaff.setRole(customerServiceRole);
+        supportStaff.setAccount(supportAccount);
+        supportStaff.setCreatedBy("SYSTEM");
+        staffRepository.save(supportStaff);
+
+        // 5. Customer 1
+        Account customer1Account = createAccount("customer", "customer@123", "customer@email.com",
             AccountType.CUSTOMER, AccountStatus.ACTIVE);
-        accountRepository.save(customerAccount);
+        accountRepository.save(customer1Account);
 
-        // Create Customer
-        Customer customer = new Customer();
-        customer.setFullName("Nguyen Van A");
-        customer.setEmail("customer@email.com");
-        customer.setPhoneNumber("0909876543");
-        customer.setAddress("123 Nguyen Hue, District 1, Ho Chi Minh City");
-        customer.setAccount(customerAccount);
-        customer.setCreatedBy("SYSTEM");
-        customerRepository.save(customer);
+        Customer customer1 = new Customer();
+        customer1.setFullName("Nguyen Van A");
+        customer1.setEmail("customer@email.com");
+        customer1.setPhoneNumber("0909876543");
+        customer1.setAddress("123 Nguyen Hue, District 1, Ho Chi Minh City");
+        customer1.setAccount(customer1Account);
+        customer1.setCreatedBy("SYSTEM");
+        customerRepository.save(customer1);
 
-        log.info("Accounts seeded: 1 admin, 1 customer");
+        // 6. Customer 2
+        Account customer2Account = createAccount("customer2", "customer@123", "customer2@email.com",
+            AccountType.CUSTOMER, AccountStatus.ACTIVE);
+        accountRepository.save(customer2Account);
+
+        Customer customer2 = new Customer();
+        customer2.setFullName("Tran Thi B");
+        customer2.setEmail("customer2@email.com");
+        customer2.setPhoneNumber("0908765432");
+        customer2.setAddress("456 Le Loi, District 3, Ho Chi Minh City");
+        customer2.setAccount(customer2Account);
+        customer2.setCreatedBy("SYSTEM");
+        customerRepository.save(customer2);
+
+        // 7. Customer 3
+        Account customer3Account = createAccount("customer3", "customer@123", "customer3@email.com",
+            AccountType.CUSTOMER, AccountStatus.ACTIVE);
+        accountRepository.save(customer3Account);
+
+        Customer customer3 = new Customer();
+        customer3.setFullName("Le Van C");
+        customer3.setEmail("customer3@email.com");
+        customer3.setPhoneNumber("0907654321");
+        customer3.setAddress("789 Tran Hung Dao, District 5, Ho Chi Minh City");
+        customer3.setAccount(customer3Account);
+        customer3.setCreatedBy("SYSTEM");
+        customerRepository.save(customer3);
+
+        log.info("Accounts seeded: 4 staff (all roles), 3 customers");
     }
 
     /**
@@ -141,11 +221,11 @@ public class DatabaseSeeder implements CommandLineRunner {
     private void seedCategories() {
         log.info("Seeding categories...");
 
-        Category menFashion = createCategory("Men Fashion", "men-fashion", "ACTIVE");
-        Category womenFashion = createCategory("Women Fashion", "women-fashion", "ACTIVE");
-        Category accessories = createCategory("Accessories", "accessories", "ACTIVE");
-        Category shoes = createCategory("Shoes", "shoes", "ACTIVE");
-        Category bags = createCategory("Bags", "bags", "ACTIVE");
+        Category menFashion = createCategory("Men Fashion", "men-fashion", CategoryStatus.ACTIVE);
+        Category womenFashion = createCategory("Women Fashion", "women-fashion", CategoryStatus.ACTIVE);
+        Category accessories = createCategory("Accessories", "accessories", CategoryStatus.ACTIVE);
+        Category shoes = createCategory("Shoes", "shoes", CategoryStatus.ACTIVE);
+        Category bags = createCategory("Bags", "bags", CategoryStatus.ACTIVE);
 
         categoryRepository.save(menFashion);
         categoryRepository.save(womenFashion);
@@ -396,6 +476,79 @@ public class DatabaseSeeder implements CommandLineRunner {
         log.info("Products seeded: 13 products with variants and images");
     }
 
+    /**
+     * 5. Seed Collections (2 Collections with 5 products each)
+     */
+    private void seedCollections() {
+        log.info("Seeding collections...");
+
+        // Get all products for assignment
+        List<Product> allProducts = productRepository.findAll();
+
+        if (allProducts.size() < 10) {
+            log.warn("Not enough products to create collections. Skipping collection seeding.");
+            return;
+        }
+
+        // Collection 1: Summer Collection
+        Collection summerCollection = new Collection();
+        summerCollection.setName("Summer Collection 2024");
+        summerCollection.setSlug("summer-collection-2024"); // Will be updated with ID after save
+        summerCollection.setDescription("Fresh and vibrant styles for the summer season");
+        summerCollection.setCreatedBy("admin");
+        summerCollection = collectionRepository.save(summerCollection);
+
+        // Update slug with Shopee-style ID suffix
+        summerCollection.setSlug("summer-collection-2024-c." + summerCollection.getId());
+        summerCollection = collectionRepository.save(summerCollection);
+
+        // Add 5 products to Summer Collection
+        // Classic White T-Shirt, Floral Summer Dress, Cotton Polo Shirt, Linen Shorts, Graphic Print T-Shirt
+        addProductToCollection(summerCollection, allProducts.get(0), 1); // Classic White T-Shirt
+        addProductToCollection(summerCollection, allProducts.get(2), 2); // Floral Summer Dress
+        addProductToCollection(summerCollection, allProducts.get(4), 3); // Cotton Polo Shirt
+        addProductToCollection(summerCollection, allProducts.get(11), 4); // Linen Shorts
+        addProductToCollection(summerCollection, allProducts.get(8), 5); // Graphic Print T-Shirt
+
+        log.info("Created Summer Collection with 5 products");
+
+        // Collection 2: Winter Essentials
+        Collection winterCollection = new Collection();
+        winterCollection.setName("Winter Essentials 2024");
+        winterCollection.setSlug("winter-essentials-2024"); // Will be updated with ID after save
+        winterCollection.setDescription("Stay warm and stylish with our winter collection");
+        winterCollection.setCreatedBy("admin");
+        winterCollection = collectionRepository.save(winterCollection);
+
+        // Update slug with Shopee-style ID suffix
+        winterCollection.setSlug("winter-essentials-2024-c." + winterCollection.getId());
+        winterCollection = collectionRepository.save(winterCollection);
+
+        // Add 5 products to Winter Collection
+        // Black Leather Jacket, Hooded Sweatshirt, Knit Cardigan, Casual Blazer, Slim Fit Denim Jeans
+        addProductToCollection(winterCollection, allProducts.get(3), 1); // Black Leather Jacket
+        addProductToCollection(winterCollection, allProducts.get(10), 2); // Hooded Sweatshirt
+        addProductToCollection(winterCollection, allProducts.get(7), 3); // Knit Cardigan
+        addProductToCollection(winterCollection, allProducts.get(11), 4); // Casual Blazer
+        addProductToCollection(winterCollection, allProducts.get(1), 5); // Slim Fit Denim Jeans
+
+        log.info("Created Winter Collection with 5 products");
+
+        log.info("Collections seeded: 2 collections with 5 products each");
+    }
+
+    /**
+     * Helper method to add a product to a collection
+     */
+    private void addProductToCollection(Collection collection, Product product, int displayOrder) {
+        CollectionItem item = new CollectionItem();
+        item.setCollection(collection);
+        item.setProduct(product);
+        item.setDisplayOrder(displayOrder);
+        item.setCreatedBy("admin");
+        collectionItemRepository.save(item);
+    }
+
     // ==================== Helper Methods ====================
 
     private Role createRole(StaffRole staffRole, String slug, String description) {
@@ -419,11 +572,13 @@ public class DatabaseSeeder implements CommandLineRunner {
         return account;
     }
 
-    private Category createCategory(String name, String slug, String status) {
+    private Category createCategory(String name, String slug, CategoryStatus status) {
+
         Category category = new Category();
         category.setCategoryName(name);
         category.setCategorySlug(slug);
         category.setCatStatus(status);
+        category.setIsActive(true);
         category.setCreatedBy("admin");
         return category;
     }

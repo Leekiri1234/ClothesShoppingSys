@@ -7,79 +7,71 @@
     <meta name="description" content="Discover the latest fashion trends and collections">
 </head>
 <body>
-    <div layout:fragment="content">
-        <!-- Hero Section -->
-        <section class="hero-section bg-light py-5 mb-4">
-            <div class="container text-center">
-                <h1 class="display-4 fw-bold mb-3">Welcome to ClothShop</h1>
-                <p class="lead mb-4">Discover the Latest Fashion Trends</p>
-                <a th:href="@{/products}" class="btn btn-dark btn-lg">Shop Now</a>
-            </div>
-        </section>
+<div layout:fragment="content">
+    <section class="hero-section bg-light py-5 mb-4">
+        <div class="container text-center">
+            <h1 class="display-4 fw-bold mb-3">Welcome to ClothShop</h1>
+            <p class="lead mb-4">Discover the Latest Fashion Trends</p>
+            <a th:href="@{/products}" class="btn btn-dark btn-lg">Shop Now</a>
+        </div>
+    </section>
 
-        <!-- Featured Products Section -->
-        <section class="featured-products">
-            <div class="container">
-                <h2 class="text-center mb-4">Featured Products</h2>
-                <div class="row g-4" th:if="${featuredProducts != null and !featuredProducts.isEmpty()}">
-                    <div class="col-md-3" th:each="product : ${featuredProducts}">
-                        <div class="card h-100 shadow-sm">
-                            <img th:src="${product.imageUrl}"
-                                 th:alt="${product.productName}"
-                                 class="card-img-top"
-                                 style="height: 250px; object-fit: cover;">
-                            <div class="card-body">
-                                <h5 class="card-title" th:text="${product.productName}">Product Name</h5>
-                                <p class="card-text text-muted" th:text="${product.categoryName}">Category</p>
-                                <p class="fw-bold text-danger" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VND'"> VND</p>
-                                <a th:href="@{/products/{slug}(slug=${product.productSlug})}"
-                                   class="btn btn-outline-dark w-100">View Details</a>
-                            </div>
+    <section class="featured-products">
+        <div class="container">
+            <h2 class="text-center mb-4">Featured Products</h2>
+            <div class="row g-4" th:if="${featuredProducts != null and !featuredProducts.isEmpty()}">
+                <div class="col-md-3" th:each="product : ${featuredProducts}">
+                    <div class="card h-100 shadow-sm border-0">
+                        <img th:src="${product.imageUrl != null ? product.imageUrl : '/images/no-image.png'}"
+                             th:alt="${product.productName}"
+                             class="card-img-top"
+                             style="height: 250px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title text-truncate" th:text="${product.productName}">Product Name</h5>
+                            <p class="card-text text-muted small" th:text="${product.categoryName}">Category</p>
+                            <p class="fw-bold text-danger"
+                               th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VND'"> VND</p>
+                            <a th:href="@{/products/{slug}(slug=${product.productSlug})}"
+                               class="btn btn-outline-dark w-100 btn-sm">View Details</a>
                         </div>
                     </div>
                 </div>
-                <div th:unless="${featuredProducts != null and !featuredProducts.isEmpty()}"
-                     class="text-center text-muted py-5">
-                    <p>No featured products available at the moment.</p>
-                </div>
             </div>
-        </section>
+            <div th:unless="${featuredProducts != null and !featuredProducts.isEmpty()}"
+                 class="text-center text-muted py-5">
+                <p>No featured products available at the moment.</p>
+            </div>
+        </div>
+    </section>
 
-        <!-- Collections Section -->
-        <section class="collections-section mt-5 py-5 bg-light">
-            <div class="container">
-                <h2 class="text-center mb-4">Shop by Collection</h2>
-                <div class="row g-3">
-                    <div class="col-md-4 text-center">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body py-4">
-                                <i class="fas fa-tshirt fa-3x text-primary mb-3"></i>
-                                <h5>Summer Collection</h5>
-                                <a th:href="@{/products?collection=summer}" class="btn btn-sm btn-outline-primary mt-2">Browse</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body py-4">
-                                <i class="fas fa-snowflake fa-3x text-info mb-3"></i>
-                                <h5>Winter Collection</h5>
-                                <a th:href="@{/products?collection=winter}" class="btn btn-sm btn-outline-info mt-2">Browse</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4 text-center">
-                        <div class="card border-0 shadow-sm">
-                            <div class="card-body py-4">
-                                <i class="fas fa-star fa-3x text-warning mb-3"></i>
-                                <h5>Premium Collection</h5>
-                                <a th:href="@{/products?collection=premium}" class="btn btn-sm btn-outline-warning mt-2">Browse</a>
+    <section class="collections-section mt-5 py-5 bg-light">
+        <div class="container">
+            <h2 class="text-center mb-4">Shop by Collection</h2>
+
+            <div class="row g-4" th:if="${homeCollections != null and !homeCollections.isEmpty()}">
+                <div class="col-md-4 text-center" th:each="col : ${homeCollections}">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body py-4 d-flex flex-column">
+                            <i class="fas fa-layer-group fa-3x text-dark mb-3"></i>
+
+                            <h5 class="fw-bold text-dark" th:text="${col.name}">Summer Collection</h5>
+                            <p class="text-muted small" th:text="${col.description}">Mô tả ngắn về bộ sưu tập</p>
+
+                            <div class="mt-auto">
+                                <a th:href="@{/collections/{slug}(slug=${col.slug})}"
+                                   class="btn btn-sm btn-outline-dark mt-2 px-4 rounded-pill">Browse</a>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </section>
-    </div>
+
+            <div th:unless="${homeCollections != null and !homeCollections.isEmpty()}"
+                 class="text-center text-muted py-5">
+                <p>No active collections available.</p>
+            </div>
+        </div>
+    </section>
+</div>
 </body>
 </html>

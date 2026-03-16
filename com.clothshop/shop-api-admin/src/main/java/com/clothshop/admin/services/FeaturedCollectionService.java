@@ -35,39 +35,64 @@ public class FeaturedCollectionService {
     private final ProductRepository productRepository;
     private final CollectionMapper collectionMapper;
 
+    /**
+     * Tạo mới hoặc Cập nhật Collection (Unified endpoint)
+     * Sử dụng Shopee-style slug: {name}-c.{id}
+     */
     @Transactional
     public CollectionResponse saveCollection(CollectionSaveRequest request, String username) {
         Collection collection;
 
         if (request.getId() == null) {
             log.info("Creating new collection: {}", request.getName());
+
+            // Generate base slug from name (chưa có ID)
             String baseSlug = SlugUtils.makeSlug(request.getName());
 
+            // USAGE 1: Dùng Mapper để map Request sang Entity thay vì dùng Builder thủ công
             collection = collectionMapper.toEntity(request);
             collection.setSlug(baseSlug);
             if (request.getIsActive() == null) collection.setIsActive(true);
 
+            if (request.getIsActive() == null) {
+                collection.setIsActive(true);
+            }
+
+            // Save lần 1 để DB sinh ra ID
             collection = collectionRepository.save(collection);
+
+            // Generate slug với ID (Shopee style): bo-suu-tap-mua-he-c.123
             String finalSlug = generateSlugWithId(baseSlug, collection.getId());
             collection.setSlug(finalSlug);
+            log.info("Generated Shopee-style slug: {}", finalSlug);
+
         } else {
             log.info("Updating collection ID: {}", request.getId());
             collection = collectionRepository.findById(request.getId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy bộ sưu tập"));
 
+            // Regenerate slug if name changed (giữ nguyên ID suffix)
             String baseSlug = SlugUtils.makeSlug(request.getName());
             String newSlugWithId = generateSlugWithId(baseSlug, collection.getId());
 
             if (!collection.getSlug().equals(newSlugWithId)) {
                 collection.setSlug(newSlugWithId);
+                log.info("Updated slug from {} to {}", collection.getSlug(), newSlugWithId);
             }
+
+            // USAGE 2: Dùng Mapper update các trường (name, description, isActive) từ Request vào Entity
             collectionMapper.updateEntityFromRequest(request, collection);
         }
 
+        // Save lần 2 (áp dụng cho cả Create để lưu cái finalSlug, và Update)
         Collection saved = collectionRepository.save(collection);
+
         return mapToResponse(saved);
     }
 
+    /**
+     * Soft Delete: Xóa bộ sưu tập và ẩn tất cả sản phẩm bên trong
+     */
     @Transactional
     public void deleteCollection(Long id, String username) {
         log.info("Soft deleting collection ID: {}", id);
@@ -76,6 +101,8 @@ public class FeaturedCollectionService {
 
         collection.setIsActive(false);
         collectionRepository.save(collection);
+
+        // Tắt toàn bộ sản phẩm bên trong để tránh hiển thị rác
         collectionItemRepository.deactivateAllItemsByCollectionId(id);
     }
 
@@ -94,6 +121,7 @@ public class FeaturedCollectionService {
         Collection collection = collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Bộ sưu tập không tồn tại"));
 
+        // Lấy thứ tự lớn nhất
         Integer maxOrder = collectionItemRepository.findMaxDisplayOrderByCollectionId(collectionId).orElse(0);
 
         // 2. Kéo TOÀN BỘ lịch sử (active + inactive) của các sản phẩm này lên RAM (Chỉ 1 câu SQL duy nhất - xuyên thủng @SQLRestriction)
@@ -151,32 +179,55 @@ public class FeaturedCollectionService {
                 .build();
     }
 
+    /**
+     * Thêm 1 sản phẩm vào bộ sưu tập (Wrapper method)
+     */
     @Transactional
     public void addProductToCollection(Long collectionId, Long productId, String username) {
+        log.info("Adding single product {} to collection {}", productId, collectionId);
         addProductsToCollection(collectionId, List.of(productId), username);
     }
 
+    /**
+     * Lấy danh sách tất cả Collection với itemCount (Tối ưu cho màn hình List)
+     */
     @Transactional(readOnly = true)
     public Page<CollectionResponse> getAllCollectionsWithCount(Pageable pageable) {
         return collectionRepository.findAll(pageable).map(this::mapToResponse);
     }
 
+    /**
+     * Tìm kiếm Collection theo tên với itemCount
+     */
     @Transactional(readOnly = true)
     public Page<CollectionResponse> searchCollectionsByName(String keyword, Pageable pageable) {
         return collectionRepository.searchByName(keyword, pageable).map(this::mapToResponse);
     }
 
+    /**
+     * Helper method: Map Collection entity sang CollectionResponse với itemCount
+     */
     private CollectionResponse mapToResponse(Collection collection) {
+        // USAGE 3: Dùng Mapper biến Entity thành DTO
         CollectionResponse response = collectionMapper.toResponse(collection);
+
+        // Count số lượng và set vào
         Long itemCount = collection.getId() != null ? collectionItemRepository.countActiveItemsByCollectionId(collection.getId()) : 0L;
         response.setItemCount(itemCount);
+
         return response;
     }
 
+    /**
+     * Generate slug với ID suffix (Shopee style)
+     */
     private String generateSlugWithId(String baseSlug, Long id) {
         return baseSlug + "-c." + id;
     }
 
+    /**
+     * Parse collection ID từ slug (để query nhanh)
+     */
     public static Long parseIdFromSlug(String slug) {
         if (slug == null || !slug.contains("-c.")) return null;
         try {

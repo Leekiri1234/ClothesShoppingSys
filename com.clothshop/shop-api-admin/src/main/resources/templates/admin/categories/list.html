@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Quản lý danh mục</title>
+</head>
+<body>
+
+<h1 layout:fragment="page-title">Danh mục</h1>
+
+<div layout:fragment="page-actions">
+    <a th:href="@{/admin/categories/create}" class="btn btn-primary">
+        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Thêm danh mục
+    </a>
+</div>
+
+<div layout:fragment="content">
+    <!-- SUCCESS MESSAGE -->
+    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert"
+         style="background: #e8f5e9; border: 1px solid #4CAF50; color: #2e7d32; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+        <svg style="width: 16px; height: 16px; flex-shrink: 0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span th:text="${successMessage}" style="flex: 1;">Thành công!</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
+                style="background: none; border: none; font-size: 20px; cursor: pointer; opacity: 0.5; padding: 0; width: 20px; height: 20px;">&times;</button>
+    </div>
+
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+        <input type="text"
+               class="filter-input"
+               placeholder="Tìm kiếm danh mục..."
+               id="searchInput">
+
+        <select class="filter-select" id="statusFilter">
+            <option value="">Tất cả trạng thái</option>
+            <option value="ACTIVE">Hoạt động</option>
+            <option value="DELETED">Đã ẩn</option>
+        </select>
+
+        <select class="filter-select" id="levelFilter">
+            <option value="">Tất cả cấp độ</option>
+            <option value="root">Danh mục gốc</option>
+            <option value="child">Danh mục con</option>
+        </select>
+
+        <button class="btn btn-outline" onclick="applyFilters()">
+            <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+            </svg>
+            Lọc
+        </button>
+
+        <button class="btn btn-outline" onclick="resetFilters()">
+            <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+                <polyline points="1 4 1 10 7 10"/>
+                <polyline points="23 20 23 14 17 14"/>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+            </svg>
+            Reset
+        </button>
+    </div>
+
+    <!-- FILTER TABS -->
+    <div class="filter-tabs">
+        <button class="tab-btn active" onclick="filterByTab('all', event)">
+            Tất cả <span th:text="${#lists.size(categories)}">0</span>
+        </button>
+        <button class="tab-btn" onclick="filterByTab('active', event)">
+            Hoạt động <span th:text="${countActive}">0</span>
+        </button>
+        <button class="tab-btn" onclick="filterByTab('inactive', event)">
+            Tạm ẩn <span th:text="${countInactive}">0</span>
+        </button>
+        <button class="tab-btn" onclick="filterByTab('deleted', event)">
+            Đã ẩn <span th:text="${countDeleted}">0</span>
+        </button>
+        <button class="tab-btn" onclick="filterByTab('root', event)">
+            Danh mục gốc <span th:text="${countRoot}">0</span>
+        </button>
+        <button class="tab-btn" onclick="filterByTab('child', event)">
+            Danh mục con <span th:text="${countChild}">0</span>
+        </button>
+    </div>
+
+    <!-- TABLE CARD -->
+    <div class="dashboard-card">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">
+                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+                    </th>
+                    <th>Danh mục</th>
+                    <th style="width: 200px;">Slug</th>
+                    <th style="width: 180px;">Danh mục cha</th>
+                    <th style="width: 100px;">Cấp độ</th>
+                    <th style="width: 120px;">Trạng thái</th>
+                    <th style="width: 140px;">Ngày tạo</th>
+                    <th style="width: 180px;">Thao tác</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="cat : ${categories}"
+                    th:attr="data-id=${cat.id},
+                             data-name=${cat.categoryName},
+                             data-status=${cat.isActive ? (cat.catStatus != null ? cat.catStatus : 'ACTIVE') : 'DELETED'},
+                             data-deleted=${!cat.isActive},
+                             data-level=${cat.parentId == null ? 'root' : 'child'}"
+                    th:classappend="${!cat.isActive} ? 'inactive-row' : ''">
+                    <td>
+                        <input type="checkbox" class="row-checkbox" th:value="${cat.id}" th:if="${cat.isActive}">
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <!-- Icon for Root Category -->
+                            <div th:if="${cat.parentId == null}"
+                                 style="width: 36px; height: 36px; border-radius: 6px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg style="width: 18px; height: 18px; stroke: white;" viewBox="0 0 24 24" fill="none" stroke-width="2">
+                                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                            </div>
+                            <!-- Icon for Child Category -->
+                            <div th:unless="${cat.parentId == null}"
+                                 style="width: 36px; height: 36px; border-radius: 6px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                <svg style="width: 16px; height: 16px; stroke: white;" viewBox="0 0 24 24" fill="none" stroke-width="2">
+                                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                                </svg>
+                            </div>
+                            <div style="min-width: 0;">
+                                <div style="font-weight: 600; font-size: 13px; color: #2c2c2c;" th:text="${cat.categoryName}">Category Name</div>
+                                <div th:if="${!cat.isActive}" style="font-size: 11px; color: #e63946; margin-top: 2px;">
+                                    <svg style="width: 10px; height: 10px; display: inline; margin-right: 2px;" viewBox="0 0 24 24" fill="currentColor">
+                                        <circle cx="12" cy="12" r="10"/>
+                                    </svg>
+                                    Đã ẩn
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <code style="font-size: 12px; background: #f5f5f5; padding: 4px 8px; border-radius: 3px; color: #2c2c2c;"
+                              th:text="${cat.categorySlug}">category-slug</code>
+                    </td>
+                    <td>
+                        <span th:if="${cat.parentName}"
+                              style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: #666;">
+                            <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                            <span th:text="${cat.parentName}">Parent Category</span>
+                        </span>
+                        <span th:unless="${cat.parentName}" style="color: #999; font-style: italic; font-size: 12px;">─ Gốc ─</span>
+                    </td>
+                    <td>
+                        <span th:if="${cat.parentId == null}"
+                              style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase;">
+                            <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="10"/>
+                            </svg>
+                            Level 0
+                        </span>
+                        <span th:unless="${cat.parentId == null}"
+                              style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase;">
+                            <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="10"/>
+                            </svg>
+                            Level 1+
+                        </span>
+                    </td>
+                    <td>
+                        <span th:if="${cat.isActive && cat.catStatus == 'ACTIVE'}"
+                              class="status-badge status-active">
+                            <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="10"/>
+                            </svg>
+                            Hoạt động
+                        </span>
+                        <span th:if="${cat.isActive && cat.catStatus != 'ACTIVE'}"
+                              class="status-badge status-pending">
+                            <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="10"/>
+                            </svg>
+                            Tạm ẩn
+                        </span>
+                        <span th:unless="${cat.isActive}"
+                              class="status-badge status-deleted">
+                            <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="10"/>
+                            </svg>
+                            Đã ẩn
+                        </span>
+                    </td>
+                    <td>
+                        <div style="font-size: 13px; color: #2c2c2c;"
+                             th:text="${#temporals.format(cat.createdAt, 'dd/MM/yyyy')}">01/01/2024</div>
+                        <div style="font-size: 11px; color: #666; margin-top: 2px;"
+                             th:text="${#temporals.format(cat.createdAt, 'HH:mm')}">14:30</div>
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <!-- Nút Edit: chỉ hiện khi còn active -->
+                            <a th:if="${cat.isActive}"
+                               th:href="@{/admin/categories/{id}/edit(id=${cat.id})}"
+                               class="action-btn action-btn-edit"
+                               title="Chỉnh sửa">
+                                <svg viewBox="0 0 24 24">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </a>
+
+                            <!-- Nút Toggle: Ẩn khi isActive=true, Khôi phục khi isActive=false -->
+                            <form th:action="@{/admin/categories/{id}/toggle-status(id=${cat.id})}"
+                                  method="post"
+                                  style="display: inline-block;"
+                                  th:onsubmit="${cat.isActive}
+                                      ? 'return confirm(\'⚠️ Ẩn danh mục này?\n\nCác danh mục con (nếu có) cũng sẽ bị ẩn theo!\')'
+                                      : 'return confirm(\'✅ Khôi phục danh mục này?\n\nCác danh mục con (nếu có) cũng sẽ được khôi phục theo!\')'">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                <!-- Ẩn (đang active) -->
+                                <button th:if="${cat.isActive}"
+                                        type="submit"
+                                        class="action-btn action-btn-delete"
+                                        title="Ẩn danh mục">
+                                    <svg viewBox="0 0 24 24">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+                                        <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+                                        <line x1="1" y1="1" x2="23" y2="23"/>
+                                    </svg>
+                                </button>
+                                <!-- Khôi phục (đang ẩn) -->
+                                <button th:unless="${cat.isActive}"
+                                        type="submit"
+                                        class="action-btn"
+                                        style="color: #4CAF50; border-color: #4CAF50;"
+                                        title="Khôi phục danh mục">
+                                    <svg viewBox="0 0 24 24">
+                                        <polyline points="1 4 1 10 7 10"/>
+                                        <path d="M3.51 15a9 9 0 1 0 .49-3.51"/>
+                                    </svg>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- EMPTY STATE -->
+        <div th:if="${#lists.isEmpty(categories)}" class="empty-state">
+            <svg style="width: 64px; height: 64px; color: #ccc; margin-bottom: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <h3 style="font-size: 16px; font-weight: 600; color: #666; margin-bottom: 8px;">Chưa có danh mục nào</h3>
+            <p style="font-size: 13px; color: #999; margin-bottom: 16px;">Bắt đầu bằng cách tạo danh mục đầu tiên cho cửa hàng của bạn</p>
+            <a th:href="@{/admin/categories/create}" class="btn btn-primary">
+                <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+                    <line x1="12" y1="5" x2="12" y2="19"/>
+                    <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Tạo danh mục đầu tiên
+            </a>
+        </div>
+    </div>
+</div>
+
+<div layout:fragment="scripts">
+    <script th:inline="javascript">
+        // Get all table rows
+        const tableRows = document.querySelectorAll('.admin-table tbody tr');
+
+        // Filter functions
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const statusFilter = document.getElementById('statusFilter').value;
+            const levelFilter = document.getElementById('levelFilter').value;
+
+            tableRows.forEach(row => {
+                const name = row.getAttribute('data-name').toLowerCase();
+                const status = row.getAttribute('data-status');
+                const level = row.getAttribute('data-level');
+
+                const matchesSearch = name.includes(searchTerm);
+                const matchesStatus = !statusFilter || status === statusFilter;
+                const matchesLevel = !levelFilter || level === levelFilter;
+
+                row.style.display = (matchesSearch && matchesStatus && matchesLevel) ? '' : 'none';
+            });
+        }
+
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('levelFilter').value = '';
+            tableRows.forEach(row => row.style.display = '');
+
+            // Reset tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.tab-btn').classList.add('active');
+        }
+
+        function filterByTab(type, event) {
+            // Update active tab
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
+
+            // Sync status dropdown
+            const statusDropdown = document.getElementById('statusFilter');
+
+            tableRows.forEach(row => {
+                const status = row.getAttribute('data-status');
+                const level = row.getAttribute('data-level');
+                const isDeleted = row.getAttribute('data-deleted') === 'true';
+
+                if (type === 'all') {
+                    row.style.display = '';
+                    statusDropdown.value = '';
+                } else if (type === 'active') {
+                    row.style.display = (!isDeleted && status === 'ACTIVE') ? '' : 'none';
+                    statusDropdown.value = 'ACTIVE';
+                } else if (type === 'inactive') {
+                    row.style.display = (!isDeleted && status === 'INACTIVE') ? '' : 'none';
+                    statusDropdown.value = 'INACTIVE';
+                } else if (type === 'deleted') {
+                    row.style.display = isDeleted ? '' : 'none';
+                    statusDropdown.value = 'DELETED';
+                } else if (type === 'root') {
+                    row.style.display = level === 'root' ? '' : 'none';
+                    statusDropdown.value = '';
+                } else if (type === 'child') {
+                    row.style.display = level === 'child' ? '' : 'none';
+                    statusDropdown.value = '';
+                }
+            });
+        }
+
+        // Real-time search
+        document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+        // Select all checkbox
+        function toggleSelectAll(checkbox) {
+            document.querySelectorAll('.row-checkbox').forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+        }
+
+        // Auto-dismiss alerts after 5 seconds
+        setTimeout(() => {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                const closeBtn = alert.querySelector('.btn-close');
+                if (closeBtn) closeBtn.click();
+            });
+        }, 5000);
+    </script>
+</div>
+
+</body>
+</html>

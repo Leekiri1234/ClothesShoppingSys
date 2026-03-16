@@ -30,7 +30,7 @@
         <select class="filter-select" id="categoryFilter">
             <option value="">Tất cả danh mục</option>
             <option th:each="cat : ${categories}"
-                    th:value="${cat.categoryId}"
+                    th:value="${cat.id}"
                     th:text="${cat.categoryName}">Category</option>
         </select>
 
