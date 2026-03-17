@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @Table(name = "cart_items", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"cart_id", "variant_id"})
 })
-@SQLDelete(sql = "UPDATE cart_items SET is_active = false WHERE id = ?")
+@SQLDelete(sql = "UPDATE cart_items SET is_active = false WHERE cart_item_id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "cart_item_id"))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
