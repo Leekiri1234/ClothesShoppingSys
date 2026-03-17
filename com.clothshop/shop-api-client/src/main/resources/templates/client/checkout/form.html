@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+  <title>Thanh toán - ClothShop</title>
+</head>
+<body>
+<div layout:fragment="content" class="container py-5">
+  <h2 class="fw-bold mb-4">Thanh toán</h2>
+
+  <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+  <form th:action="@{/checkout/confirm}" method="post" th:object="${orderRequest}">
+    <div class="row g-4">
+      <div class="col-lg-7">
+        <div class="card shadow-sm border-0 mb-4">
+          <div class="card-header bg-white pb-0 border-0 mt-2">
+            <h5 class="fw-bold"><i class="fas fa-map-marker-alt text-primary me-2"></i>Thông tin giao hàng</h5>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label class="form-label">Số điện thoại người nhận *</label>
+              <input type="text" class="form-control" th:field="*{phoneNumber}"
+                     th:classappend="${#fields.hasErrors('phoneNumber')} ? 'is-invalid'">
+              <div class="invalid-feedback" th:errors="*{phoneNumber}"></div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Địa chỉ giao hàng chi tiết *</label>
+              <textarea class="form-control" rows="3" th:field="*{shippingAddress}"
+                        th:classappend="${#fields.hasErrors('shippingAddress')} ? 'is-invalid'"></textarea>
+              <div class="invalid-feedback" th:errors="*{shippingAddress}"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+          <div class="card-header bg-white pb-0 border-0 mt-2">
+            <h5 class="fw-bold"><i class="fas fa-credit-card text-primary me-2"></i>Phương thức thanh toán</h5>
+          </div>
+          <div class="card-body">
+            <div class="form-check mb-3" th:each="method : ${paymentMethods}">
+              <input class="form-check-input" type="radio" th:field="*{paymentMethod}" th:value="${method.name()}">
+              <label class="form-check-label fw-medium" th:text="${method.displayName}"></label>
+            </div>
+            <div class="text-danger small" th:if="${#fields.hasErrors('paymentMethod')}" th:errors="*{paymentMethod}"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-5">
+        <div class="card shadow-sm border-0 sticky-top" style="top: 20px;">
+          <div class="card-body p-4">
+            <h5 class="fw-bold mb-4">Tóm tắt đơn hàng</h5>
+
+            <div class="d-flex align-items-center mb-3 pb-3 border-bottom" th:each="item : ${cart.items}">
+              <img th:src="${item.imageUrl}" class="img-thumbnail me-3" style="width: 60px; height: 60px; object-fit: cover;">
+              <div class="flex-grow-1">
+                <h6 class="mb-0 fs-6" th:text="${item.productName}">Product</h6>
+                <small class="text-muted" th:text="${item.colorName} + ' | Size: ' + ${item.sizeName}">Variant</small>
+              </div>
+              <div class="text-end">
+                <small class="text-muted d-block">x<span th:text="${item.quantity}">1</span></small>
+                <strong th:text="${#numbers.formatDecimal(item.subtotal, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0</strong>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label text-muted small uppercase">Mã giảm giá</label>
+              <div class="input-group">
+                <input type="text" id="voucherCodeInput" class="form-control" th:field="*{voucherCode}" placeholder="Nhập mã...">
+                <button type="button" id="btnApplyVoucher" class="btn btn-outline-dark">Áp dụng</button>
+              </div>
+              <div id="voucherMessage" class="small mt-1"></div>
+            </div>
+
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Tạm tính:</span>
+              <span id="displayTotal" th:text="${#numbers.formatDecimal(cart.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2 text-success">
+              <span>Giảm giá:</span>
+              <span id="displayDiscount">- 0 ₫</span>
+            </div>
+            <hr>
+            <div class="d-flex justify-content-between mb-4">
+              <span class="fw-bold fs-5">Tổng cộng:</span>
+              <strong class="text-danger fs-4" id="displayFinal" th:text="${#numbers.formatDecimal(cart.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</strong>
+            </div>
+
+            <button type="submit" class="btn btn-dark w-100 py-3 fw-bold fs-6">ĐẶT HÀNG</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+<th:block layout:fragment="scripts">
+  <script>
+    document.getElementById('btnApplyVoucher').addEventListener('click', function() {
+      const voucherCode = document.getElementById('voucherCodeInput').value;
+      const msgBox = document.getElementById('voucherMessage');
+
+      if (!voucherCode) {
+        msgBox.className = 'small mt-1 text-danger';
+        msgBox.innerText = 'Vui lòng nhập mã giảm giá';
+        return;
+      }
+
+      const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+      const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+      // Gọi API bằng x-www-form-urlencoded vì @RequestParam mong đợi format này
+      fetch('/checkout/calculate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          [csrfHeader]: csrfToken
+        },
+        body: new URLSearchParams({ 'voucherCode': voucherCode })
+      })
+              .then(res => res.json().then(data => ({ status: res.status, body: data })))
+              .then(obj => {
+                if (obj.status === 200) {
+                  msgBox.className = 'small mt-1 text-success fw-bold';
+                  msgBox.innerText = obj.body.voucherMessage;
+
+                  // Cập nhật giao diện tiền
+                  document.getElementById('displayTotal').innerText = new Intl.NumberFormat('vi-VN').format(obj.body.totalAmount) + ' ₫';
+                  document.getElementById('displayDiscount').innerText = '- ' + new Intl.NumberFormat('vi-VN').format(obj.body.discount) + ' ₫';
+                  document.getElementById('displayFinal').innerText = new Intl.NumberFormat('vi-VN').format(obj.body.finalAmount) + ' ₫';
+                } else {
+                  msgBox.className = 'small mt-1 text-danger';
+                  msgBox.innerText = obj.body.error || 'Mã giảm giá không hợp lệ';
+                  document.getElementById('voucherCodeInput').value = ''; // Xóa mã sai để backend không nhận
+                }
+              })
+              .catch(err => {
+                console.error(err);
+                msgBox.className = 'small mt-1 text-danger';
+                msgBox.innerText = 'Lỗi kết nối, vui lòng thử lại';
+              });
+    });
+  </script>
+</th:block>
+</body>
+</html>
