@@ -14,7 +14,8 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
 
-    Optional<Product> findByProductSlug(String slug);
+    @Query("SELECT p FROM Product p WHERE p.productSlug = :slug AND p.isActive = true")
+    Optional<Product> findByProductSlug(@Param("slug") String slug);
 
     boolean existsByProductSlug(String productSlug);
 

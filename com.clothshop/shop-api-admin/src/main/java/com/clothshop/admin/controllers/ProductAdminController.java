@@ -114,10 +114,10 @@ public class ProductAdminController {
         return "redirect:/admin/products";
     }
 
-    @PostMapping("/{id}/delete")
-    public String deleteProduct(@PathVariable Long id, RedirectAttributes redirectAttributes) {
-        productAdminService.deleteProduct(id);
-        redirectAttributes.addFlashAttribute("successMessage", "Đã xóa sản phẩm thành công");
+    @PostMapping("/{id}/toggle-status")
+    public String toggleProductStatus(@PathVariable Long id, RedirectAttributes redirectAttributes) {
+        String message = productAdminService.toggleProductStatus(id);
+        redirectAttributes.addFlashAttribute("successMessage", message);
         return "redirect:/admin/products";
     }
 
