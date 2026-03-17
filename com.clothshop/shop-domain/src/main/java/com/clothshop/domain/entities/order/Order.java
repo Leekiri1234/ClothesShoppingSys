@@ -3,6 +3,7 @@ package com.clothshop.domain.entities.order;
 import com.clothshop.domain.entities.auth.Customer;
 import com.clothshop.domain.entities.base.BaseEntity;
 import com.clothshop.domain.enums.OrderStatus;
+import com.clothshop.domain.enums.PaymentMethod;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -40,7 +41,7 @@ public class Order extends BaseEntity {
     private BigDecimal totalPrice; // totalAmount - discount
 
     @Column(name = "payment_method", length = 50)
-    private String paymentMethod; // COD, BANK_TRANSFER, VNPAY
+    private PaymentMethod paymentMethod;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20)
