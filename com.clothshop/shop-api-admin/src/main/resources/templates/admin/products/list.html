@@ -96,7 +96,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr th:each="product : ${products.content}">
+                <tr th:each="product : ${products.content}" th:classappend="${!product.isActive} ? 'inactive-row' : ''">
                     <td>
                         <input type="checkbox" class="row-checkbox" th:value="${product.productId}">
                     </td>
@@ -127,12 +127,26 @@
                                onchange="updateStock(this, [[${product.productId}]])">
                     </td>
                     <td>
-                        <label class="toggle-switch">
-                            <input type="checkbox"
-                                   th:checked="${product.isActive}"
-                                   onchange="toggleProductStatus(this, [[${product.productId}]])">
-                            <span class="toggle-slider"></span>
-                        </label>
+                        <span th:unless="${product.isActive}" class="badge status-deleted" style="background-color: #ffebee; color: #c62828;">
+                            <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="12" cy="12" r="10"/>
+                            </svg>
+                            Ngưng bán
+                        </span>
+                        <th:block th:if="${product.isActive}">
+                            <span th:if="${product.stock > 0}" class="badge status-active" style="background-color: #e8f5e9; color: #2e7d32;">
+                                <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="12" cy="12" r="10"/>
+                                </svg>
+                                Đang bán
+                            </span>
+                            <span th:if="${product.stock <= 0}" class="badge status-pending" style="background-color: #fff3e0; color: #ef6c00;">
+                                <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
+                                    <circle cx="12" cy="12" r="10"/>
+                                </svg>
+                                Hết hàng
+                            </span>
+                        </th:block>
                     </td>
                     <td>
                         <div class="actions-cell">
@@ -152,15 +166,33 @@
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                 </svg>
                             </a>
-                            <button class="btn btn-xs btn-danger"
-                                    data-confirm-delete
-                                    onclick="deleteProduct([[${product.productId}]])"
-                                    title="Xóa">
-                                <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24">
-                                    <polyline points="3 6 5 6 21 6"/>
-                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                </svg>
-                            </button>
+                            <form th:action="@{/admin/products/{id}/toggle-status(id=${product.productId})}"
+                                  method="post"
+                                  style="display:inline;"
+                                  th:onsubmit="${product.isActive}
+                                      ? 'return confirm(\'⚠️ Ẩn sản phẩm này?\n\nSản phẩm sẽ không hiển thị trên cửa hàng!\')'
+                                      : 'return confirm(\'✅ Khôi phục sản phẩm này?\n\nSản phẩm sẽ hiển thị lại trên cửa hàng!\')'">
+
+                                <button type="submit"
+                                        th:if="${product.isActive}"
+                                        class="btn btn-xs btn-outline-danger"
+                                        title="Ẩn sản phẩm">
+                                    <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
+                                </button>
+
+                                <button type="submit"
+                                        th:unless="${product.isActive}"
+                                        class="btn btn-xs btn-outline-success"
+                                        title="Khôi phục sản phẩm">
+                                    <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="1 4 1 10 7 10"></polyline>
+                                        <path d="M3.51 15a9 9 0 1 0 .49-3.51"></path>
+                                    </svg>
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>
