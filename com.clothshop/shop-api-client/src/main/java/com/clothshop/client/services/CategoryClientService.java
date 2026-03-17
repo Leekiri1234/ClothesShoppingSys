@@ -1,7 +1,7 @@
 package com.clothshop.client.services;
 
 import com.clothshop.client.dtos.response.CategoryResponse;
-import com.clothshop.client.mappers.CategoryMapper;
+import com.clothshop.client.mappers.CategoryClientMapper;
 import com.clothshop.domain.repositories.product.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -12,10 +12,10 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CategoryClientService {
     private final CategoryRepository categoryRepository;
-    private final CategoryMapper categoryMapper;
+    private final CategoryClientMapper categoryClientMapper;
 
     public List<CategoryResponse> getAllActiveCategories() {
-        return categoryMapper.toCategoryResponseList(
+        return categoryClientMapper.toCategoryResponseList(
                 categoryRepository.findAllByIsActiveTrue()
         );
     }

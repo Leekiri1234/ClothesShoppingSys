@@ -40,8 +40,7 @@ public interface CollectionRepository extends JpaRepository<Collection, Long> {
             "LEFT JOIN FETCH c.items ci " +
             "LEFT JOIN FETCH ci.product p " +
             "LEFT JOIN FETCH p.category cat " +
-            "WHERE c.slug = :slug AND c.isActive = true " +
-            "AND (p IS NULL OR cat.id IS NOT NULL)")
+            "WHERE c.slug = :slug AND c.isActive = true")
     Optional<Collection> findBySlugAndIsActiveTrue(@Param("slug") String slug);
 
     @Query("SELECT DISTINCT c FROM Collection c " +
