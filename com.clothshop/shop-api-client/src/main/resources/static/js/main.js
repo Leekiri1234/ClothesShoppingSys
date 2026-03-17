@@ -199,3 +199,17 @@ function changeProductImage(imageUrl) {
         mainImage.src = imageUrl;
     }
 }
+function updateCartBadge() {
+    fetch('/cart/count')
+        .then(res => res.json())
+        .then(data => {
+            const badge = document.querySelector('.cart-badge'); // Selector của bạn
+            if (badge) {
+                badge.innerText = data.count;
+                badge.style.display = data.count > 0 ? 'block' : 'none';
+            }
+        });
+}
+
+// Gọi khi vừa load trang để hiện số lượng cũ
+document.addEventListener('DOMContentLoaded', updateCartBadge);
