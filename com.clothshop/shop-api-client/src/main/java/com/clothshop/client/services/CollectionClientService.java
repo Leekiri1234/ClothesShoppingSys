@@ -1,7 +1,7 @@
 package com.clothshop.client.services;
 
 import com.clothshop.client.dtos.response.CollectionResponse;
-import com.clothshop.client.mappers.CollectionMapper;
+import com.clothshop.client.mappers.CollectionClientMapper;
 import com.clothshop.domain.entities.marketing.Collection;
 import com.clothshop.domain.repositories.marketing.CollectionRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -17,11 +17,11 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class CollectionClientService {
     private final CollectionRepository collectionRepository;
-    private final CollectionMapper collectionMapper;
+    private final CollectionClientMapper collectionClientMapper;
 
     public List<CollectionResponse> getAllActiveCollections() {
         return collectionRepository.findByIsActiveTrue().stream()
-                .map(collectionMapper::toCollectionResponse) // Gọn hơn rất nhiều
+                .map(collectionClientMapper::toCollectionResponse) // Gọn hơn rất nhiều
                 .collect(Collectors.toList());
     }
 
@@ -30,6 +30,6 @@ public class CollectionClientService {
         Collection collection = collectionRepository.findBySlugAndIsActiveTrue(slug)
                 .orElseThrow(() -> new EntityNotFoundException("Collection not found"));
 
-        return collectionMapper.toCollectionResponse(collection);
+        return collectionClientMapper.toCollectionResponse(collection);
     }
 }

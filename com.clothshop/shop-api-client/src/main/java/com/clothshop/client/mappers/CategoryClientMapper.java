@@ -12,7 +12,7 @@ import java.util.List;
  * Follows the architectural guideline: NEVER expose Entity to View layer.
  */
 @Mapper(componentModel = "spring")
-public interface CategoryMapper {
+public interface CategoryClientMapper {
 
     /**
      * Convert Category entity to CategoryResponse DTO.

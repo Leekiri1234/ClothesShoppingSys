@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
-public interface CollectionMapper {
+public interface CollectionClientMapper {
 
     @Mapping(source = "items", target = "products", qualifiedByName = "mapItemsToProducts")
     CollectionResponse toCollectionResponse(Collection collection);
