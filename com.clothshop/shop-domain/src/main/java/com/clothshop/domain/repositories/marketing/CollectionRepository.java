@@ -40,8 +40,6 @@ public interface CollectionRepository extends JpaRepository<Collection, Long> {
             "LEFT JOIN FETCH c.items ci " +
             "LEFT JOIN FETCH ci.product p " +
             "LEFT JOIN FETCH p.category cat " +
-            "LEFT JOIN FETCH p.variants " +
-            "LEFT JOIN FETCH p.images " +
             "WHERE c.slug = :slug AND c.isActive = true " +
             "AND (p IS NULL OR cat.id IS NOT NULL)")
     Optional<Collection> findBySlugAndIsActiveTrue(@Param("slug") String slug);
