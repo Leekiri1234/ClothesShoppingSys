@@ -82,9 +82,9 @@ public class CheckoutController {
         }
 
         try {
-            Long orderId = checkoutService.placeOrder(principal.getName(), request);
+            String orderInvoice = checkoutService.placeOrder(principal.getName(), request);
             redirectAttributes.addFlashAttribute("success", "Đặt hàng thành công! Đơn hàng của bạn đang chờ xác nhận.");
-            return "redirect:/orders/" + orderId; // Sẽ làm trang chi tiết đơn hàng sau
+            return "redirect:/orders/" + orderInvoice;
         } catch (BusinessException e) {
             model.addAttribute("error", e.getMessage());
             model.addAttribute("cart", cartService.getCartSummary(principal.getName()));
@@ -93,3 +93,4 @@ public class CheckoutController {
         }
     }
 }
+

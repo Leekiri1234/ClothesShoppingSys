@@ -40,6 +40,7 @@ public class Order extends BaseEntity {
     @Column(name = "final_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalPrice; // totalAmount - discount
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", length = 50)
     private PaymentMethod paymentMethod;
 

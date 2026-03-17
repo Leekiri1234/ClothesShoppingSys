@@ -126,7 +126,7 @@ public class CheckoutClientService {
 
     // 3. Create Order
     @Transactional
-    public Long placeOrder(String username, OrderCreateRequest request) {
+    public String placeOrder(String username, OrderCreateRequest request) {
         Customer customer = getCustomerByUsername(username);
 
         // Cập nhật thông tin giao hàng cho Customer nếu có thay đổi
@@ -201,6 +201,6 @@ public class CheckoutClientService {
 
         // CHÚ Ý: CHƯA TRỪ STOCK Ở ĐÂY. Stock sẽ được trừ khi Admin Verify Payment.
 
-        return savedOrder.getId();
+        return savedOrder.getOrderInvoice();
     }
 }
