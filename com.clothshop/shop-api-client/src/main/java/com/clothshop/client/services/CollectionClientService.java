@@ -1,8 +1,10 @@
 package com.clothshop.client.services;
 
 import com.clothshop.client.dtos.response.CollectionResponse;
-import com.clothshop.client.mappers.CollectionMapper;
+import com.clothshop.client.mappers.CollectionClientMapper;
+import com.clothshop.domain.entities.marketing.Collection;
 import com.clothshop.domain.repositories.marketing.CollectionRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,17 +17,19 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class CollectionClientService {
     private final CollectionRepository collectionRepository;
-    private final CollectionMapper collectionMapper;
+    private final CollectionClientMapper collectionClientMapper;
 
     public List<CollectionResponse> getAllActiveCollections() {
         return collectionRepository.findByIsActiveTrue().stream()
-                .map(collectionMapper::toCollectionResponse) // Gọn hơn rất nhiều
+                .map(collectionClientMapper::toCollectionResponse) // Gọn hơn rất nhiều
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public CollectionResponse getCollectionBySlug(String slug) {
-        return collectionRepository.findBySlugAndIsActiveTrue(slug)
-                .map(collectionMapper::toCollectionResponse)
-                .orElseThrow(() -> new RuntimeException("Collection not found"));
+        Collection collection = collectionRepository.findBySlugAndIsActiveTrue(slug)
+                .orElseThrow(() -> new EntityNotFoundException("Collection not found"));
+
+        return collectionClientMapper.toCollectionResponse(collection);
     }
 }
