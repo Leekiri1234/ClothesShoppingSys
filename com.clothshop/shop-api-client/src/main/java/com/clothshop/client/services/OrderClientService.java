@@ -78,21 +78,34 @@ public class OrderClientService {
     }
 
     @Transactional
-    public void cancelOrder(String username, String orderInvoice) {
+    public void cancelOrder(String username, String orderInvoice, String reason) {
         Long customerId = getCustomerId(username);
-        Order order = orderRepository.findByOrderInvoice(orderInvoice)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy đơn hàng"));
+        Order order = orderRepository.findByOrderInvoiceWithDetails(orderInvoice)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy đơn hàng"));
 
         if (!order.getCustomer().getId().equals(customerId)) {
-            throw new RuntimeException("Bạn không có quyền hủy đơn hàng này");
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "Bạn không có quyền hủy đơn hàng này");
         }
 
-        if (!order.getStatus().equals(OrderStatus.PENDING)) {
-            throw new RuntimeException("Chỉ có thể hủy đơn hàng ở trạng thái Chờ xác nhận");
+        if (!OrderStatus.PENDING.equals(order.getStatus())) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Cannot cancel order in " + order.getStatus() + " status");
         }
 
         order.setStatus(OrderStatus.CANCELLED);
+
+        OrderStatusHistory history = new OrderStatusHistory();
+        history.setOrder(order);
+        history.setStatusId(OrderStatus.CANCELLED);
+        history.setChangedAt(java.time.LocalDateTime.now());
+        history.setNote(reason != null ? reason : "Customer cancelled order");
+
+        if (order.getStatusHistory() == null) {
+            order.setStatusHistory(new java.util.ArrayList<>());
+        }
+        order.getStatusHistory().add(history);
+
         orderRepository.save(order);
+        // TODO: send notification to admin (e.g., event or email)
     }
 
     @Transactional
@@ -125,3 +138,4 @@ public class OrderClientService {
         orderRepository.save(order);
     }
 }
+
