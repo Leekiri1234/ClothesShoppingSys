@@ -189,6 +189,60 @@
             document.getElementById('quantity').disabled = true;
             document.getElementById('selectedVariantId').value = '';
         }
+        document.getElementById('btnAddToCart').addEventListener('click', function() {
+            const variantId = document.getElementById('selectedVariantId').value;
+            const quantity = document.getElementById('quantity').value;
+
+            if (!variantId) {
+                alert("Vui lòng chọn màu sắc và kích cỡ!");
+                return;
+            }
+
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+
+            // Nếu có token (người dùng đã đăng nhập và CSRF được bật), thêm vào header
+            if (csrfHeader && csrfToken) {
+                headers[csrfHeader] = csrfToken;
+            }
+
+            fetch('/cart/add', {
+                method: 'POST',
+                headers: headers, // Sử dụng headers đã được gán token
+                body: JSON.stringify({
+                    variantId: parseInt(variantId),
+                    quantity: parseInt(quantity)
+                })
+            })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    }
+                    // Lỗi 401 (Unauth) hoặc 403 (Forbidden/Missing CSRF)
+                    if (response.status === 401 || response.status === 403) {
+                        alert("Vui lòng đăng nhập để thực hiện tính năng này!");
+                        window.location.href = '/login';
+                        throw new Error("Unauthorized");
+                    }
+                    return response.json().then(err => { throw err; });
+                })
+                .then(data => {
+                    alert("Đã thêm sản phẩm vào giỏ hàng thành công!");
+                    if (typeof updateCartBadge === 'function') {
+                        updateCartBadge();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    if(error.message !== "Unauthorized") {
+                        alert(error.message || "Có lỗi xảy ra khi thêm vào giỏ hàng");
+                    }
+                });
+        });
     </script>
 </th:block>
 </body>

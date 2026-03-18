@@ -23,15 +23,23 @@ public class ProductSearchService {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
         Page<Product> productPage;
 
+        // 1. Nếu có keyword -> Tìm theo Tên SP + Danh mục + Bộ sưu tập
         if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
-            productPage = productRepository.findByProductNameContainingIgnoreCaseAndIsActiveTrue(request.getKeyword(), pageable);
-        } else if (request.getCategoryId() != null) {
+            productPage = productRepository.searchFullText(request.getKeyword().trim(), pageable);
+        }
+        // 2. Nếu không có keyword nhưng có CategoryId -> Lọc theo danh mục
+        else if (request.getCategoryId() != null) {
             productPage = productRepository.findByCategory_IdAndIsActiveTrue(request.getCategoryId(), pageable);
-        } else if (request.getCollectionSlug() != null) {
+        }
+        // 3. Nếu lọc theo Collection Slug
+        else if (request.getCollectionSlug() != null) {
             productPage = productRepository.findByCollectionSlug(request.getCollectionSlug(), pageable);
-        } else {
-            productPage = productRepository.findAll(pageable); // Hoặc lấy sản phẩm mới nhất
+        }
+        // 4. Mặc định lấy tất cả SP đang hoạt động
+        else {
+            productPage = productRepository.findAllActive(pageable);
         }
 
-        return productPage.map(productMapper::toListResponse);    }
+        return productPage.map(productMapper::toListResponse);
+    }
 }

@@ -62,4 +62,19 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "WHERE ci.collection.slug = :slug " +
             "AND ci.product.isActive = true")
     Page<Product> findByCollectionSlug(@Param("slug") String slug, Pageable pageable);
+
+    @Query("SELECT DISTINCT p FROM Product p " +
+            "LEFT JOIN p.category cat " +
+            "LEFT JOIN p.collectionItems ci " +
+            "LEFT JOIN ci.collection col " +
+            "WHERE p.isActive = true " +
+            "AND (" +
+            "   LOWER(p.productName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "   OR (cat IS NOT NULL AND LOWER(cat.categoryName) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+            "   OR (col IS NOT NULL AND LOWER(col.name) LIKE LOWER(CONCAT('%', :keyword, '%')))" +
+            ")")
+    Page<Product> searchFullText(@Param("keyword") String keyword, Pageable pageable);
+
+    @Query("SELECT p FROM Product p WHERE p.isActive = true")
+    Page<Product> findAllActive(Pageable pageable);
 }

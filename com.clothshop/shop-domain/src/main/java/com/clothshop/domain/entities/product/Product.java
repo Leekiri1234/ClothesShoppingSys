@@ -1,6 +1,7 @@
 package com.clothshop.domain.entities.product;
 
 import com.clothshop.domain.entities.base.BaseEntity;
+import com.clothshop.domain.entities.marketing.CollectionItem;
 import com.clothshop.domain.enums.ProductStatus;
 import jakarta.persistence.*;
 import jakarta.persistence.CascadeType;
@@ -48,4 +49,7 @@ public class Product extends BaseEntity {
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 20)
     private List<ProductImage> images;
+
+    @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
+    private List<CollectionItem> collectionItems;
 }
