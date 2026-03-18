@@ -34,10 +34,7 @@
           </div>
 
           <div class="text-end mt-3" th:if="${order.status.name() == 'PENDING'}">
-            <form th:action="@{/orders/{orderInvoice}/cancel(orderInvoice=${order.orderInvoice})}" method="post"
-                  onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?')">
-              <button type="submit" class="btn btn-danger">Hủy đơn hàng</button>
-            </form>
+            <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">Hủy đơn hàng</button>
           </div>
           <div class="text-end mt-3" th:if="${order.status.name() == 'CANCELLED'}">
             <form th:action="@{/orders/{orderInvoice}/reorder(orderInvoice=${order.orderInvoice})}" method="post"
@@ -106,6 +103,31 @@
           <p class="mb-1 text-muted"><i class="fas fa-phone-alt me-2 small"></i><span th:text="${order.customerPhone}">Phone</span></p>
           <p class="mb-0 text-muted"><i class="fas fa-map-pin me-2 small"></i><span th:text="${order.shippingAddress}">Address</span></p>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cancel Order Modal -->
+  <div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="cancelModalLabel">Lý do hủy đơn hàng</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form th:action="@{/orders/{orderInvoice}/cancel(orderInvoice=${order.orderInvoice})}" method="post" th:object="${cancelRequest}">
+          <div class="modal-body">
+            <input type="hidden" th:field="*{orderInvoice}" th:value="${order.orderInvoice}" />
+            <div class="mb-3">
+              <label class="form-label">Vui lòng nhập lý do hủy *</label>
+              <textarea class="form-control" rows="3" th:field="*{reason}" required></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            <button type="submit" class="btn btn-danger">Xác nhận hủy</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>

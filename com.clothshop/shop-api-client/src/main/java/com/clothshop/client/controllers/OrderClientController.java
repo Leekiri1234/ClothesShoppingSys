@@ -1,5 +1,6 @@
 package com.clothshop.client.controllers;
 
+import com.clothshop.client.dtos.request.OrderCancellationRequest;
 import com.clothshop.client.dtos.response.OrderDetailResponse;
 import com.clothshop.client.dtos.response.OrderListClientResponse;
 import com.clothshop.client.services.OrderClientService;
@@ -40,13 +41,17 @@ public class OrderClientController {
     public String viewOrderDetail(@PathVariable String orderInvoice, Principal principal, Model model) {
         OrderDetailResponse order = orderService.getOrderDetail(principal.getName(), orderInvoice);
         model.addAttribute("order", order);
+        model.addAttribute("cancelRequest", new OrderCancellationRequest());
         return "client/orders/detail";
     }
 
     @PostMapping("/{orderInvoice}/cancel")
-    public String cancelOrder(@PathVariable String orderInvoice, Principal principal, RedirectAttributes redirectAttributes) {
+    public String cancelOrder(@PathVariable String orderInvoice,
+                              @ModelAttribute("cancelRequest") OrderCancellationRequest cancelRequest,
+                              Principal principal,
+                              RedirectAttributes redirectAttributes) {
         try {
-            orderService.cancelOrder(principal.getName(), orderInvoice);
+            orderService.cancelOrder(principal.getName(), orderInvoice, cancelRequest.getReason());
             redirectAttributes.addFlashAttribute("successMessage", "Đã hủy đơn hàng thành công.");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Không thể hủy đơn hàng: " + e.getMessage());
