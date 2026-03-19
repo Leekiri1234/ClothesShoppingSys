@@ -1,6 +1,8 @@
 package com.clothshop.domain.repositories.marketing;
 
 import com.clothshop.domain.entities.marketing.FeaturedProduct;
+import com.clothshop.domain.entities.product.Product;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -28,4 +30,11 @@ public interface FeaturedProductRepository extends JpaRepository<FeaturedProduct
     @Modifying
     @Query("UPDATE FeaturedProduct f SET f.isActive = false, f.updatedBy = :username WHERE f.isActive = true")
     void deactivateAllFeaturedProducts(@Param("username") String username);
+
+    @Query("SELECT fp.product FROM FeaturedProduct fp " +
+            "JOIN fp.product p " +
+            "LEFT JOIN FETCH p.category " +
+            "WHERE fp.isActive = true AND p.isActive = true " +
+            "ORDER BY fp.displayOrder ASC")
+    List<Product> findTopFeaturedProducts(Pageable pageable);
 }

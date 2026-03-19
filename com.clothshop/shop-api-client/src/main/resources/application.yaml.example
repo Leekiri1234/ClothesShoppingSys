@@ -26,6 +26,11 @@ spring:
     suffix: .html
     cache: false
 
+  # CẤU HÌNH CACHE CAFFEINE
+    cache:
+        type: caffeine
+        caffeine:
+        spec: maximumSize=100,expireAfterAccess=10m // Cấu hình cache Caffeine với kích thước tối đa 100 mục và thời gian hết hạn sau 10 phút không truy cập (để 30s nếu muốn test tính năng thay đổi phía admin)
 logging:
   level:
     com.clothshop: DEBUG
