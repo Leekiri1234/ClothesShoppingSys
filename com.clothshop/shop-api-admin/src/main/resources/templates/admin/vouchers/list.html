@@ -40,18 +40,26 @@
                         <td th:text="${item.discountType.displayName}"></td>
                         <td th:text="${item.discountType.name() == 'PERCENTAGE' ? #numbers.formatDecimal(item.discountValue, 0, 'COMMA', 2, 'POINT') + ' %' : #numbers.formatDecimal(item.discountValue, 0, 'COMMA', 0, 'POINT') + ' ₫'}"></td>
                         <td th:text="${item.minOrderAmount != null ? #numbers.formatDecimal(item.minOrderAmount, 0, 'COMMA', 0, 'POINT') + ' ₫' : '-'}"></td>
-                        <td th:text="${item.maxDiscount != null ? #numbers.formatDecimal(item.maxDiscount, 0, 'COMMA', 0, 'POINT') + ' ₫' : '-'}" ></td>
+                        <td th:text="${item.discountType.name() == 'PERCENTAGE' ? (item.maxDiscount != null ? #numbers.formatDecimal(item.maxDiscount, 0, 'COMMA', 0, 'POINT') + ' ₫' : '-') : '-'}"></td>
                         <td th:text="${item.currentUsage} + '/' + (${item.usageLimit} != null ? ${item.usageLimit} : '∞')"></td>
                         <td>
                             <div th:text="${#temporals.format(item.validFrom, 'dd/MM/yyyy HH:mm')} + ' - ' + ${#temporals.format(item.validTo, 'dd/MM/yyyy HH:mm')}"></div>
                         </td>
-                        <td><span class="badge bg-success" th:text="${item.status}"></span></td>
+                        <td>
+                            <span th:classappend="${item.status} == 'ACTIVE' ? 'bg-success' : (${item.status} == 'DISABLED' ? 'bg-secondary' : 'bg-warning')"
+                                  class="badge"
+                                  th:text="${item.status}"></span>
+                        </td>
                         <td>
                             <div class="d-flex gap-2">
                                 <a class="btn btn-sm btn-outline-primary" th:href="@{/admin/vouchers/edit/{id}(id=${item.id})}">Sửa</a>
-                                <form th:action="@{/admin/vouchers/{id}/disable(id=${item.id})}" method="post" onsubmit="return confirm('Vô hiệu hóa voucher này?');">
+                                <form th:if="${item.status == 'ACTIVE'}" th:action="@{/admin/vouchers/{id}/disable(id=${item.id})}" method="post" onsubmit="return confirm('Vô hiệu hóa voucher này?');">
                                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                                     <button type="submit" class="btn btn-sm btn-outline-danger">Vô hiệu</button>
+                                </form>
+                                <form th:if="${item.status == 'DISABLED'}" th:action="@{/admin/vouchers/{id}/enable(id=${item.id})}" method="post" onsubmit="return confirm('Kích hoạt lại voucher này?');">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                                    <button type="submit" class="btn btn-sm btn-outline-success">Kích hoạt</button>
                                 </form>
                             </div>
                         </td>
