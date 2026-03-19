@@ -13,6 +13,7 @@ import com.clothshop.domain.entities.order.Order;
 import com.clothshop.domain.entities.order.OrderItem;
 import com.clothshop.domain.entities.order.OrderStatusHistory;
 import com.clothshop.domain.entities.order.Payment;
+import com.clothshop.domain.enums.DiscountType;
 import com.clothshop.domain.enums.OrderStatus;
 import com.clothshop.domain.enums.PaymentStatus;
 import com.clothshop.domain.repositories.auth.AccountRepository;
@@ -102,12 +103,12 @@ public class CheckoutClientService {
             }
 
             // Calculate discount
-            if ("PERCENTAGE".equals(voucher.getDiscountType())) {
+            if (DiscountType.PERCENTAGE.equals(voucher.getDiscountType())) {
                 discount = totalAmount * (voucher.getDiscountValue().doubleValue() / 100);
                 if (voucher.getMaxDiscount() != null && discount > voucher.getMaxDiscount().doubleValue()) {
                     discount = voucher.getMaxDiscount().doubleValue();
                 }
-            } else {
+            } else if (DiscountType.FIXED_AMOUNT.equals(voucher.getDiscountType())) {
                 discount = voucher.getDiscountValue().doubleValue();
             }
             voucherMsg = "Đã áp dụng mã giảm giá thành công!";

@@ -2,6 +2,7 @@ package com.clothshop.domain.entities.marketing;
 
 import com.clothshop.domain.entities.base.BaseEntity;
 import com.clothshop.domain.entities.product.Product;
+import com.clothshop.domain.enums.DiscountType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -29,8 +30,9 @@ public class FlashSaleItem extends BaseEntity {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @Column(name = "discount_type", length = 20)
-    private String discountType; // PERCENTAGE, FIXED_AMOUNT
+    @Enumerated(EnumType.STRING)
+    @Column(name = "discount_type", length = 20, nullable = false)
+    private DiscountType discountType;
 
     @Column(name = "discount_value", precision = 10, scale = 2)
     private BigDecimal discountValue;
