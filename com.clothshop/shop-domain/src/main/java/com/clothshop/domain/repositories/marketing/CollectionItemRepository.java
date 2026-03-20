@@ -39,4 +39,8 @@ public interface CollectionItemRepository extends JpaRepository<CollectionItem, 
     List<CollectionItem> findAllHistoryByCollectionIdAndProductIds(
             @Param("collectionId") Long collectionId,
             @Param("productIds") List<Long> productIds);
+
+    // Kiểm tra item thuộc đúng collection trước khi update để tránh IDOR
+    @Query("SELECT ci FROM CollectionItem ci WHERE ci.id = :itemId AND ci.collection.id = :collectionId AND ci.isActive = true")
+    Optional<CollectionItem> findByIdAndCollectionId(@Param("itemId") Long itemId, @Param("collectionId") Long collectionId);
 }
