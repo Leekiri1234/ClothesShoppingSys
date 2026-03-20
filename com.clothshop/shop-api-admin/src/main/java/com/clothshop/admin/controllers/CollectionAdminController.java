@@ -28,9 +28,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Controller
 @RequestMapping("/admin/collections")
@@ -217,19 +215,19 @@ public class CollectionAdminController {
             if (result.isAllDuplicates()) {
                 // Tất cả sản phẩm đã có trong bộ sưu tập
                 redirectAttributes.addFlashAttribute("warningMessage",
-                    "Tất cả " + result.getDuplicateCount() + " sản phẩm đã có trong bộ sưu tập rồi!");
+                        "Tất cả " + result.getDuplicateCount() + " sản phẩm đã có trong bộ sưu tập rồi!");
                 redirectAttributes.addFlashAttribute("duplicateProductNames", result.getDuplicateProductNames());
             } else if (result.hasAnyDuplicates()) {
                 // Một số sản phẩm bị trùng, một số được thêm
                 redirectAttributes.addFlashAttribute("successMessage",
-                    "Đã gán " + result.getAddedCount() + " sản phẩm mới vào bộ sưu tập!");
+                        "Đã gán " + result.getAddedCount() + " sản phẩm mới vào bộ sưu tập!");
                 redirectAttributes.addFlashAttribute("warningMessage",
-                    result.getDuplicateCount() + " sản phẩm đã có sẵn nên bị bỏ qua.");
+                        result.getDuplicateCount() + " sản phẩm đã có sẵn nên bị bỏ qua.");
                 redirectAttributes.addFlashAttribute("duplicateProductNames", result.getDuplicateProductNames());
             } else {
                 // Tất cả đều mới
                 redirectAttributes.addFlashAttribute("successMessage",
-                    "Đã gán " + result.getAddedCount() + " sản phẩm vào bộ sưu tập!");
+                        "Đã gán " + result.getAddedCount() + " sản phẩm vào bộ sưu tập!");
             }
             return "redirect:/admin/collections/" + id + "/assign";
         }
@@ -274,8 +272,8 @@ public class CollectionAdminController {
             Principal principal,
             RedirectAttributes redirectAttributes) {
 
-        CollectionItem item = collectionItemRepository.findByIdAndCollectionId(itemId, collectionId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy liên kết hoặc item không thuộc bộ sưu tập này"));
+        CollectionItem item = collectionItemRepository.findById(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy liên kết"));
 
         item.setIsActive(false);
         item.setUpdatedBy(principal.getName());
