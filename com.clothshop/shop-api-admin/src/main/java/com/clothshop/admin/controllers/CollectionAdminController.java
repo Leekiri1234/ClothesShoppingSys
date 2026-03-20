@@ -28,7 +28,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin/collections")
@@ -239,18 +241,21 @@ public class CollectionAdminController {
                 return "redirect:/admin/collections/" + id + "/assign";
             }
 
-            // Update display order for each item
+            // Batch fetch tất cả items trong 1 câu query, sau đó cập nhật trong bộ nhớ và saveAll
+            List<CollectionItem> items = collectionItemRepository.findAllById(itemIds);
+            Map<Long, Integer> orderMap = new HashMap<>();
             for (int i = 0; i < itemIds.size(); i++) {
-                Long itemId = itemIds.get(i);
-                Integer newOrder = orders.get(i);
-
-                CollectionItem item = collectionItemRepository.findById(itemId)
-                        .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy item"));
-
-                item.setDisplayOrder(newOrder);
-                item.setUpdatedBy(principal.getName());
-                collectionItemRepository.save(item);
+                orderMap.put(itemIds.get(i), orders.get(i));
             }
+            String updatedBy = principal.getName();
+            for (CollectionItem item : items) {
+                Integer newOrder = orderMap.get(item.getId());
+                if (newOrder != null) {
+                    item.setDisplayOrder(newOrder);
+                    item.setUpdatedBy(updatedBy);
+                }
+            }
+            collectionItemRepository.saveAll(items);
 
             log.info("Updated display orders for {} items in collection {}", itemIds.size(), id);
             redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật thứ tự hiển thị!");
