@@ -172,6 +172,7 @@
                                   th:onsubmit="${product.isActive}
                                       ? 'return confirm(\'⚠️ Ẩn sản phẩm này?\n\nSản phẩm sẽ không hiển thị trên cửa hàng!\')'
                                       : 'return confirm(\'✅ Khôi phục sản phẩm này?\n\nSản phẩm sẽ hiển thị lại trên cửa hàng!\')'">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
                                 <button type="submit"
                                         th:if="${product.isActive}"
