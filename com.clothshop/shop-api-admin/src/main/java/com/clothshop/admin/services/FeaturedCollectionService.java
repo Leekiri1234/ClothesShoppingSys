@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -127,6 +128,13 @@ public class FeaturedCollectionService {
         // 2. Kéo TOÀN BỘ lịch sử (active + inactive) của các sản phẩm này lên RAM (Chỉ 1 câu SQL duy nhất - xuyên thủng @SQLRestriction)
         List<CollectionItem> historicalItems = collectionItemRepository.findAllHistoryByCollectionIdAndProductIds(collectionId, distinctProductIds);
 
+        // Chuyển sang Map để tra cứu O(1) thay vì O(n) mỗi vòng lặp
+        Map<Long, CollectionItem> historicalItemMap = historicalItems.stream()
+                .collect(Collectors.toMap(
+                        item -> item.getProduct().getId(),
+                        item -> item,
+                        (existing, replacement) -> existing));
+
         List<CollectionItem> itemsToSave = new ArrayList<>();
         List<String> duplicateProductNames = new ArrayList<>();
         int currentOrder = maxOrder + 1;
@@ -135,15 +143,12 @@ public class FeaturedCollectionService {
         // 3. Xử lý logic trên RAM để chống N+1
         for (Long pId : distinctProductIds) {
             // Tìm xem ID này đã từng tồn tại trong lịch sử chưa
-            Optional<CollectionItem> existingItemOpt = historicalItems.stream()
-                    .filter(item -> item.getProduct().getId().equals(pId))
-                    .findFirst();
+            CollectionItem existingItem = historicalItemMap.get(pId);
 
-            if (existingItemOpt.isPresent()) {
-                CollectionItem existingItem = existingItemOpt.get();
+            if (existingItem != null) {
                 if (existingItem.getIsActive()) {
                     // TH1: Đã tồn tại và ĐANG ACTIVE -> Ghi nhận trùng lặp để báo UI
-                    duplicateProductNames.add(existingItem.getProduct().getProductName());
+                    duplicateProductNames.add(productNameMap.getOrDefault(pId, ""));
                 } else {
                     // TH2: Đã tồn tại nhưng BỊ XÓA MỀM -> Khôi phục (Re-activate) thay vì tạo mới
                     existingItem.setIsActive(true);
