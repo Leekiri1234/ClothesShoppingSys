@@ -66,7 +66,7 @@ public class SecurityConfig {
                                 "/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
 
                         // Customer-only pages
-                        .requestMatchers("/profile/**", "/cart/**", "/checkout/**", "/orders/**").hasRole("CUSTOMER")
+                        .requestMatchers("/profile/**", "/cart/**", "/checkout/**", "/orders/**", "/vouchers/**").hasRole("CUSTOMER")
 
                         .anyRequest().permitAll()
                 )

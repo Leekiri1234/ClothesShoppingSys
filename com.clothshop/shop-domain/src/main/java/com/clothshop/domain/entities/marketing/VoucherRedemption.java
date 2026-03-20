@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "voucher_redemptions")
-@SQLDelete(sql = "UPDATE voucher_redemptions SET is_active = false WHERE id = ?")
+@SQLDelete(sql = "UPDATE voucher_redemptions SET is_active = false WHERE redemption_id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "redemption_id"))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
