@@ -2,10 +2,12 @@ package com.clothshop.domain.config;
 
 import com.clothshop.domain.entities.auth.*;
 import com.clothshop.domain.entities.marketing.*;
+import com.clothshop.domain.entities.order.*;
 import com.clothshop.domain.entities.product.*;
 import com.clothshop.domain.enums.*;
 import com.clothshop.domain.repositories.auth.*;
 import com.clothshop.domain.repositories.marketing.*;
+import com.clothshop.domain.repositories.order.*;
 import com.clothshop.domain.repositories.product.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +17,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -51,7 +55,14 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final ProductImageRepository productImageRepository;
     private final CollectionRepository collectionRepository;
     private final CollectionItemRepository collectionItemRepository;
+    private final VoucherRepository voucherRepository;
+    private final VoucherRedemptionRepository voucherRedemptionRepository;
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderStatusHistoryRepository orderStatusHistoryRepository;
+    private final PaymentRepository paymentRepository;
     private final PasswordEncoder passwordEncoder;
+    private final FeaturedProductRepository featuredProductRepository;
 
     @Override
     @Transactional
@@ -69,6 +80,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         seedCategories();
         seedProducts();
         seedCollections();
+        seedFeaturedProducts();
+        seedVouchersAndOrders();
 
         log.info("Database seeding completed successfully!");
     }
@@ -538,6 +551,140 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     /**
+     * 6. Seed Featured Products (homepage spotlight)
+     */
+    private void seedFeaturedProducts() {
+        log.info("Seeding featured products...");
+        List<Product> products = productRepository.findAll();
+        if (products.isEmpty()) {
+            log.warn("No products found, skipping featured products seeding.");
+            return;
+        }
+
+        // Pick first 5 products as featured with display order
+        int limit = Math.min(5, products.size());
+        for (int i = 0; i < limit; i++) {
+            Product product = products.get(i);
+            FeaturedProduct featured = FeaturedProduct.builder()
+                .product(product)
+                .displayOrder(i + 1)
+                .startDate(LocalDateTime.now().minusDays(1))
+                .endDate(LocalDateTime.now().plusDays(60))
+                .createdBy("marketing")
+                .build();
+            featuredProductRepository.save(featured);
+        }
+
+        log.info("Featured products seeded: {}", limit);
+    }
+
+    /**
+     * 7. Seed Vouchers + Sample Client Orders
+     */
+    private void seedVouchersAndOrders() {
+        log.info("Seeding vouchers and client orders...");
+
+        List<Customer> customers = customerRepository.findAll();
+        List<ProductVariant> variants = productVariantRepository.findAll();
+
+        if (customers.isEmpty() || variants.size() < 3) {
+            log.warn("Not enough customers or variants to seed orders. Skipping order seeding.");
+            return;
+        }
+
+        Voucher percentVoucher = createVoucher(
+            "WELCOME10",
+            DiscountType.PERCENTAGE,
+            new BigDecimal("10"),
+            new BigDecimal("300000"),
+            new BigDecimal("120000"),
+            50,
+            LocalDateTime.now().minusDays(5),
+            LocalDateTime.now().plusDays(30),
+            VoucherStatus.ACTIVE.name()
+        );
+
+        Voucher fixedVoucher = createVoucher(
+            "SAVE50K",
+            DiscountType.FIXED_AMOUNT,
+            new BigDecimal("50000"),
+            new BigDecimal("250000"),
+            null,
+            100,
+            LocalDateTime.now().minusDays(2),
+            LocalDateTime.now().plusDays(45),
+            VoucherStatus.ACTIVE.name()
+        );
+
+        Voucher expiredVoucher = createVoucher(
+            "FLASH15",
+            DiscountType.PERCENTAGE,
+            new BigDecimal("15"),
+            new BigDecimal("200000"),
+            new BigDecimal("150000"),
+            20,
+            LocalDateTime.now().minusDays(40),
+            LocalDateTime.now().minusDays(5),
+            VoucherStatus.EXPIRED.name()
+        );
+
+        // Orders for single customer with different statuses
+        Customer customer = customers.get(0);
+
+        createOrderWithVoucher(
+            "INV-1001",
+            customer,
+            PaymentMethod.COD,
+            OrderStatus.PENDING,
+            List.of(new ItemSpec(variants.get(0), 1), new ItemSpec(variants.get(1), 2)),
+            percentVoucher,
+            "Pending confirmation"
+        );
+
+        createOrderWithVoucher(
+            "INV-1002",
+            customer,
+            PaymentMethod.MOMO,
+            OrderStatus.CONFIRMED,
+            List.of(new ItemSpec(variants.get(2), 1), new ItemSpec(variants.get(3), 1)),
+            fixedVoucher,
+            "Confirmed by system"
+        );
+
+        createOrderWithVoucher(
+            "INV-1003",
+            customer,
+            PaymentMethod.VNPAY,
+            OrderStatus.SHIPPING,
+            List.of(new ItemSpec(variants.get(4), 2)),
+            percentVoucher,
+            "Shipping to customer"
+        );
+
+        createOrderWithVoucher(
+            "INV-1004",
+            customer,
+            PaymentMethod.BANK_TRANSFER,
+            OrderStatus.DELIVERED,
+            List.of(new ItemSpec(variants.get(5), 1), new ItemSpec(variants.get(6), 1)),
+            fixedVoucher,
+            "Delivered successfully"
+        );
+
+        createOrderWithVoucher(
+            "INV-1005",
+            customer,
+            PaymentMethod.COD,
+            OrderStatus.CANCELLED,
+            List.of(new ItemSpec(variants.get(7), 1)),
+            expiredVoucher,
+            "Cancelled by customer"
+        );
+
+        log.info("Vouchers and orders seeded: 3 vouchers, 5 client orders for single customer");
+    }
+
+    /**
      * Helper method to add a product to a collection
      */
     private void addProductToCollection(Collection collection, Product product, int displayOrder) {
@@ -620,5 +767,132 @@ public class DatabaseSeeder implements CommandLineRunner {
         image.setCreatedBy("admin");
         return image;
     }
-}
 
+    private Voucher createVoucher(String code, DiscountType discountType, BigDecimal discountValue,
+                                  BigDecimal minOrderValue, BigDecimal maxDiscount, Integer usageLimit,
+                                  LocalDateTime validFrom, LocalDateTime validTo, String status) {
+        Voucher voucher = new Voucher();
+        voucher.setCode(code);
+        voucher.setDiscountType(discountType);
+        voucher.setDiscountValue(discountValue);
+        voucher.setMinOrderValue(minOrderValue);
+        voucher.setMaxDiscount(maxDiscount);
+        voucher.setUsageLimit(usageLimit);
+        voucher.setCurrentUsage(0);
+        voucher.setValidFrom(validFrom);
+        voucher.setValidTo(validTo);
+        voucher.setStatus(status);
+        voucher.setCreatedBy("marketing");
+        return voucherRepository.save(voucher);
+    }
+
+    private void createOrderWithVoucher(String invoice, Customer customer, PaymentMethod paymentMethod,
+                                        OrderStatus status, List<ItemSpec> items, Voucher voucher, String note) {
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        int totalQty = 0;
+
+        for (ItemSpec item : items) {
+            BigDecimal line = item.variant().getRetailPrice().multiply(BigDecimal.valueOf(item.quantity()));
+            totalAmount = totalAmount.add(line);
+            totalQty += item.quantity();
+        }
+
+        BigDecimal discount = voucher != null ? calculateDiscount(totalAmount, voucher) : BigDecimal.ZERO;
+        BigDecimal finalPrice = totalAmount.subtract(discount);
+        if (finalPrice.compareTo(BigDecimal.ZERO) < 0) {
+            finalPrice = BigDecimal.ZERO;
+        }
+
+        Order order = Order.builder()
+            .orderInvoice(invoice)
+            .customer(customer)
+            .totalQuantity(totalQty)
+            .totalAmount(totalAmount.setScale(2, RoundingMode.HALF_UP))
+            .discount(discount.setScale(2, RoundingMode.HALF_UP))
+            .totalPrice(finalPrice.setScale(2, RoundingMode.HALF_UP))
+            .paymentMethod(paymentMethod)
+            .status(status)
+            .createdBy("SYSTEM")
+            .build();
+
+        List<OrderItem> orderItems = items.stream()
+            .map(item -> OrderItem.builder()
+                .order(order)
+                .variant(item.variant())
+                .quantity(item.quantity())
+                .unitPrice(item.variant().getRetailPrice())
+                .createdBy("SYSTEM")
+                .build())
+            .collect(java.util.stream.Collectors.toList());
+        order.setOrderItems(orderItems);
+
+        OrderStatusHistory history = OrderStatusHistory.builder()
+            .order(order)
+            .statusId(status)
+            .changedAt(LocalDateTime.now())
+            .note(note)
+            .createdBy("SYSTEM")
+            .build();
+        order.setStatusHistory(List.of(history));
+
+        PaymentStatus paymentStatus = status == OrderStatus.PENDING || status == OrderStatus.CANCELLED
+            ? PaymentStatus.PENDING
+            : PaymentStatus.PAID;
+
+        Payment payment = Payment.builder()
+            .order(order)
+            .paymentMethod(paymentMethod)
+            .amount(finalPrice.setScale(2, RoundingMode.HALF_UP))
+            .paymentStatus(paymentStatus)
+            .processedBy("admin")
+            .processedAt(LocalDateTime.now())
+            .verifiedAt(paymentStatus == PaymentStatus.PAID ? LocalDateTime.now() : null)
+            .createdBy("SYSTEM")
+            .build();
+        order.setPayment(payment);
+
+        Order savedOrder = orderRepository.save(order);
+        orderItemRepository.saveAll(orderItems);
+        orderStatusHistoryRepository.save(history);
+        paymentRepository.save(payment);
+
+        if (voucher != null) {
+            voucher.setCurrentUsage((voucher.getCurrentUsage() == null ? 0 : voucher.getCurrentUsage()) + 1);
+            voucherRepository.save(voucher);
+
+            VoucherRedemption redemption = VoucherRedemption.builder()
+                .voucher(voucher)
+                .customer(customer)
+                .order(savedOrder)
+                .discountAmount(discount.setScale(2, RoundingMode.HALF_UP))
+                .createdBy("SYSTEM")
+                .build();
+            voucherRedemptionRepository.save(redemption);
+        }
+    }
+
+    private BigDecimal calculateDiscount(BigDecimal totalAmount, Voucher voucher) {
+        if (voucher == null) {
+            return BigDecimal.ZERO;
+        }
+
+        if (voucher.getMinOrderValue() != null && totalAmount.compareTo(voucher.getMinOrderValue()) < 0) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal discount;
+        if (voucher.getDiscountType() == DiscountType.PERCENTAGE) {
+            discount = totalAmount.multiply(voucher.getDiscountValue()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        } else {
+            discount = voucher.getDiscountValue();
+        }
+
+        if (voucher.getMaxDiscount() != null && discount.compareTo(voucher.getMaxDiscount()) > 0) {
+            discount = voucher.getMaxDiscount();
+        }
+
+        return discount;
+    }
+
+    private record ItemSpec(ProductVariant variant, int quantity) { }
+}
