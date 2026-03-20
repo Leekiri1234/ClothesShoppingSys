@@ -63,6 +63,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
             "AND ci.product.isActive = true")
     Page<Product> findByCollectionSlug(@Param("slug") String slug, Pageable pageable);
 
+    // Lấy ID và tên sản phẩm theo danh sách ID (1 câu SQL, tránh N+1)
+    @Query("SELECT p.id, p.productName FROM Product p WHERE p.id IN :ids")
+    List<Object[]> findIdAndProductNameByIdIn(@Param("ids") List<Long> ids);
     @Query("SELECT DISTINCT p FROM Product p " +
             "LEFT JOIN p.category cat " +
             "LEFT JOIN p.collectionItems ci " +

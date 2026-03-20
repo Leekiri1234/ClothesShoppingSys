@@ -28,7 +28,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin/collections")
@@ -272,8 +274,8 @@ public class CollectionAdminController {
             Principal principal,
             RedirectAttributes redirectAttributes) {
 
-        CollectionItem item = collectionItemRepository.findById(itemId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy liên kết"));
+        CollectionItem item = collectionItemRepository.findByIdAndCollectionId(itemId, collectionId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy liên kết hoặc item không thuộc bộ sưu tập này"));
 
         item.setIsActive(false);
         item.setUpdatedBy(principal.getName());
