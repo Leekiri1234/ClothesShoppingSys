@@ -179,19 +179,23 @@ public class ProductAdminService {
     }
 
     /**
-     * Soft delete product (set isActive = false).
-     * Follows soft delete pattern for data retention.
+     * Toggle trạng thái sản phẩm (ẩn ↔ hiện).
+     * - Nếu đang ACTIVE   → chuyển sang isActive=false, prodStatus=INACTIVE (ẩn).
+     * - Nếu đang INACTIVE → chuyển sang isActive=true,  prodStatus=ACTIVE   (khôi phục).
      */
     @Transactional
-    public void deleteProduct(Long productId) {
+    public String toggleProductStatus(Long productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
 
-        product.setIsActive(false);
-        product.setProdStatus(ProductStatus.INACTIVE);
+        boolean activate = !Boolean.TRUE.equals(product.getIsActive());
+
+        product.setIsActive(activate);
+        product.setProdStatus(activate ? ProductStatus.ACTIVE : ProductStatus.INACTIVE);
         productRepository.save(product);
 
-        log.info("Product soft deleted: {}", productId);
+        log.info("Product status toggled: id={}, newStatus={}", productId, activate);
+        return activate ? "Đã hiện sản phẩm: " + product.getProductName() : "Đã ẩn sản phẩm: " + product.getProductName();
     }
 
     /**

@@ -260,15 +260,18 @@
             </button>
             <a th:href="@{/admin/products}" class="btn btn-outline">Hủy</a>
             <button type="button"
-                    class="btn btn-danger"
+                    class="btn"
+                    th:classappend="${product.isActive} ? 'btn-danger' : 'btn-success'"
                     style="margin-left: auto;"
-                    data-confirm-delete
-                    onclick="deleteProduct()">
-                <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
-                    <polyline points="3 6 5 6 21 6"/>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                </svg>
-                Xóa sản phẩm
+                    onclick="toggleProductStatus()">
+                <span th:if="${product.isActive}" style="display: flex; align-items: center; gap: 6px;">
+                    <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                    Ẩn sản phẩm
+                </span>
+                <span th:unless="${product.isActive}" style="display: flex; align-items: center; gap: 6px;">
+                    <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    Hiện sản phẩm
+                </span>
             </button>
         </div>
 
@@ -299,35 +302,31 @@
     });
 });
 
-// Delete product
-function deleteProduct() {
-    if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này? Hành động này không thể hoàn tác!')) {
-        return;
-    }
-
+// Toggle product status
+function toggleProductStatus() {
     const productId = document.querySelector('input[name="productId"]').value;
     const csrfToken = document.querySelector('input[name="_csrf"]').value;
 
-    fetch(`/admin/products/${productId}`, {
-        method: 'DELETE',
+    fetch(`/admin/products/${productId}/toggle-status`, {
+        method: 'POST',
         headers: {
             'X-CSRF-TOKEN': csrfToken
         }
     })
     .then(response => {
-        if (response.ok) {
-            AdminUI.showToast('Đã xóa sản phẩm thành công', 'success');
-            setTimeout(() => {
-                window.location.href = '/admin/products';
-            }, 1000);
+        if (response.ok || response.redirected) {
+            window.location.reload();
         } else {
-            throw new Error('Delete failed');
+            console.error('Toggle failed', response);
+            AdminUI.showToast('Không thể thay đổi trạng thái sản phẩm', 'danger');
         }
     })
     .catch(error => {
-        AdminUI.showToast('Không thể xóa sản phẩm', 'danger');
+        console.error('Error:', error);
+        AdminUI.showToast('Có lỗi xảy ra', 'danger');
     });
 }
+
 </script>
 </div>
 
