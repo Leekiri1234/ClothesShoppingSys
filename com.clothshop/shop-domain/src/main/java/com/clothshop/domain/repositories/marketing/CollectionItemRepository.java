@@ -35,12 +35,8 @@ public interface CollectionItemRepository extends JpaRepository<CollectionItem, 
 
     // Dùng Native Query để "xuyên thủng" @SQLRestriction.
     // Dùng IN (:productIds) để kéo toàn bộ lịch sử gán sản phẩm lên RAM trong 1 câu SQL duy nhất (Chống N+1)
-    @Query(value = "SELECT * FROM collection_items WHERE collection_id = :collectionId AND product_id IN (:productIds)", nativeQuery = true)
+    @Query(value = "SELECT * FROM collection_items WHERE collection_id = :collectionId AND product_id IN :productIds", nativeQuery = true)
     List<CollectionItem> findAllHistoryByCollectionIdAndProductIds(
             @Param("collectionId") Long collectionId,
             @Param("productIds") List<Long> productIds);
-
-    // Kiểm tra item thuộc đúng collection trước khi update để tránh IDOR
-    @Query("SELECT ci FROM CollectionItem ci WHERE ci.id = :itemId AND ci.collection.id = :collectionId AND ci.isActive = true")
-    Optional<CollectionItem> findByIdAndCollectionId(@Param("itemId") Long itemId, @Param("collectionId") Long collectionId);
 }
