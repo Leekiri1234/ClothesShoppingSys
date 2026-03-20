@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -127,6 +128,10 @@ public class FeaturedCollectionService {
         // 2. Kéo TOÀN BỘ lịch sử (active + inactive) của các sản phẩm này lên RAM (Chỉ 1 câu SQL duy nhất - xuyên thủng @SQLRestriction)
         List<CollectionItem> historicalItems = collectionItemRepository.findAllHistoryByCollectionIdAndProductIds(collectionId, distinctProductIds);
 
+        // Prefetch tên sản phẩm theo danh sách ID (1 câu SQL) để tránh N+1 khi ghi nhận trùng lặp
+        Map<Long, String> productNameMap = productRepository.findIdAndProductNameByIdIn(distinctProductIds)
+                .stream().collect(Collectors.toMap(row -> (Long) row[0], row -> (String) row[1]));
+
         List<CollectionItem> itemsToSave = new ArrayList<>();
         List<String> duplicateProductNames = new ArrayList<>();
         int currentOrder = maxOrder + 1;
@@ -143,7 +148,7 @@ public class FeaturedCollectionService {
                 CollectionItem existingItem = existingItemOpt.get();
                 if (existingItem.getIsActive()) {
                     // TH1: Đã tồn tại và ĐANG ACTIVE -> Ghi nhận trùng lặp để báo UI
-                    duplicateProductNames.add(existingItem.getProduct().getProductName());
+                    duplicateProductNames.add(productNameMap.getOrDefault(pId, ""));
                 } else {
                     // TH2: Đã tồn tại nhưng BỊ XÓA MỀM -> Khôi phục (Re-activate) thay vì tạo mới
                     existingItem.setIsActive(true);
