@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -147,7 +148,7 @@ public class FeaturedCollectionService {
             if (existingItem != null) {
                 if (existingItem.getIsActive()) {
                     // TH1: Đã tồn tại và ĐANG ACTIVE -> Ghi nhận trùng lặp để báo UI
-                    duplicateProductNames.add(existingItem.getProduct().getProductName());
+                    duplicateProductNames.add(productNameMap.getOrDefault(pId, ""));
                 } else {
                     // TH2: Đã tồn tại nhưng BỊ XÓA MỀM -> Khôi phục (Re-activate) thay vì tạo mới
                     existingItem.setIsActive(true);
