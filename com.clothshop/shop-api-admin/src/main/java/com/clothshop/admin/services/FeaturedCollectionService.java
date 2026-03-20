@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -129,6 +128,13 @@ public class FeaturedCollectionService {
         // 2. Kéo TOÀN BỘ lịch sử (active + inactive) của các sản phẩm này lên RAM (Chỉ 1 câu SQL duy nhất - xuyên thủng @SQLRestriction)
         List<CollectionItem> historicalItems = collectionItemRepository.findAllHistoryByCollectionIdAndProductIds(collectionId, distinctProductIds);
 
+        // Chuyển sang Map để tra cứu O(1) thay vì O(n) mỗi vòng lặp
+        Map<Long, CollectionItem> historicalItemMap = historicalItems.stream()
+                .collect(Collectors.toMap(
+                        item -> item.getProduct().getId(),
+                        item -> item,
+                        (existing, replacement) -> existing));
+
         // Xác định các ID thực sự mới (chưa có trong lịch sử) để validate trước khi tạo bản ghi
         Set<Long> historicalProductIds = historicalItems.stream()
                 .map(item -> item.getProduct().getId())
@@ -155,6 +161,10 @@ public class FeaturedCollectionService {
         } else {
             newProductMap = Map.of();
         }
+
+        // Prefetch tên sản phẩm theo danh sách ID (1 câu SQL) để tránh N+1 khi ghi nhận trùng lặp
+        Map<Long, String> productNameMap = productRepository.findIdAndProductNameByIdIn(distinctProductIds)
+                .stream().collect(Collectors.toMap(row -> (Long) row[0], row -> (String) row[1]));
 
         List<CollectionItem> itemsToSave = new ArrayList<>();
         List<String> duplicateProductNames = new ArrayList<>();
