@@ -28,7 +28,9 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin/collections")
@@ -239,18 +241,21 @@ public class CollectionAdminController {
                 return "redirect:/admin/collections/" + id + "/assign";
             }
 
-            // Update display order for each item
+            // Batch fetch tất cả items trong 1 câu query, sau đó cập nhật trong bộ nhớ và saveAll
+            List<CollectionItem> items = collectionItemRepository.findAllById(itemIds);
+            Map<Long, Integer> orderMap = new HashMap<>();
             for (int i = 0; i < itemIds.size(); i++) {
                 Long itemId = itemIds.get(i);
                 Integer newOrder = orders.get(i);
 
-                CollectionItem item = collectionItemRepository.findById(itemId)
-                        .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy item"));
+                CollectionItem item = collectionItemRepository.findByIdAndCollectionId(itemId, id)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy item hoặc item không thuộc bộ sưu tập này"));
 
                 item.setDisplayOrder(newOrder);
                 item.setUpdatedBy(principal.getName());
                 collectionItemRepository.save(item);
             }
+            collectionItemRepository.saveAll(items);
 
             log.info("Updated display orders for {} items in collection {}", itemIds.size(), id);
             redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật thứ tự hiển thị!");
@@ -272,8 +277,8 @@ public class CollectionAdminController {
             Principal principal,
             RedirectAttributes redirectAttributes) {
 
-        CollectionItem item = collectionItemRepository.findById(itemId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy liên kết"));
+        CollectionItem item = collectionItemRepository.findByIdAndCollectionId(itemId, collectionId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy liên kết hoặc item không thuộc bộ sưu tập này"));
 
         item.setIsActive(false);
         item.setUpdatedBy(principal.getName());

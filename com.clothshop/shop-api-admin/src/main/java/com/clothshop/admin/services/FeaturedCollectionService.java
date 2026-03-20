@@ -164,15 +164,12 @@ public class FeaturedCollectionService {
         // 3. Xử lý logic trên RAM để chống N+1
         for (Long pId : distinctProductIds) {
             // Tìm xem ID này đã từng tồn tại trong lịch sử chưa
-            Optional<CollectionItem> existingItemOpt = historicalItems.stream()
-                    .filter(item -> item.getProduct().getId().equals(pId))
-                    .findFirst();
+            CollectionItem existingItem = historicalItemMap.get(pId);
 
-            if (existingItemOpt.isPresent()) {
-                CollectionItem existingItem = existingItemOpt.get();
+            if (existingItem != null) {
                 if (existingItem.getIsActive()) {
                     // TH1: Đã tồn tại và ĐANG ACTIVE -> Ghi nhận trùng lặp để báo UI
-                    duplicateProductNames.add(existingItem.getProduct().getProductName());
+                    duplicateProductNames.add(productNameMap.getOrDefault(pId, ""));
                 } else {
                     // TH2: Đã tồn tại nhưng BỊ XÓA MỀM -> Khôi phục (Re-activate) thay vì tạo mới
                     existingItem.setIsActive(true);
