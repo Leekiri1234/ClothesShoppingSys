@@ -244,8 +244,8 @@ public class CollectionAdminController {
                 Long itemId = itemIds.get(i);
                 Integer newOrder = orders.get(i);
 
-                CollectionItem item = collectionItemRepository.findById(itemId)
-                        .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy item"));
+                CollectionItem item = collectionItemRepository.findByIdAndCollectionId(itemId, id)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy item hoặc item không thuộc bộ sưu tập này"));
 
                 item.setDisplayOrder(newOrder);
                 item.setUpdatedBy(principal.getName());
@@ -272,8 +272,8 @@ public class CollectionAdminController {
             Principal principal,
             RedirectAttributes redirectAttributes) {
 
-        CollectionItem item = collectionItemRepository.findById(itemId)
-                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy liên kết"));
+        CollectionItem item = collectionItemRepository.findByIdAndCollectionId(itemId, collectionId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy liên kết hoặc item không thuộc bộ sưu tập này"));
 
         item.setIsActive(false);
         item.setUpdatedBy(principal.getName());
