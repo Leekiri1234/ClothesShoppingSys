@@ -1,6 +1,7 @@
 package com.clothshop.domain.entities.marketing;
 
 import com.clothshop.domain.entities.base.BaseEntity;
+import com.clothshop.domain.enums.DiscountType;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -21,8 +22,9 @@ public class Voucher extends BaseEntity {
     @Column(name = "code", unique = true, nullable = false, length = 50)
     private String code;
 
-    @Column(name = "discount_type", length = 20)
-    private String discountType; // PERCENTAGE, FIXED_AMOUNT
+    @Enumerated(EnumType.STRING)
+    @Column(name = "discount_type", length = 20, nullable = false)
+    private DiscountType discountType;
 
     @Column(name = "discount_value", precision = 10, scale = 2)
     private BigDecimal discountValue;
