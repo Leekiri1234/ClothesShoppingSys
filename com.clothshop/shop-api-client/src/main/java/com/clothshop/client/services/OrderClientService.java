@@ -8,10 +8,13 @@ import com.clothshop.common.dtos.response.PageResponse;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
 import com.clothshop.domain.entities.auth.Account;
+import com.clothshop.domain.entities.marketing.Voucher;
 import com.clothshop.domain.entities.order.Order;
 import com.clothshop.domain.entities.order.OrderStatusHistory;
 import com.clothshop.domain.enums.OrderStatus;
 import com.clothshop.domain.repositories.auth.AccountRepository;
+import com.clothshop.domain.repositories.marketing.VoucherRedemptionRepository;
+import com.clothshop.domain.repositories.marketing.VoucherRepository;
 import com.clothshop.domain.repositories.order.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -20,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -31,6 +35,8 @@ public class OrderClientService {
     private final OrderRepository orderRepository;
     private final AccountRepository accountRepository;
     private final OrderClientMapper orderMapper;
+    private final VoucherRedemptionRepository voucherRedemptionRepository;
+    private final VoucherRepository voucherRepository;
 
     private Long getCustomerId(String username) {
         Account account = accountRepository.findByUsernameWithCustomer(username)
@@ -90,6 +96,15 @@ public class OrderClientService {
         if (!OrderStatus.PENDING.equals(order.getStatus())) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Cannot cancel order in " + order.getStatus() + " status");
         }
+
+        // Restore voucher usage if applied
+        voucherRedemptionRepository.findByOrderId(order.getId()).ifPresent(redemption -> {
+            Voucher voucher = redemption.getVoucher();
+            Integer currentUsage = voucher.getCurrentUsage() == null ? 0 : voucher.getCurrentUsage();
+            voucher.setCurrentUsage(Math.max(0, currentUsage - 1));
+            voucherRepository.save(voucher);
+            voucherRedemptionRepository.delete(redemption);
+        });
 
         order.setStatus(OrderStatus.CANCELLED);
 
