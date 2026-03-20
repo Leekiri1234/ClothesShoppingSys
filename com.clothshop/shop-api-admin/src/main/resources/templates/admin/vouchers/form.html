@@ -146,9 +146,9 @@
 
     function parseCurrency(value) {
       if (!value) return null;
-      const digits = value.replace(/[^0-9]/g, '');
-      if (!digits) return null;
-      return parseInt(digits, 10);
+      const digitsOnly = value.replace(/[^0-9]/g, '');
+      if (!digitsOnly) return null;
+      return Number(digitsOnly);
     }
 
     function parseDecimal(value) {
@@ -269,6 +269,8 @@
       hydrateInitialDisplays();
       hydrateDateDisplays();
       toggleMaxDiscount();
+      // Ensure hidden fields are in sync even if user does not blur inputs
+      syncAllNumericFields();
     });
   </script>
 </div>
