@@ -9,7 +9,7 @@ import java.util.List;
 
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor
 public class OrderFilterRequest {
-    private List<OrderStatus> statuses; // Lọc theo nhiều trạng thái
+    private OrderStatus status; // Lọc theo 1 trạng thái duy nhất
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private LocalDateTime startDate;

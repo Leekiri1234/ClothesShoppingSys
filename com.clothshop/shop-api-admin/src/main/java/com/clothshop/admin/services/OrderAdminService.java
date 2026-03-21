@@ -40,8 +40,8 @@ public class OrderAdminService {
         Specification<Order> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if (filter.getStatuses() != null && !filter.getStatuses().isEmpty()) {
-                predicates.add(root.get("status").in(filter.getStatuses()));
+            if (filter.getStatus() != null) {
+                predicates.add(cb.equal(root.get("status"), filter.getStatus()));
             }
 
             if (filter.getStartDate() != null) {
@@ -96,6 +96,7 @@ public class OrderAdminService {
                 .oldStatus(oldStatus)
                 .newStatus(newStatus)
                 .note(note)
+                .changedAt(java.time.LocalDateTime.now())
                 .build();
 
         historyRepository.save(history);

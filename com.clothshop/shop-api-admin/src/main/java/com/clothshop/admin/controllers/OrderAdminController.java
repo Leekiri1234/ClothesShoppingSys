@@ -28,7 +28,7 @@ public class OrderAdminController {
      */
     @GetMapping
     public String listOrders(@ModelAttribute("filter") OrderFilterRequest filter,
-                             @PageableDefault(size = 10, sort = "id") Pageable pageable,
+                             @PageableDefault(size = 10, sort = "id", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable,
                              Model model) {
 
         Page<OrderAdminResponse> orderPage = orderService.getOrders(filter, pageable);
