@@ -5,6 +5,7 @@ import com.clothshop.domain.entities.marketing.*;
 import com.clothshop.domain.entities.order.*;
 import com.clothshop.domain.entities.product.*;
 import com.clothshop.domain.enums.*;
+import com.clothshop.domain.enums.OrderStatus;
 import com.clothshop.domain.repositories.auth.*;
 import com.clothshop.domain.repositories.marketing.*;
 import com.clothshop.domain.repositories.order.*;
@@ -827,12 +828,13 @@ public class DatabaseSeeder implements CommandLineRunner {
         order.setOrderItems(orderItems);
 
         OrderStatusHistory history = OrderStatusHistory.builder()
-            .order(order)
-            .statusId(status)
-            .changedAt(LocalDateTime.now())
-            .note(note)
-            .createdBy("SYSTEM")
-            .build();
+                .order(order)
+                .oldStatus(null) // Đơn mới nên status cũ là null
+                .newStatus(status)
+                .note(note)
+                .changedAt(LocalDateTime.now()) // Thêm trường changedAt nếu Entity yêu cầu
+                .createdBy("SYSTEM")
+                .build();
         order.setStatusHistory(List.of(history));
 
         PaymentStatus paymentStatus = status == OrderStatus.PENDING || status == OrderStatus.CANCELLED
@@ -840,15 +842,14 @@ public class DatabaseSeeder implements CommandLineRunner {
             : PaymentStatus.PAID;
 
         Payment payment = Payment.builder()
-            .order(order)
-            .paymentMethod(paymentMethod)
-            .amount(finalPrice.setScale(2, RoundingMode.HALF_UP))
-            .paymentStatus(paymentStatus)
-            .processedBy("admin")
-            .processedAt(LocalDateTime.now())
-            .verifiedAt(paymentStatus == PaymentStatus.PAID ? LocalDateTime.now() : null)
-            .createdBy("SYSTEM")
-            .build();
+                .order(order)
+                .paymentMethod(paymentMethod.name())
+                .amount(finalPrice.setScale(2, RoundingMode.HALF_UP))
+                .status(paymentStatus)
+                .verifiedBy(null) // Dùng verifiedBy thay vì processedBy theo ERD
+                .verifiedAt(paymentStatus == PaymentStatus.PAID ? LocalDateTime.now() : null)
+                .createdBy("SYSTEM")
+                .build();
         order.setPayment(payment);
 
         Order savedOrder = orderRepository.save(order);

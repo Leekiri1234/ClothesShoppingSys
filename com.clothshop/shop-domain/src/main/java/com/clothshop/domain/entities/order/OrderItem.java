@@ -12,7 +12,7 @@ import java.math.BigDecimal;
 
 @Entity
 @Table(name = "order_items")
-@SQLDelete(sql = "UPDATE order_items SET is_active = false WHERE id = ?")
+@SQLDelete(sql = "UPDATE order_items SET is_active = false WHERE item_id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "item_id"))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
@@ -29,6 +29,6 @@ public class OrderItem extends BaseEntity {
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "unit_price", nullable = false, precision = 10, scale = 2)
-    private BigDecimal unitPrice; // Snapshot giá tại thời điểm đặt hàng
+    @Column(name = "unit_price", nullable = false, precision = 12, scale = 2)
+    private BigDecimal unitPrice; // Snapshot giá lúc mua
 }
