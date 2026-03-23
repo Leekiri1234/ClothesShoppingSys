@@ -5,13 +5,11 @@ import com.clothshop.domain.enums.OrderStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "order_status_history")
-@SQLDelete(sql = "UPDATE order_status_history SET is_active = false WHERE id = ?")
-@SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "history_id"))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class OrderStatusHistory extends BaseEntity {
@@ -21,13 +19,18 @@ public class OrderStatusHistory extends BaseEntity {
     private Order order;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "status_id", nullable = false, length = 20)
-    private OrderStatus statusId;
+    @Column(name = "old_status", length = 20)
+    private OrderStatus oldStatus; // Trạng thái trước khi đổi
 
-    @Column(name = "changed_at")
-    private java.time.LocalDateTime changedAt;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "new_status", length = 20, nullable = false)
+    private OrderStatus newStatus; // Trạng thái sau khi đổi
 
-    @Lob
-    @Column(name = "note")
-    private String note;
+    @Column(name = "changed_at", nullable = false)
+    private LocalDateTime changedAt;
+
+    @Column(name = "note", length = 500)
+    private String note; // Ghi chú lý do đổi trạng thái (ví dụ: "Khách gọi điện hủy")
+
+    // createdBy (người đổi) và createdAt đã có sẵn từ BaseEntity
 }
