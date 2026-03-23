@@ -17,10 +17,15 @@ public interface OrderAdminMapper {
     @Mapping(source = "customer.fullName", target = "customerName")
     @Mapping(source = "customer.email", target = "customerEmail")
     @Mapping(source = "statusHistory", target = "history")
+    @Mapping(source = "orderItems", target = "items")
+    @Mapping(source = "totalAmount", target = "totalAmount") // Explicit mapping
+    @Mapping(source = "discount", target = "discount")
+    @Mapping(source = "totalPrice", target = "totalPrice")
     OrderDetailResponse toDetailResponse(Order order);
 
     @Mapping(source = "variant.product.productName", target = "productName")
     @Mapping(source = ".", target = "variantName", qualifiedByName = "mapVariantName")
+    @Mapping(target = "subTotal", expression = "java(item.getUnitPrice().multiply(java.math.BigDecimal.valueOf(item.getQuantity())))")
     OrderItemResponse toItemResponse(OrderItem item);
 
     @Mapping(source = "createdBy", target = "changedBy") // BaseEntity có createdBy

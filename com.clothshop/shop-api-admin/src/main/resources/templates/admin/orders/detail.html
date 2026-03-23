@@ -45,15 +45,15 @@
                                 </td>
                                 <td th:text="${#numbers.formatDecimal(item.unitPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
                                 <td th:text="${item.quantity}"></td>
-                                <td th:text="${#numbers.formatDecimal(item.unitPrice * item.quantity, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+                                <td th:text="${item.subTotal != null ? #numbers.formatDecimal(item.subTotal, 0, 'COMMA', 0, 'POINT') : '0'} + ' đ'"></td>
                             </tr>
                             </tbody>
                         </table>
                         <hr>
                         <div class="text-right">
-                            <p>Tạm tính: <span th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'"></span></p>
-                            <p>Giảm giá: <span th:text="${#numbers.formatDecimal(order.discount, 0, 'COMMA', 0, 'POINT')} + ' đ'" class="text-danger"></span></p>
-                            <h4 class="font-weight-bold">Tổng cộng: <span th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'" class="text-primary"></span></h4>
+                            <p>Tạm tính: <span th:text="${order.totalAmount != null ? #numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') : '0'} + ' đ'"></span></p>
+                            <p>Giảm giá: <span th:text="${order.discount != null ? #numbers.formatDecimal(order.discount, 0, 'COMMA', 0, 'POINT') : '0'} + ' đ'" class="text-danger"></span></p>
+                            <h4 class="font-weight-bold">Tổng cộng: <span th:text="${order.totalPrice != null ? #numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') : '0'} + ' đ'" class="text-primary"></span></h4>
                         </div>
                     </div>
                 </div>
@@ -94,11 +94,11 @@
                                 <div class="font-weight-bold">
                                     <span th:text="${h.oldStatus != null ? h.oldStatus.displayName : 'Bắt đầu'}" class="text-muted"></span>
                                     <i class="fas fa-arrow-right mx-2"></i>
-                                    <span th:text="${h.newStatus.displayName}" class="text-primary"></span>
+                                    <span th:text="${h.newStatus != null ? h.newStatus.displayName : 'N/A'}" class="text-primary"></span>
                                 </div>
                                 <small class="text-muted d-block">
                                     <i class="fas fa-user-edit"></i> <span th:text="${h.changedBy}">admin</span> |
-                                    <i class="fas fa-clock"></i> <span th:text="${#temporals.format(h.changedAt, 'dd/MM/yyyy HH:mm')}"></span>
+                                    <i class="fas fa-clock"></i> <span th:text="${h.changedAt != null ? #temporals.format(h.changedAt, 'dd/MM/yyyy HH:mm') : ''}"></span>
                                 </small>
                                 <p th:if="${h.note != null && !h.note.isEmpty()}"
                                    class="mt-1 mb-0 p-2 bg-light rounded small"
