@@ -172,7 +172,7 @@ public class CheckoutClientService {
         // 4. Record OrderStatusHistory
         OrderStatusHistory history = new OrderStatusHistory();
         history.setOrder(order);
-        history.setStatusId(OrderStatus.PENDING);
+        history.setNewStatus(OrderStatus.PENDING);
         history.setChangedAt(LocalDateTime.now());
         history.setNote("Order created by customer");
 
@@ -183,9 +183,9 @@ public class CheckoutClientService {
         // Create Payment Entity
         Payment payment = new Payment();
         payment.setOrder(order);
-        payment.setPaymentMethod(request.getPaymentMethod());
+        payment.setPaymentMethod(request.getPaymentMethod().name());
         payment.setAmount(order.getTotalPrice());
-        payment.setPaymentStatus(PaymentStatus.PENDING);
+        payment.setStatus(PaymentStatus.PENDING);
         order.setPayment(payment);
 
         // Update Voucher usage if applicable
