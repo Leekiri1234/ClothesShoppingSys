@@ -106,11 +106,13 @@ public class OrderClientService {
             voucherRedemptionRepository.delete(redemption);
         });
 
+        OrderStatus previousStatus = order.getStatus();
         order.setStatus(OrderStatus.CANCELLED);
 
         OrderStatusHistory history = new OrderStatusHistory();
         history.setOrder(order);
-        history.setStatusId(OrderStatus.CANCELLED);
+        history.setOldStatus(previousStatus);
+        history.setNewStatus(OrderStatus.CANCELLED);
         history.setChangedAt(java.time.LocalDateTime.now());
         history.setNote(reason != null ? reason : "Customer cancelled order");
 
@@ -137,11 +139,13 @@ public class OrderClientService {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Chỉ có thể đặt lại đơn hàng đã hủy");
         }
 
+        OrderStatus previousStatus = order.getStatus();
         order.setStatus(OrderStatus.PENDING);
 
         OrderStatusHistory history = new OrderStatusHistory();
         history.setOrder(order);
-        history.setStatusId(OrderStatus.PENDING);
+        history.setOldStatus(previousStatus);
+        history.setNewStatus(OrderStatus.PENDING);
         history.setChangedAt(java.time.LocalDateTime.now());
         history.setNote("Khách hàng đặt lại đơn hàng đã hủy");
 

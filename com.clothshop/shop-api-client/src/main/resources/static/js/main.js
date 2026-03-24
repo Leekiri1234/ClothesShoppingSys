@@ -48,8 +48,23 @@ function addToCart(variantId, quantity) {
             quantity: quantity
         })
     })
-    .then(response => response.json())
+    .then(async response => {
+        const contentType = response.headers.get('content-type') || '';
+
+        if (!contentType.includes('application/json')) {
+            // Usually means the request was redirected to login page (HTML)
+            if (response.redirected) {
+                window.location.href = response.url;
+                return null;
+            }
+            throw new Error('Expected JSON response but received non-JSON content.');
+        }
+
+        return response.json();
+    })
     .then(data => {
+        if (!data) return;
+
         if (data.success) {
             showNotification('Product added to cart!', 'success');
             updateCartCount();
@@ -68,8 +83,19 @@ function addToCart(variantId, quantity) {
  */
 function updateCartCount() {
     fetch('/cart/count')
-        .then(response => response.json())
+        .then(async response => {
+            const contentType = response.headers.get('content-type') || '';
+
+            if (!contentType.includes('application/json')) {
+                // Ignore HTML responses to prevent JSON parse errors in the console
+                return null;
+            }
+
+            return response.json();
+        })
         .then(data => {
+            if (!data) return;
+
             const cartBadge = document.querySelector('.cart-count-badge');
             if (cartBadge) {
                 cartBadge.textContent = data.count;
@@ -201,8 +227,16 @@ function changeProductImage(imageUrl) {
 }
 function updateCartBadge() {
     fetch('/cart/count')
-        .then(res => res.json())
+        .then(async res => {
+            const contentType = res.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                return null;
+            }
+            return res.json();
+        })
         .then(data => {
+            if (!data) return;
+
             const badge = document.querySelector('.cart-badge'); // Selector của bạn
             if (badge) {
                 badge.innerText = data.count;

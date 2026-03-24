@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,8 +20,11 @@ public class ProductSearchService {
     private final ProductRepository productRepository;
     private final ProductClientMapper productMapper;
 
+    @Transactional(readOnly = true)
     public Page<ProductListResponse> search(ProductSearchRequest request) {
-        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        int page = Math.max(0, request.getPage());
+        int size = request.getSize() > 0 ? request.getSize() : 12;
+        Pageable pageable = PageRequest.of(page, size);
         Page<Product> productPage;
 
         // 1. Nếu có keyword -> Tìm theo Tên SP + Danh mục + Bộ sưu tập

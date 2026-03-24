@@ -62,6 +62,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public resources
                         .requestMatchers("/favicon.ico", "/error/**").permitAll()
+                        .requestMatchers("/cart/count").permitAll()
                         .requestMatchers("/", "/home", "/products/**", "/search", "/login", "/register",
                                 "/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
 

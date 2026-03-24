@@ -77,7 +77,11 @@ public interface ProductClientMapper {
         if (product == null || product.getImages() == null || product.getImages().isEmpty()) {
             return "https://via.placeholder.com/300x300?text=No+Image";
         }
-        return product.getImages().get(0).getImageUrl();
+        String imageUrl = product.getImages().get(0).getImageUrl();
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return "https://via.placeholder.com/300x300?text=No+Image";
+        }
+        return normalizeImageUrl(imageUrl);
     }
 
     @Named("calculateAvailability")
@@ -94,6 +98,16 @@ public interface ProductClientMapper {
         if (images == null) return null;
         return images.stream()
                 .map(ProductImage::getImageUrl)
+                .filter(url -> url != null && !url.isBlank())
+                .map(this::normalizeImageUrl)
                 .collect(Collectors.toList());
+    }
+
+    default String normalizeImageUrl(String imageUrl) {
+        String trimmed = imageUrl.trim();
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("/")) {
+            return trimmed;
+        }
+        return "/" + trimmed;
     }
 }

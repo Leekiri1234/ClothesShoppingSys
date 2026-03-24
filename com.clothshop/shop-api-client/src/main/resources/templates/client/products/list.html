@@ -24,7 +24,7 @@
         <div th:each="product : ${products.content}" class="col-lg-3 col-md-4 col-sm-6 mb-4">
             <div class="card h-100 border-0 shadow-sm product-card py-2">
                 <a th:href="@{/products/{slug}(slug=${product.productSlug})}" class="text-decoration-none">
-                    <img th:src="${product.imageUrl != null ? product.imageUrl : '/images/no-image.png'}"
+                    <img th:src="${product.imageUrl != null ? product.imageUrl : 'https://via.placeholder.com/300x300?text=No+Image'}"
                          class="card-img-top"
                          alt="Product"
                          style="height: 250px; object-fit: cover;">

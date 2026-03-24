@@ -20,10 +20,10 @@
             <div id="productCarousel" class="carousel slide" data-bs-ride="carousel">
                 <div class="carousel-inner rounded shadow-sm">
                     <div class="carousel-item active">
-                        <img th:src="${product.imageUrl}" class="d-block w-100" style="height: 500px; object-fit: cover;">
+                        <img th:src="${product.imageUrl != null ? product.imageUrl : 'https://via.placeholder.com/800x1000?text=No+Image'}" class="d-block w-100" style="height: 500px; object-fit: cover;">
                     </div>
                     <div th:each="imgUrl : ${product.images}" class="carousel-item">
-                        <img th:src="${imgUrl}" class="d-block w-100" style="height: 500px; object-fit: cover;">
+                        <img th:src="${imgUrl != null ? imgUrl : 'https://via.placeholder.com/800x1000?text=No+Image'}" class="d-block w-100" style="height: 500px; object-fit: cover;">
                     </div>
                 </div>
                 <button class="carousel-control-prev" type="button" data-bs-target="#productCarousel" data-bs-slide="prev">
