@@ -75,6 +75,12 @@ public class VoucherService {
 
         voucherMapper.updateEntityFromRequest(request, voucher);
         voucher.setUpdatedBy(username);
+
+        boolean wasExpired = VoucherStatus.EXPIRED.name().equals(voucher.getStatus());
+        if (wasExpired && request.getValidTo().isAfter(LocalDateTime.now())) {
+            voucher.setStatus(VoucherStatus.ACTIVE.name());
+        }
+
         voucherRepository.save(voucher);
     }
 

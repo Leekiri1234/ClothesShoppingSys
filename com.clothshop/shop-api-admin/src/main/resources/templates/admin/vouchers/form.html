@@ -196,20 +196,41 @@
     }
 
     function hydrateInitialDisplays() {
+      const discountType = document.getElementById('discountType').value;
+
+      // 1. Discount Value
       const discountHidden = document.getElementById('discountValueRaw');
-      if (discountHidden) {
-        document.getElementById('discountValueDisplay').value = discountHidden.value ? discountHidden.value : '';
-        formatDiscountValue(true);
+      const discountDisplay = document.getElementById('discountValueDisplay');
+      if (discountHidden && discountHidden.value) {
+        const val = parseFloat(discountHidden.value);
+        if (!isNaN(val)) {
+          // Check type to decide format
+          if (discountType === 'PERCENTAGE') {
+             discountDisplay.value = formatPercent(val);
+          } else {
+             discountDisplay.value = formatVnd(val);
+          }
+        }
       }
+
+      // 2. Min Order
       const minOrderHidden = document.getElementById('minOrderValueRaw');
-      if (minOrderHidden) {
-        document.getElementById('minOrderValueDisplay').value = minOrderHidden.value ? minOrderHidden.value : '';
-        formatCurrencyField('minOrderValueDisplay','minOrderValueRaw', true);
+      const minOrderDisplay = document.getElementById('minOrderValueDisplay');
+      if (minOrderHidden && minOrderHidden.value) {
+        const val = parseFloat(minOrderHidden.value);
+        if (!isNaN(val)) {
+          minOrderDisplay.value = formatVnd(val);
+        }
       }
+
+      // 3. Max Discount
       const maxDiscountHidden = document.getElementById('maxDiscountRaw');
-      if (maxDiscountHidden) {
-        document.getElementById('maxDiscountDisplay').value = maxDiscountHidden.value ? maxDiscountHidden.value : '';
-        formatCurrencyField('maxDiscountDisplay','maxDiscountRaw', true);
+      const maxDiscountDisplay = document.getElementById('maxDiscountDisplay');
+      if (maxDiscountHidden && maxDiscountHidden.value) {
+        const val = parseFloat(maxDiscountHidden.value);
+        if (!isNaN(val)) {
+          maxDiscountDisplay.value = formatVnd(val);
+        }
       }
     }
 
@@ -269,8 +290,7 @@
       hydrateInitialDisplays();
       hydrateDateDisplays();
       toggleMaxDiscount();
-      // Ensure hidden fields are in sync even if user does not blur inputs
-      syncAllNumericFields();
+      // syncAllNumericFields(); // Removed to prevent double-processing on load
     });
   </script>
 </div>
