@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Chi tiết đơn hàng</title>
+    <style>
+        .timeline { list-style: none; padding: 20px 0; position: relative; }
+        .timeline:before { top: 0; bottom: 0; position: absolute; content: " "; width: 3px; background-color: #eeeeee; left: 20px; }
+        .timeline > li { margin-bottom: 20px; position: relative; padding-left: 50px; }
+        .timeline > li:before { content: " "; width: 15px; height: 15px; border-radius: 50%; background-color: #4e73df; position: absolute; left: 14px; top: 5px; border: 3px solid #fff; }
+    </style>
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="container-fluid">
+        <div class="d-sm-flex align-items-center justify-content-between mb-4">
+            <h1 class="h3 mb-0 text-gray-800">Chi tiết đơn hàng: <span th:text="${order.orderInvoice}"></span></h1>
+            <a th:href="@{/admin/orders}" class="btn btn-secondary btn-sm shadow-sm">
+                <i class="fas fa-arrow-left fa-sm text-white-50"></i> Quay lại
+            </a>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Danh sách sản phẩm</h6>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th>Đơn giá</th>
+                                <th>Số lượng</th>
+                                <th>Thành tiền</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr th:each="item : ${order.items}">
+                                <td>
+                                    <div th:text="${item.productName}" class="font-weight-bold"></div>
+                                    <small class="text-muted" th:text="${item.variantName}"></small>
+                                </td>
+                                <td th:text="${#numbers.formatDecimal(item.unitPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'"></td>
+                                <td th:text="${item.quantity}"></td>
+                                <td th:text="${item.subTotal != null ? #numbers.formatDecimal(item.subTotal, 0, 'COMMA', 0, 'POINT') : '0'} + ' đ'"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                        <hr>
+                        <div class="text-right">
+                            <p>Tạm tính: <span th:text="${order.totalAmount != null ? #numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') : '0'} + ' đ'"></span></p>
+                            <p>Giảm giá: <span th:text="${order.discount != null ? #numbers.formatDecimal(order.discount, 0, 'COMMA', 0, 'POINT') : '0'} + ' đ'" class="text-danger"></span></p>
+                            <h4 class="font-weight-bold">Tổng cộng: <span th:text="${order.totalPrice != null ? #numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') : '0'} + ' đ'" class="text-primary"></span></h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Cập nhật trạng thái</h6>
+                    </div>
+                    <div class="card-body">
+                        <form th:action="@{/admin/orders/{id}/status(id=${order.orderId})}" method="post">
+                            <div class="form-group">
+                                <label>Trạng thái mới</label>
+                                <select name="newStatus" class="form-control">
+                                    <option th:each="st : ${allStatuses}"
+                                            th:value="${st}"
+                                            th:text="${st.displayName}"
+                                            th:selected="${st == order.status}"></option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Ghi chú</label>
+                                <textarea name="note" class="form-control" rows="2" placeholder="Lý do thay đổi..."></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary btn-block">Cập nhật</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Lịch sử xử lý</h6>
+                    </div>
+                    <div class="card-body">
+                        <ul class="timeline">
+                            <li th:each="h : ${order.history}">
+                                <div class="font-weight-bold">
+                                    <span th:text="${h.oldStatus != null ? h.oldStatus.displayName : 'Bắt đầu'}" class="text-muted"></span>
+                                    <i class="fas fa-arrow-right mx-2"></i>
+                                    <span th:text="${h.newStatus != null ? h.newStatus.displayName : 'N/A'}" class="text-primary"></span>
+                                </div>
+                                <small class="text-muted d-block">
+                                    <i class="fas fa-user-edit"></i> <span th:text="${h.changedBy}">admin</span> |
+                                    <i class="fas fa-clock"></i> <span th:text="${h.changedAt != null ? #temporals.format(h.changedAt, 'dd/MM/yyyy HH:mm') : ''}"></span>
+                                </small>
+                                <p th:if="${h.note != null && !h.note.isEmpty()}"
+                                   class="mt-1 mb-0 p-2 bg-light rounded small"
+                                   th:text="${'Note: ' + h.note}"></p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

@@ -8,8 +8,6 @@ import com.clothshop.domain.entities.order.OrderStatusHistory;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.List;
-
 @Mapper(componentModel = "spring")
 public interface OrderClientMapper {
 
@@ -29,5 +27,6 @@ public interface OrderClientMapper {
     @Mapping(expression = "java(item.getUnitPrice().doubleValue() * item.getQuantity())", target = "subtotal")
     OrderDetailResponse.OrderItemClientResponse toOrderItemResponse(OrderItem item);
 
+    @Mapping(source = "newStatus", target = "statusId")
     OrderDetailResponse.OrderHistoryClientResponse toHistoryResponse(OrderStatusHistory history);
 }
