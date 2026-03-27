@@ -35,7 +35,7 @@ public class    DashboardController {
         model.addAttribute("totalCustomers", 0);
         model.addAttribute("revenue", "$0");
 
-        return "admin/dashboard";
+        return "admin/legacy";
     }
 
     /**
@@ -45,5 +45,14 @@ public class    DashboardController {
     @GetMapping("")
     public String redirectToDashboard() {
         return "redirect:/admin/dashboard";
+    }
+
+    /**
+     * Serve legacy admin UI for migration/mapping preview.
+     * GET /admin/legacy
+     */
+    @GetMapping("/legacy")
+    public String showLegacyAdminView() {
+        return "admin/legacy";
     }
 }

@@ -36,6 +36,14 @@ public class HomeController {
         List<CollectionResponse> homeCollections = collectionClientService.getAllActiveCollections();
         model.addAttribute("homeCollections", homeCollections);
 
-        return "client/home";
+        return "client/legacy";
+    }
+
+    /**
+     * Serve legacy client UI for migration/mapping preview.
+     */
+    @GetMapping("/legacy-client")
+    public String legacyClientView() {
+        return "client/legacy";
     }
 }

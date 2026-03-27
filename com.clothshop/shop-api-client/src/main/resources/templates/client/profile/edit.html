@@ -1,75 +1,14 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layouts/layout}">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Cập nhật tài khoản - ClothShop</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="refresh" content="0;url=/legacy-client">
+  <title>Redirecting...</title>
+  <script>
+    window.location.replace('/legacy-client');
+  </script>
 </head>
 <body>
-<div layout:fragment="content" class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-
-            <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
-
-            <div class="card shadow-sm border-0">
-                <div class="card-header bg-dark text-white">
-                    <h4 class="mb-0">Cập nhật hồ sơ</h4>
-                </div>
-                <div class="card-body p-4">
-                    <form th:action="@{/profile/update}" th:object="${updateRequest}" method="post" class="needs-validation" novalidate>
-
-                        <div class="row mb-3">
-                            <label class="col-sm-3 col-form-label text-muted">Tên đăng nhập</label>
-                            <div class="col-sm-9">
-                                <input type="text" class="form-control" th:value="${profile.username}" disabled>
-                            </div>
-                        </div>
-                        <div class="row mb-3">
-                            <label class="col-sm-3 col-form-label text-muted">Email</label>
-                            <div class="col-sm-9">
-                                <input type="text" class="form-control" th:value="${profile.email}" disabled>
-                            </div>
-                        </div>
-
-                        <hr>
-
-                        <div class="row mb-3">
-                            <label for="fullName" class="col-sm-3 col-form-label">Họ và tên *</label>
-                            <div class="col-sm-9">
-                                <input type="text" class="form-control" id="fullName" th:field="*{fullName}"
-                                       th:classappend="${#fields.hasErrors('fullName')} ? 'is-invalid'">
-                                <div class="invalid-feedback" th:errors="*{fullName}"></div>
-                            </div>
-                        </div>
-
-                        <div class="row mb-3">
-                            <label for="phone" class="col-sm-3 col-form-label">Số điện thoại *</label>
-                            <div class="col-sm-9">
-                                <input type="text" class="form-control" id="phone" th:field="*{phone}"
-                                       th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid'">
-                                <div class="invalid-feedback" th:errors="*{phone}"></div>
-                            </div>
-                        </div>
-
-                        <div class="row mb-4">
-                            <label for="address" class="col-sm-3 col-form-label">Địa chỉ giao hàng *</label>
-                            <div class="col-sm-9">
-                                <textarea class="form-control" id="address" rows="3" th:field="*{address}"
-                                          th:classappend="${#fields.hasErrors('address')} ? 'is-invalid'"></textarea>
-                                <div class="invalid-feedback" th:errors="*{address}"></div>
-                            </div>
-                        </div>
-
-                        <div class="text-end">
-                            <a th:href="@{/profile}" class="btn btn-outline-secondary me-2">Hủy bỏ</a>
-                            <button type="submit" class="btn btn-dark px-4">Lưu thay đổi</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+  <p>Redirecting to legacy client UI... <a th:href="@{/legacy-client}">Click here</a></p>
 </body>
 </html>
