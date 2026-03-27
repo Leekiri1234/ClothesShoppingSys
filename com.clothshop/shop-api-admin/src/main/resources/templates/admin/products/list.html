@@ -1,14 +1,21 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0;url=/admin/legacy">
-  <title>Redirecting...</title>
-  <script>
-    window.location.replace('/admin/legacy');
-  </script>
+    <title>Admin Page</title>
 </head>
 <body>
-  <p>Redirecting to legacy admin UI... <a th:href="@{/admin/legacy}">Click here</a></p>
+<h1 layout:fragment="page-title" style="margin:0;">Admin Workspace</h1>
+<section layout:fragment="content">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <p style="margin:0;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8a877f;">Admin Page</p>
+        <a th:href="@{/admin/dashboard}" style="text-decoration:none;border:1px solid #c5a882;padding:9px 12px;color:#1c1c1a;font-size:12px;letter-spacing:.1em;text-transform:uppercase;">Ve dashboard</a>
+    </div>
+    <p style="margin:0 0 8px;color:#6b6b67;line-height:1.65;">
+        Trang quan tri nay da duoc map lai theo giao dien moi trong resources/templates, khong can su dung _legacy.
+    </p>
+    <p style="margin:0;color:#8a877f;font-size:12px;letter-spacing:.06em;">Duong dan hien tai: <strong>Tuong ung voi man hinh hien tai</strong></p>
+</section>
 </body>
 </html>

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Danh sach bo suu tap</title>
+</head>
+<body>
+<section layout:fragment="content">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <div>
+            <p style="margin:0 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8a877f;">Collections</p>
+            <h2 style="margin:0;font-size:24px;font-weight:300;">Tat ca bo suu tap</h2>
+        </div>
+        <p style="margin:0;color:#6b6b67;font-size:13px;" th:text="${#lists.size(collections)} + ' bo suu tap'">0 bo suu tap</p>
+    </div>
+
+    <div th:if="${#lists.isEmpty(collections)}" style="border:1px dashed #d8d3c8;padding:14px;background:#fdfcf9;color:#6b6b67;">
+        Chua co bo suu tap dang hoat dong.
+    </div>
+
+    <div th:if="${!#lists.isEmpty(collections)}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;">
+        <article th:each="collection : ${collections}" style="border:1px solid #ece9e2;background:#fff;padding:14px;display:flex;flex-direction:column;">
+            <div style="height:150px;background:#f5f3ef;margin-bottom:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                <img th:if="${collection.bannerUrl != null}" th:src="${collection.bannerUrl}" th:alt="${collection.name}" style="width:100%;height:100%;object-fit:cover;">
+                <span th:if="${collection.bannerUrl == null}" style="font-size:12px;color:#8a877f;">Khong co banner</span>
+            </div>
+            <h3 style="margin:0 0 8px;font-size:16px;font-weight:500;" th:text="${collection.name}">Ten bo suu tap</h3>
+            <p style="margin:0 0 10px;color:#6b6b67;line-height:1.6;" th:text="${collection.description}">Mo ta bo suu tap.</p>
+            <a th:href="@{/collections/{slug}(slug=${collection.slug})}" style="margin-top:auto;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#1c1c1a;">Xem chi tiet</a>
+        </article>
+    </div>
+</section>
+</body>
+</html>

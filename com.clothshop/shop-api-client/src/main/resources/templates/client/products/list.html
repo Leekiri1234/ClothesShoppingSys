@@ -1,14 +1,55 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0;url=/legacy-client">
-  <title>Redirecting...</title>
-  <script>
-    window.location.replace('/legacy-client');
-  </script>
+    <title>Danh sach san pham</title>
 </head>
 <body>
-  <p>Redirecting to legacy client UI... <a th:href="@{/legacy-client}">Click here</a></p>
+<section layout:fragment="content">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <div>
+            <p style="margin:0 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8a877f;">Catalog</p>
+            <h2 style="margin:0;font-size:24px;font-weight:300;" th:text="${pageTitle}">Tat ca san pham</h2>
+        </div>
+        <p style="margin:0;color:#6b6b67;font-size:13px;" th:text="${products.totalElements} + ' san pham'">0 san pham</p>
+    </div>
+
+    <form method="get" th:action="@{/products}" style="display:grid;grid-template-columns:2fr 1fr auto;gap:8px;margin-bottom:16px;">
+        <input type="text" name="q" th:value="${keyword}" placeholder="Tim theo ten san pham..." style="padding:10px;border:1px solid #ddd;background:#fff;">
+        <select name="categoryId" style="padding:10px;border:1px solid #ddd;background:#fff;">
+            <option value="">Tat ca danh muc</option>
+            <option th:each="cat : ${allCategories}" th:value="${cat.id}" th:selected="${currentCategoryId == cat.id}" th:text="${cat.name}">Danh muc</option>
+        </select>
+        <button type="submit" style="padding:10px 12px;border:1px solid #1c1c1a;background:#1c1c1a;color:#fff;text-transform:uppercase;font-size:12px;">Loc</button>
+    </form>
+
+    <div th:if="${products.totalElements == 0}" style="border:1px dashed #d8d3c8;padding:14px;background:#fdfcf9;color:#6b6b67;">
+        Khong tim thay san pham phu hop bo loc hien tai.
+    </div>
+
+    <div th:if="${products.totalElements > 0}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;">
+        <article th:each="item : ${products.content}" style="border:1px solid #ece9e2;background:#fff;padding:12px;display:flex;flex-direction:column;">
+            <div style="height:170px;background:#f5f3ef;margin-bottom:10px;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                <img th:if="${item.thumbnail != null or item.imageUrl != null}" th:src="${item.thumbnail != null ? item.thumbnail : item.imageUrl}" th:alt="${item.name}" style="width:100%;height:100%;object-fit:cover;">
+                <span th:if="${item.thumbnail == null and item.imageUrl == null}" style="font-size:12px;color:#8a877f;">Khong co anh</span>
+            </div>
+            <h3 style="margin:0 0 6px;font-size:15px;font-weight:500;" th:text="${item.name != null ? item.name : item.productName}">Ten san pham</h3>
+            <p style="margin:0 0 8px;color:#8a877f;font-size:12px;" th:text="${item.categoryName}">Danh muc</p>
+            <p style="margin:0 0 12px;font-weight:600;" th:text="${item.price} + ' VND'">0 VND</p>
+            <a th:href="@{/products/{slug}(slug=${item.slug != null ? item.slug : item.productSlug})}" style="margin-top:auto;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#1c1c1a;">Xem chi tiet</a>
+        </article>
+    </div>
+
+    <nav th:if="${products.totalPages > 1}" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:16px;">
+        <a th:if="${!products.first}" th:href="@{/products(page=${products.number - 1}, q=${keyword}, categoryId=${currentCategoryId})}" style="border:1px solid #ddd;padding:6px 10px;text-decoration:none;color:#1c1c1a;">Prev</a>
+        <span th:each="pageNum : ${#numbers.sequence(0, products.totalPages - 1)}">
+            <a th:href="@{/products(page=${pageNum}, q=${keyword}, categoryId=${currentCategoryId})}"
+               th:text="${pageNum + 1}"
+               th:style="${pageNum == products.number} ? 'border:1px solid #1c1c1a;background:#1c1c1a;color:#fff;padding:6px 10px;text-decoration:none;' : 'border:1px solid #ddd;padding:6px 10px;text-decoration:none;color:#1c1c1a;'">1</a>
+        </span>
+        <a th:if="${!products.last}" th:href="@{/products(page=${products.number + 1}, q=${keyword}, categoryId=${currentCategoryId})}" style="border:1px solid #ddd;padding:6px 10px;text-decoration:none;color:#1c1c1a;">Next</a>
+    </nav>
+</section>
 </body>
 </html>

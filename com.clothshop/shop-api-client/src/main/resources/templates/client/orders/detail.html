@@ -1,14 +1,23 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0;url=/legacy-client">
-  <title>Redirecting...</title>
-  <script>
-    window.location.replace('/legacy-client');
-  </script>
+    <title>Client Page</title>
 </head>
 <body>
-  <p>Redirecting to legacy client UI... <a th:href="@{/legacy-client}">Click here</a></p>
+<section layout:fragment="content">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <div>
+            <p style="margin:0 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8a877f;">Client Page</p>
+            <h2 style="margin:0;font-size:24px;font-weight:300;">Giao dien da duoc map moi</h2>
+        </div>
+        <a th:href="@{/products}" style="text-decoration:none;border:1px solid #c5a882;padding:9px 12px;color:#1c1c1a;font-size:12px;letter-spacing:.1em;text-transform:uppercase;">Xem san pham</a>
+    </div>
+    <p style="margin:0 0 8px;color:#6b6b67;line-height:1.65;">
+        Trang nay da duoc thay the giao dien theo phong cach legacy va map truc tiep trong he thong templates.
+    </p>
+    <p style="margin:0;color:#8a877f;font-size:12px;letter-spacing:.06em;">Duong dan hien tai: <strong>Tuong ung voi man hinh hien tai</strong></p>
+</section>
 </body>
 </html>

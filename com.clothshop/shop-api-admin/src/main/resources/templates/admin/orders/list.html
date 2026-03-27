@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Quan ly don hang</title>
+</head>
+<body>
+<h1 layout:fragment="page-title" style="margin:0;">Quan ly don hang</h1>
+<section layout:fragment="content">
+    <form method="get" th:action="@{/admin/orders}" style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:8px;margin-bottom:14px;">
+        <input type="text" name="keyword" th:value="${filter.keyword}" placeholder="Tim theo ma hoa don / khach hang" style="padding:10px;border:1px solid #ddd;background:#fff;">
+        <select name="status" style="padding:10px;border:1px solid #ddd;background:#fff;">
+            <option value="">Tat ca trang thai</option>
+            <option th:each="status : ${allStatuses}" th:value="${status}" th:selected="${filter.status != null and filter.status.name() == status.name()}" th:text="${status}">PENDING</option>
+        </select>
+        <input type="datetime-local" name="startDate" th:value="${filter.startDate != null ? #temporals.format(filter.startDate, 'yyyy-MM-dd''T''HH:mm') : ''}" style="padding:10px;border:1px solid #ddd;background:#fff;">
+        <button type="submit" style="padding:10px 12px;border:1px solid #1c1c1a;background:#1c1c1a;color:#fff;text-transform:uppercase;font-size:12px;">Loc</button>
+    </form>
+
+    <div style="overflow:auto;">
+        <table style="width:100%;border-collapse:collapse;background:#fff;">
+            <thead>
+            <tr style="background:#f7f5f1;">
+                <th style="padding:10px;border:1px solid #ece9e2;text-align:left;">Hoa don</th>
+                <th style="padding:10px;border:1px solid #ece9e2;text-align:left;">Khach hang</th>
+                <th style="padding:10px;border:1px solid #ece9e2;text-align:left;">Tong tien</th>
+                <th style="padding:10px;border:1px solid #ece9e2;text-align:left;">Trang thai</th>
+                <th style="padding:10px;border:1px solid #ece9e2;text-align:left;">Ngay tao</th>
+                <th style="padding:10px;border:1px solid #ece9e2;text-align:left;">Hanh dong</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${orders.totalElements == 0}">
+                <td colspan="6" style="padding:12px;border:1px solid #ece9e2;color:#6b6b67;">Khong co don hang phu hop bo loc.</td>
+            </tr>
+            <tr th:each="item : ${orders.content}">
+                <td style="padding:10px;border:1px solid #ece9e2;" th:text="${item.orderInvoice}">INV001</td>
+                <td style="padding:10px;border:1px solid #ece9e2;" th:text="${item.customerName}">Customer</td>
+                <td style="padding:10px;border:1px solid #ece9e2;" th:text="${item.totalPrice} + ' VND'">0 VND</td>
+                <td style="padding:10px;border:1px solid #ece9e2;" th:text="${item.status}">PENDING</td>
+                <td style="padding:10px;border:1px solid #ece9e2;" th:text="${#temporals.format(item.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
+                <td style="padding:10px;border:1px solid #ece9e2;">
+                    <a th:href="@{/admin/orders/{id}(id=${item.orderId})}" style="font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:#1c1c1a;">Chi tiet</a>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <nav th:if="${orders.totalPages > 1}" style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;">
+        <a th:if="${!orders.first}" th:href="@{/admin/orders(page=${orders.number - 1}, keyword=${filter.keyword}, status=${filter.status})}" style="border:1px solid #ddd;padding:6px 10px;text-decoration:none;color:#1c1c1a;">Prev</a>
+        <span th:each="pageNum : ${#numbers.sequence(0, orders.totalPages - 1)}">
+            <a th:href="@{/admin/orders(page=${pageNum}, keyword=${filter.keyword}, status=${filter.status})}"
+               th:text="${pageNum + 1}"
+               th:style="${pageNum == orders.number} ? 'border:1px solid #1c1c1a;background:#1c1c1a;color:#fff;padding:6px 10px;text-decoration:none;' : 'border:1px solid #ddd;padding:6px 10px;text-decoration:none;color:#1c1c1a;'">1</a>
+        </span>
+        <a th:if="${!orders.last}" th:href="@{/admin/orders(page=${orders.number + 1}, keyword=${filter.keyword}, status=${filter.status})}" style="border:1px solid #ddd;padding:6px 10px;text-decoration:none;color:#1c1c1a;">Next</a>
+    </nav>
+</section>
+</body>
+</html>

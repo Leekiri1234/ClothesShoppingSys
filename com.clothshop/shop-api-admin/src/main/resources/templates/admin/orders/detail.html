@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Chi tiet don hang</title>
+</head>
+<body>
+<h1 layout:fragment="page-title" style="margin:0;">Chi tiet don hang</h1>
+<section layout:fragment="content">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px;">
+        <div>
+            <p style="margin:0 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8a877f;">Order</p>
+            <h2 style="margin:0;font-size:22px;font-weight:400;" th:text="${order.orderInvoice}">INV001</h2>
+            <p style="margin:6px 0 0;color:#6b6b67;" th:text="|${order.customerName} - ${order.customerPhone}|">Customer</p>
+        </div>
+        <a th:href="@{/admin/orders}" style="text-decoration:none;border:1px solid #ddd;padding:8px 10px;color:#1c1c1a;font-size:12px;letter-spacing:.08em;text-transform:uppercase;">Quay lai danh sach</a>
+    </div>
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:12px;">
+        <section style="border:1px solid #ece9e2;background:#fff;padding:14px;overflow:auto;">
+            <h3 style="margin:0 0 10px;font-size:18px;font-weight:400;">San pham trong don</h3>
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                <tr style="background:#f7f5f1;">
+                    <th style="padding:8px;border:1px solid #ece9e2;text-align:left;">San pham</th>
+                    <th style="padding:8px;border:1px solid #ece9e2;text-align:left;">Bien the</th>
+                    <th style="padding:8px;border:1px solid #ece9e2;text-align:left;">So luong</th>
+                    <th style="padding:8px;border:1px solid #ece9e2;text-align:left;">Don gia</th>
+                    <th style="padding:8px;border:1px solid #ece9e2;text-align:left;">Thanh tien</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:if="${#lists.isEmpty(order.items)}">
+                    <td colspan="5" style="padding:10px;border:1px solid #ece9e2;color:#6b6b67;">Khong co du lieu chi tiet san pham.</td>
+                </tr>
+                <tr th:each="line : ${order.items}">
+                    <td style="padding:8px;border:1px solid #ece9e2;" th:text="${line.productName}">Product</td>
+                    <td style="padding:8px;border:1px solid #ece9e2;" th:text="${line.variantName}">Variant</td>
+                    <td style="padding:8px;border:1px solid #ece9e2;" th:text="${line.quantity}">1</td>
+                    <td style="padding:8px;border:1px solid #ece9e2;" th:text="${line.unitPrice} + ' VND'">0 VND</td>
+                    <td style="padding:8px;border:1px solid #ece9e2;" th:text="${line.subTotal} + ' VND'">0 VND</td>
+                </tr>
+                </tbody>
+            </table>
+        </section>
+
+        <section style="border:1px solid #ece9e2;background:#fff;padding:14px;display:flex;flex-direction:column;gap:10px;">
+            <h3 style="margin:0;font-size:18px;font-weight:400;">Cap nhat trang thai</h3>
+            <p style="margin:0;color:#6b6b67;font-size:13px;" th:text="|Trang thai hien tai: ${order.status}|">Trang thai hien tai</p>
+            <p style="margin:0;color:#6b6b67;font-size:13px;" th:text="|Tong thanh toan: ${order.totalPrice} VND|">0 VND</p>
+            <p style="margin:0;color:#6b6b67;font-size:13px;" th:text="|Ngay tao: ${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}|">Ngay tao</p>
+
+            <form method="post" th:action="@{/admin/orders/{id}/status(id=${order.orderId})}" style="display:grid;gap:8px;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <select name="newStatus" style="padding:10px;border:1px solid #ddd;background:#fff;" required>
+                    <option th:each="status : ${allStatuses}" th:value="${status}" th:selected="${status.name() == order.status.name()}" th:text="${status}">PENDING</option>
+                </select>
+                <textarea name="note" rows="3" placeholder="Ghi chu thay doi trang thai" style="padding:10px;border:1px solid #ddd;background:#fff;"></textarea>
+                <button type="submit" style="padding:10px;border:1px solid #1c1c1a;background:#1c1c1a;color:#fff;text-transform:uppercase;font-size:12px;">Cap nhat</button>
+            </form>
+        </section>
+    </div>
+
+    <section style="margin-top:14px;border:1px solid #ece9e2;background:#fff;padding:14px;">
+        <h3 style="margin:0 0 10px;font-size:18px;font-weight:400;">Lich su trang thai</h3>
+        <div th:if="${#lists.isEmpty(order.history)}" style="color:#6b6b67;">Chua co lich su thay doi trang thai.</div>
+        <ul th:if="${!#lists.isEmpty(order.history)}" style="margin:0;padding-left:18px;display:grid;gap:8px;">
+            <li th:each="event : ${order.history}" style="color:#3a3a35;">
+                <span th:text="${#temporals.format(event.changedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</span>
+                <span th:text="|: ${event.oldStatus} -> ${event.newStatus}|">: OLD -> NEW</span>
+                <span th:if="${event.note != null and !#strings.isEmpty(event.note)}" th:text="| (${event.note})|">(note)</span>
+            </li>
+        </ul>
+    </section>
+</section>
+</body>
+</html>

@@ -63,7 +63,7 @@ public class SecurityConfig {
                         // Public resources
                         .requestMatchers("/favicon.ico", "/error/**").permitAll()
                         .requestMatchers("/cart/count").permitAll()
-                        .requestMatchers("/", "/home", "/products/**", "/search", "/login", "/register",
+                        .requestMatchers("/", "/home", "/products/**", "/search", "/login", "/register", "/forgot-password",
                                 "/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
 
                         // Customer-only pages

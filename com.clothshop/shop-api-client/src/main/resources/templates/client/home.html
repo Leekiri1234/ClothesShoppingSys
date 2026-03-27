@@ -1,14 +1,116 @@
 <!DOCTYPE html>
-<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0;url=/legacy-client">
-  <title>Redirecting...</title>
-  <script>
-    window.location.replace('/legacy-client');
-  </script>
+    <title>Trang chủ</title>
 </head>
 <body>
-  <p>Redirecting to legacy client UI... <a th:href="@{/legacy-client}">Click here</a></p>
+<section layout:fragment="content">
+    <section class="hero">
+        <div class="container">
+            <div class="hero-grid">
+                <div class="hero-content">
+                    <p class="hero-eyebrow">SS 2025 COLLECTION</p>
+                    <h1>
+                        Phong cách<br>tối giản
+                    </h1>
+                    <p class="hero-subtitle text-accent">Vẻ đẹp vượt thời gian</p>
+                    <p class="hero-description">
+                        Bộ sưu tập Xuân Hè 2025 — Những thiết kế tối giản, thanh lịch được tạo ra từ chất liệu cao cấp.
+                        Mỗi chiếc là một lựa chọn có chủ đích cho phong cách sống hiện đại.
+                    </p>
+                    <div class="hero-actions">
+                        <a class="btn btn--primary" th:href="@{/products}">KHÁM PHÁ NGAY</a>
+                        <a class="btn btn--outline" th:href="@{/products}">XEM ƯU ĐÃI</a>
+                    </div>
+                    <div class="hero-stats">
+                        <div class="stat-item">
+                            <span class="stat-value" th:text="${#lists.size(featuredProducts)} + '+'">0+</span>
+                            <span class="stat-label">Sản phẩm nổi bật</span>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item">
+                            <span class="stat-value" th:text="${#lists.size(homeCollections)} + '+'">0+</span>
+                            <span class="stat-label">Bộ sưu tập</span>
+                        </div>
+                        <div class="stat-divider"></div>
+                        <div class="stat-item">
+                            <span class="stat-value">98%</span>
+                            <span class="stat-label">Hài lòng</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="hero-image">
+                    <img th:src="${(!#lists.isEmpty(featuredProducts) and featuredProducts.get(0).thumbnail != null) ? featuredProducts.get(0).thumbnail : ((!#lists.isEmpty(featuredProducts) and featuredProducts.get(0).imageUrl != null) ? featuredProducts.get(0).imageUrl : 'https://images.unsplash.com/photo-1544441893-675973e31985?w=800&q=85')}"
+                         alt="MINIMAL SS 2025 Collection"
+                         loading="eager">
+                    <div class="hero-image-badge">
+                        <p class="badge-label">Bộ sưu tập</p>
+                        <p class="badge-title">Xuân Hè 2025</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="best-sellers">
+        <div class="container">
+            <div class="section-header-with-link">
+                <div class="section-header">
+                    <p class="eyebrow">Được yêu thích nhất</p>
+                    <h2>Sản phẩm nổi bật</h2>
+                </div>
+                <a th:href="@{/products}" class="view-all-link">XEM TẤT CẢ</a>
+            </div>
+            <div class="product-grid">
+                <article class="product-card" th:each="item : ${featuredProducts}">
+                    <a th:href="@{/products/{slug}(slug=${item.slug != null ? item.slug : item.productSlug})}">
+                        <div class="product-card-image">
+                            <img th:if="${item.thumbnail != null or item.imageUrl != null}"
+                                 th:src="${item.thumbnail != null ? item.thumbnail : item.imageUrl}"
+                                 th:alt="${item.name != null ? item.name : item.productName}"
+                                 loading="lazy">
+                            <div class="img-placeholder" th:if="${item.thumbnail == null and item.imageUrl == null}">NO IMAGE</div>
+                        </div>
+                        <div class="product-card-info">
+                            <div class="product-card-brand" th:text="${item.categoryName != null ? item.categoryName : 'MINIMAL'}">MINIMAL</div>
+                            <div class="product-card-name" th:text="${item.name != null ? item.name : item.productName}">Tên sản phẩm</div>
+                            <div class="product-card-price">
+                                <span class="product-price-current" th:text="${#numbers.formatDecimal(item.price, 0, 'POINT', 0, 'COMMA')} + '₫'">0₫</span>
+                            </div>
+                        </div>
+                    </a>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="collections">
+        <div class="container">
+            <div class="section-header">
+                <p class="eyebrow">Danh mục</p>
+                <h2>Bộ sưu tập nổi bật</h2>
+            </div>
+            <div class="collections-grid">
+                <a class="collection-card"
+                   th:each="collection : ${homeCollections}"
+                   th:href="@{/collections/{slug}(slug=${collection.slug})}">
+                    <img th:if="${collection.bannerUrl != null}" th:src="${collection.bannerUrl}" th:alt="${collection.name}" loading="lazy">
+                    <div class="img-placeholder" th:if="${collection.bannerUrl == null}">COLLECTION</div>
+                    <div class="collection-card-label">
+                        <h3 th:text="${collection.name}">Bộ sưu tập</h3>
+                    </div>
+                    <div class="collection-card-overlay">
+                        <h3 th:text="${collection.name}">Bộ sưu tập</h3>
+                        <p th:text="${collection.description}">Mô tả bộ sưu tập</p>
+                        <div class="btn-view">XEM THÊM</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </section>
+</section>
 </body>
 </html>

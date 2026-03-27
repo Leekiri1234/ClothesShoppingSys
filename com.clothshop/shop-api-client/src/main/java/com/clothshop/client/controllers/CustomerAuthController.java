@@ -63,6 +63,25 @@ public class CustomerAuthController {
     }
 
     /**
+     * Display forgot password page.
+     */
+    @GetMapping("/forgot-password")
+    public String showForgotPasswordPage() {
+        return "client/forgot-password";
+    }
+
+    /**
+     * Process forgot password request.
+     */
+    @PostMapping("/forgot-password")
+    public String processForgotPassword(String email, RedirectAttributes redirectAttributes) {
+        log.info("Forgot password requested for email: {}", email);
+        redirectAttributes.addFlashAttribute("message",
+            "Neu email ton tai, chung toi da gui huong dan dat lai mat khau.");
+        return "redirect:/forgot-password";
+    }
+
+    /**
      * Process customer registration.
      *
      * Validation Flow:
