@@ -35,3 +35,4 @@ logging:
   level:
     com.clothshop: DEBUG
     org.hibernate.SQL: DEBUG
+spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
