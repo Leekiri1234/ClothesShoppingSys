@@ -115,19 +115,20 @@
                         <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-edit"></i> Cập nhật trạng thái</h6>
                     </div>
                     <div class="card-body">
-                        <form th:action="@{/admin/orders/{id}/status(id=${order.orderId})}" method="post">
+                        <form th:action="@{/admin/orders/{id}/status(id=${order.orderId})}" method="post" id="statusForm">
                             <div class="form-group">
-                                <select name="newStatus" class="form-control">
+                                <label for="statusSelect">Trạng thái mới</label>
+                                <select name="newStatus" id="statusSelect" class="form-control">
                                     <option th:each="st : ${allStatuses}"
-                                            th:value="${st}"
+                                            th:value="${st.name()}"
                                             th:text="${st.displayName}"
                                             th:selected="${st == order.status}"></option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <textarea name="note" class="form-control" rows="2" placeholder="Ghi chú nội bộ..."></textarea>
+                                <textarea name="note" class="form-control" rows="2" placeholder="Ghi chú lý do..."></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-block">Lưu thay đổi</button>
+                            <button type="submit" class="btn btn-primary btn-block">Cập nhật trạng thái</button>
                         </form>
                     </div>
                 </div>
@@ -156,5 +157,29 @@
         </div>
     </div>
 </div>
+
+<th:block layout:fragment="scripts">
+    <script>
+        (function() {
+            var statusForm = document.getElementById('statusForm');
+            var statusSelect = document.getElementById('statusSelect');
+
+            if (!statusForm || !statusSelect) {
+                return;
+            }
+
+            statusForm.addEventListener('submit', function(e) {
+                var selectedStatus = (statusSelect.value || '').toUpperCase();
+
+                if (selectedStatus === 'CANCELLED') {
+                    var confirmCancel = confirm('CẢNH BÁO: Bạn đang thực hiện HỦY đơn hàng. Hệ thống sẽ tự động hoàn lại số lượng sản phẩm vào kho hàng. Bạn có chắc chắn không?');
+                    if (!confirmCancel) {
+                        e.preventDefault();
+                    }
+                }
+            });
+        })();
+    </script>
+</th:block>
 </body>
 </html>
