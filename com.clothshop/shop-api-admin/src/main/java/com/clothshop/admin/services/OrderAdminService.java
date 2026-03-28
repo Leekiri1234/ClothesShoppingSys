@@ -95,15 +95,18 @@ public class OrderAdminService {
 
         OrderStatus oldStatus = order.getStatus();
 
-        // 2. Kiểm tra nếu trạng thái không đổi thì không làm gì cả
-        if (oldStatus == newStatus) return;
-
-        // 3. LOGIC HOÀN KHO: Chỉ chạy khi trạng thái mới là CANCELLED và trạng thái cũ KHÔNG PHẢI là CANCELLED
+        // 1. HOÀN KHO: Nếu đơn bị Hủy
         if (newStatus == OrderStatus.CANCELLED && oldStatus != OrderStatus.CANCELLED) {
             handleRestocking(order);
         }
 
-        // 4. Cập nhật trạng thái và lưu lịch sử (như cũ)
+        // 2. TRỪ KHO: Nếu đơn được Xác nhận hoặc Giao hàng (Và trước đó nó đang ở trạng thái Chờ/Nháp)
+        else if ((newStatus == OrderStatus.CONFIRMED || newStatus == OrderStatus.SHIPPING)
+                && oldStatus == OrderStatus.PENDING) {
+            handleDeductStock(order);
+        }
+
+        // Cập nhật trạng thái và lưu lịch sử (như cũ)
         order.setStatus(newStatus);
         orderRepository.save(order);
 
@@ -132,6 +135,27 @@ public class OrderAdminService {
 
                 log.info("Restocked: Product {} - Variant {} | +{} items",
                         variant.getProduct().getProductName(), variant.getSku(), item.getQuantity());
+            }
+        }
+    }
+
+    private void handleDeductStock(Order order) {
+        if (order.getOrderItems() == null) return;
+
+        for (OrderItem item : order.getOrderItems()) {
+            ProductVariant variant = item.getVariant();
+            if (variant != null) {
+                int currentStock = variant.getStockQuantity() != null ? variant.getStockQuantity() : 0;
+
+                // Kiểm tra xem kho còn đủ hàng không trước khi trừ
+                if (currentStock < item.getQuantity()) {
+                    throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK,
+                            "Sản phẩm " + variant.getProduct().getProductName() + " không đủ tồn kho!");
+                }
+
+                variant.setStockQuantity(currentStock - item.getQuantity());
+                variantRepository.save(variant);
+                log.info("Deducted: Variant {} | -{} items", variant.getSku(), item.getQuantity());
             }
         }
     }
