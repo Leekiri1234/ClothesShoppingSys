@@ -1,14 +1,11 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
 <head>
-    <meta charset="UTF-8">
     <title>Đơn hàng của tôi — MINIMAL</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<header th:replace="~{fragments/header :: header}"></header>
-
-<main class="container" style="padding-top: 120px; padding-bottom: 80px;">
+<main layout:fragment="content" class="container" style="padding-top: 120px; padding-bottom: 80px;">
     <div class="section-header">
         <p class="eyebrow">Tài khoản</p>
         <h2>Lịch sử đơn hàng</h2>
@@ -60,7 +57,5 @@
         </div>
     </div>
 </main>
-
-<footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
-</html>
+</html>

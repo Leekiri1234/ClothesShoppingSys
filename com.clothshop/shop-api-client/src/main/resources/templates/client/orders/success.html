@@ -1,10 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đặt hàng thành công — MINIMAL</title>
-    <link rel="stylesheet" th:href="@{/style.css}">
     <style>
         .success-wrapper {
           padding: 100px 0;
@@ -46,9 +44,7 @@
 </head>
 <body>
 
-<header th:replace="~{fragments/header :: header}"></header>
-
-<main class="page-content">
+<main layout:fragment="content" class="page-content">
     <div class="container">
         <div class="success-wrapper">
             <div class="success-icon">
@@ -83,8 +79,6 @@
         </div>
     </div>
 </main>
-
-<footer th:replace="~{fragments/footer :: footer}"></footer>
 
 </body>
 </html>
