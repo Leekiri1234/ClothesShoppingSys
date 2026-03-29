@@ -47,7 +47,7 @@ public class CustomerAuthController {
         if (logout != null) {
             model.addAttribute("message", "You have been logged out successfully");
         }
-        return "client/login";
+        return "client/auth/login";
     }
 
     /**
@@ -59,7 +59,7 @@ public class CustomerAuthController {
     @GetMapping("/register")
     public String showRegisterPage(Model model) {
         model.addAttribute("registerRequest", new RegisterRequest());
-        return "client/register";
+        return "client/auth/register";
     }
 
     /**
@@ -87,7 +87,7 @@ public class CustomerAuthController {
         // Check for validation errors from @Valid annotation
         if (bindingResult.hasErrors()) {
             log.warn("Registration validation failed: {}", bindingResult.getAllErrors());
-            return "client/register";
+            return "client/auth/register";
         }
 
         try {
@@ -104,13 +104,23 @@ public class CustomerAuthController {
             // Business validation failed (e.g., username/email already exists)
             log.error("Registration failed: {}", e.getMessage());
             model.addAttribute("error", e.getMessage());
-            return "client/register";
+            return "client/auth/register";
         } catch (Exception e) {
             // Unexpected error
             log.error("Unexpected error during registration: ", e);
             model.addAttribute("error", "An unexpected error occurred. Please try again.");
-            return "client/register";
+            return "client/auth/register";
         }
+    }
+
+    /**
+     * Display forgot password page.
+     *
+     * @return forgot password page view
+     */
+    @GetMapping("/forgot-password")
+    public String showForgotPasswordPage() {
+        return "client/auth/forgot-password";
     }
 }
 
