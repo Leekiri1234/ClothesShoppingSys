@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Hồ sơ cá nhân - MINIMAL</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <section class="page" style="display: block; opacity: 1; visibility: visible;" id="page-profile">
+        <div class="container" style="padding-top: 40px; padding-bottom: 80px;">
+            <div th:if="${success}" class="alert alert-success" style="color: #27ae60; background: #e8f5e9; padding: 10px; border-radius: 4px; margin-bottom: 16px; font-size: 14px;" role="alert">
+                <span th:text="${success}"></span>
+            </div>
+            
+            <div class="profile-layout">
+                <aside class="profile-sidebar">
+                    <div class="profile-avatar-wrap">
+                        <div class="profile-avatar">
+                            <div class="img-placeholder" style="width:72px;height:72px;font-size:24px;border-radius:50%" th:text="${#strings.substring(profile.fullName != null ? profile.fullName : profile.username, 0, 1)}">N</div>
+                        </div>
+                        <div class="profile-name" th:text="${profile.fullName}">Họ và tên</div>
+                        <div class="profile-email" th:text="${profile.email}">email@example.com</div>
+                    </div>
+                    <nav class="profile-sidebar-nav">
+                        <a th:href="@{/profile}" class="profile-sidebar-link active" style="text-decoration: none;">Thông tin tài khoản</a>
+                        <a href="#" class="profile-sidebar-link" style="text-decoration: none;">Đơn hàng của tôi</a>
+                        <a href="#" class="profile-sidebar-link" style="text-decoration: none;">Danh sách yêu thích</a>
+                        <a href="#" class="profile-sidebar-link" style="text-decoration: none;">Đổi / Trả hàng</a>
+                        <form th:action="@{/logout}" method="post" style="margin: 0;">
+                            <button type="submit" class="profile-sidebar-link" style="color:#e63946; border: none; background: none; width: 100%; text-align: left; padding: 12px 16px; font-family: inherit; font-size: 14px; cursor: pointer;">Đăng xuất</button>
+                        </form>
+                    </nav>
+                </aside>
+                <div>
+                    <div class="profile-section">
+                        <div class="profile-section-header">
+                            <h5>Thông tin cá nhân</h5>
+                            <a th:href="@{/profile/edit}" class="btn btn--ghost btn--sm" style="text-decoration: none;">Chỉnh sửa</a>
+                        </div>
+                        <div class="form-grid" id="profile-fields">
+                            <div class="form-group"><label class="form-label">Tên đăng nhập</label><input type="text" class="form-input" th:value="${profile.username}" readonly></div>
+                            <div class="form-group"><label class="form-label">Họ và tên</label><input type="text" class="form-input" th:value="${profile.fullName}" readonly></div>
+                            <div class="form-group"><label class="form-label">Số điện thoại</label><input type="tel" class="form-input" th:value="${profile.phone}" readonly></div>
+                            <div class="form-group" style="grid-column: 1 / -1;"><label class="form-label">Email</label><input type="email" class="form-input" th:value="${profile.email}" readonly></div>
+                        </div>
+                    </div>
+                    <div class="profile-section">
+                        <div class="profile-section-header">
+                            <h5>Sổ địa chỉ & Liên hệ</h5>
+                            <a th:href="@{/profile/edit}" class="btn btn--outline btn--sm" style="text-decoration: none;">Cập nhật địa chỉ</a>
+                        </div>
+                        <div class="address-grid">
+                            <div class="address-card default" th:if="${profile.address != null and !profile.address.isEmpty()}">
+                                <span class="address-card-badge">Mặc định</span>
+                                <p style="font-size:13px;font-weight:600;margin-bottom:8px;" th:text="${profile.fullName}"></p>
+                                <p style="font-size:13px;color:#666;line-height:1.7">
+                                    <span th:text="${profile.phone}"></span><br>
+                                    <span th:text="${profile.address}"></span>
+                                </p>
+                                <div class="address-card-actions">
+                                    <a th:href="@{/profile/edit}" class="address-action-link" style="text-decoration: none;">Chỉnh sửa</a>
+                                </div>
+                            </div>
+                            <div th:if="${profile.address == null or profile.address.isEmpty()}" style="font-size: 13px; color: #999; padding: 20px 0;">
+                                Bạn chưa thiết lập địa chỉ nào. Nhấn "Cập nhật địa chỉ" để thêm địa chỉ giao hàng.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+</body>
+</html>

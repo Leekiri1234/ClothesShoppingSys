@@ -30,7 +30,7 @@ public class CustomerProfileController {
         // Không cần try-catch, nếu lỗi (hết session/không tìm thấy user), Global Handler sẽ lo
         CustomerProfileResponse profile = profileService.getProfile(principal.getName());
         model.addAttribute("profile", profile);
-        return "client/profile/view";
+        return "client/profile/index";
     }
 
     /**
