@@ -314,10 +314,20 @@ function initChipInputs() {
 function addChip(container, value) {
   const chip = document.createElement('div');
   chip.className = 'chip';
-  chip.innerHTML = `
-    <span>${value}</span>
-    <button type="button" class="chip-remove" onclick="this.parentElement.remove()">×</button>
-  `;
+
+  const label = document.createElement('span');
+  label.textContent = value;
+
+  const removeButton = document.createElement('button');
+  removeButton.type = 'button';
+  removeButton.className = 'chip-remove';
+  removeButton.textContent = '×';
+  removeButton.addEventListener('click', () => {
+    chip.remove();
+  });
+
+  chip.appendChild(label);
+  chip.appendChild(removeButton);
   container.appendChild(chip);
 }
 
