@@ -4,6 +4,7 @@ import com.clothshop.client.dtos.request.OrderCreateRequest;
 import com.clothshop.client.dtos.response.CheckoutSummaryResponse;
 import com.clothshop.client.services.CartClientService;
 import com.clothshop.client.services.CheckoutClientService;
+import com.clothshop.client.services.ClientVoucherService;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.domain.entities.auth.Account;
 import com.clothshop.domain.enums.PaymentMethod;
@@ -30,6 +31,7 @@ public class CheckoutController {
     private final CheckoutClientService checkoutService;
     private final CartClientService cartService;
     private final AccountRepository accountRepository;
+    private final ClientVoucherService clientVoucherService;
 
     @GetMapping
     public String showCheckoutForm(Principal principal, Model model) {
@@ -51,6 +53,7 @@ public class CheckoutController {
         model.addAttribute("cart", cartService.getCartSummary(principal.getName()));
         model.addAttribute("orderRequest", request);
         model.addAttribute("paymentMethods", PaymentMethod.values());
+        model.addAttribute("vouchers", clientVoucherService.getAvailableVouchers());
 
         return "client/checkout/form";
     }

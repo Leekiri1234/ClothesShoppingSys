@@ -132,5 +132,15 @@ public class VoucherAdminController {
         redirectAttributes.addFlashAttribute("successMessage", "Đã vô hiệu hóa voucher!");
         return "redirect:/admin/vouchers";
     }
-}
 
+    @PostMapping("/{id}/enable")
+    public String enableVoucher(@PathVariable Long id, Principal principal, RedirectAttributes redirectAttributes) {
+        try {
+            voucherService.reactivateVoucher(id, principal.getName());
+            redirectAttributes.addFlashAttribute("successMessage", "Đã kích hoạt lại voucher!");
+        } catch (BusinessException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/vouchers";
+    }
+}

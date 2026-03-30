@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -128,43 +128,11 @@ public class FeaturedCollectionService {
         // 2. Kéo TOÀN BỘ lịch sử (active + inactive) của các sản phẩm này lên RAM (Chỉ 1 câu SQL duy nhất - xuyên thủng @SQLRestriction)
         List<CollectionItem> historicalItems = collectionItemRepository.findAllHistoryByCollectionIdAndProductIds(collectionId, distinctProductIds);
 
-        // Chuyển sang Map để tra cứu O(1) thay vì O(n) mỗi vòng lặp
-        Map<Long, CollectionItem> historicalItemMap = historicalItems.stream()
-                .collect(Collectors.toMap(
-                        item -> item.getProduct().getId(),
-                        item -> item,
-                        (existing, replacement) -> existing));
-
-        // Xác định các ID thực sự mới (chưa có trong lịch sử) để validate trước khi tạo bản ghi
-        Set<Long> historicalProductIds = historicalItems.stream()
-                .map(item -> item.getProduct().getId())
-                .collect(Collectors.toSet());
-        List<Long> newProductIds = distinctProductIds.stream()
-                .filter(id -> !historicalProductIds.contains(id))
-                .collect(Collectors.toList());
-
-        // Validate: Đảm bảo tất cả ID mới đều tồn tại trong DB trước khi tạo bản ghi
-        Map<Long, Product> newProductMap;
-        if (!newProductIds.isEmpty()) {
-            List<Product> foundProducts = productRepository.findAllById(newProductIds);
-            if (foundProducts.size() != newProductIds.size()) {
-                Set<Long> foundIds = foundProducts.stream()
-                        .map(Product::getId)
-                        .collect(Collectors.toSet());
-                List<Long> missingIds = newProductIds.stream()
-                        .filter(id -> !foundIds.contains(id))
-                        .collect(Collectors.toList());
-                throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND,
-                        "Không tìm thấy sản phẩm với ID: " + missingIds);
-            }
-            newProductMap = foundProducts.stream().collect(Collectors.toMap(Product::getId, p -> p));
-        } else {
-            newProductMap = Map.of();
-        }
 
         // Prefetch tên sản phẩm theo danh sách ID (1 câu SQL) để tránh N+1 khi ghi nhận trùng lặp
         Map<Long, String> productNameMap = productRepository.findIdAndProductNameByIdIn(distinctProductIds)
                 .stream().collect(Collectors.toMap(row -> (Long) row[0], row -> (String) row[1]));
+
 
         List<CollectionItem> itemsToSave = new ArrayList<>();
         List<String> duplicateProductNames = new ArrayList<>();
@@ -174,12 +142,15 @@ public class FeaturedCollectionService {
         // 3. Xử lý logic trên RAM để chống N+1
         for (Long pId : distinctProductIds) {
             // Tìm xem ID này đã từng tồn tại trong lịch sử chưa
-            CollectionItem existingItem = historicalItemMap.get(pId);
+            Optional<CollectionItem> existingItemOpt = historicalItems.stream()
+                    .filter(item -> item.getProduct().getId().equals(pId))
+                    .findFirst();
 
-            if (existingItem != null) {
+            if (existingItemOpt.isPresent()) {
+                CollectionItem existingItem = existingItemOpt.get();
                 if (existingItem.getIsActive()) {
                     // TH1: Đã tồn tại và ĐANG ACTIVE -> Ghi nhận trùng lặp để báo UI
-                    duplicateProductNames.add(productNameMap.getOrDefault(pId, ""));
+                    duplicateProductNames.add(existingItem.getProduct().getProductName());
                 } else {
                     // TH2: Đã tồn tại nhưng BỊ XÓA MỀM -> Khôi phục (Re-activate) thay vì tạo mới
                     existingItem.setIsActive(true);
@@ -189,10 +160,11 @@ public class FeaturedCollectionService {
                     reactivatedCount++;
                 }
             } else {
-                // TH3: Mới hoàn toàn -> Tạo bản ghi mới với Product đã được validate
+                // TH3: Mới hoàn toàn -> Tạo bản ghi mới sử dụng Product Proxy để không query dư thừa
+                Product productProxy = productRepository.getReferenceById(pId);
                 itemsToSave.add(CollectionItem.builder()
                         .collection(collection)
-                        .product(newProductMap.get(pId))
+                        .product(productProxy)
                         .displayOrder(currentOrder++)
                         .isActive(true)
                         .build());

@@ -17,7 +17,7 @@ public interface VoucherRepository extends JpaRepository<Voucher, Long> {
     @Query("SELECT v FROM Voucher v WHERE v.status = 'ACTIVE' " +
             "AND v.validFrom <= :now AND v.validTo >= :now " +
             "AND (v.usageLimit IS NULL OR v.currentUsage < v.usageLimit)")
-    List<Voucher> findValidVouchers(@Param("now") LocalDateTime now);
+    List<Voucher> findAvailableVouchers(@Param("now") LocalDateTime now);
 
     boolean existsByCode(String code);
 }

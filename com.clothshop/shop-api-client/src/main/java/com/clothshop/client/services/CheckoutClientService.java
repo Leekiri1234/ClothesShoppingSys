@@ -9,6 +9,7 @@ import com.clothshop.domain.entities.auth.Customer;
 import com.clothshop.domain.entities.customer.Cart;
 import com.clothshop.domain.entities.customer.CartItem;
 import com.clothshop.domain.entities.marketing.Voucher;
+import com.clothshop.domain.entities.marketing.VoucherRedemption;
 import com.clothshop.domain.entities.order.Order;
 import com.clothshop.domain.entities.order.OrderItem;
 import com.clothshop.domain.entities.order.OrderStatusHistory;
@@ -20,6 +21,7 @@ import com.clothshop.domain.repositories.auth.AccountRepository;
 import com.clothshop.domain.repositories.customer.CartItemRepository;
 import com.clothshop.domain.repositories.customer.CartRepository;
 import com.clothshop.domain.repositories.marketing.VoucherRepository;
+import com.clothshop.domain.repositories.marketing.VoucherRedemptionRepository;
 import com.clothshop.domain.repositories.order.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,6 +43,7 @@ public class CheckoutClientService {
     private final OrderRepository orderRepository;
     private final VoucherRepository voucherRepository;
     private final AccountRepository accountRepository;
+    private final VoucherRedemptionRepository voucherRedemptionRepository;
 
     private Customer getCustomerByUsername(String username) {
         Account account = accountRepository.findByUsernameWithCustomer(username)
@@ -169,7 +172,7 @@ public class CheckoutClientService {
         // 4. Record OrderStatusHistory
         OrderStatusHistory history = new OrderStatusHistory();
         history.setOrder(order);
-        history.setStatusId(OrderStatus.PENDING);
+        history.setNewStatus(OrderStatus.PENDING);
         history.setChangedAt(LocalDateTime.now());
         history.setNote("Order created by customer");
 
@@ -180,17 +183,25 @@ public class CheckoutClientService {
         // Create Payment Entity
         Payment payment = new Payment();
         payment.setOrder(order);
-        payment.setPaymentMethod(request.getPaymentMethod());
+        payment.setPaymentMethod(request.getPaymentMethod().name());
         payment.setAmount(order.getTotalPrice());
-        payment.setPaymentStatus(PaymentStatus.PENDING);
+        payment.setStatus(PaymentStatus.PENDING);
         order.setPayment(payment);
 
         // Update Voucher usage if applicable
         if (request.getVoucherCode() != null && !request.getVoucherCode().isEmpty()) {
             Voucher voucher = voucherRepository.findByCode(request.getVoucherCode().toUpperCase()).orElse(null);
             if (voucher != null) {
-                voucher.setCurrentUsage(voucher.getCurrentUsage() + 1);
+                Integer current = voucher.getCurrentUsage() == null ? 0 : voucher.getCurrentUsage();
+                voucher.setCurrentUsage(current + 1);
                 voucherRepository.save(voucher);
+
+                VoucherRedemption redemption = new VoucherRedemption();
+                redemption.setVoucher(voucher);
+                redemption.setCustomer(customer);
+                redemption.setOrder(order);
+                redemption.setDiscountAmount(BigDecimal.valueOf(summary.getDiscount()));
+                voucherRedemptionRepository.save(redemption);
             }
         }
 

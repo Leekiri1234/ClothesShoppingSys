@@ -16,6 +16,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -73,6 +75,12 @@ public class VoucherService {
 
         voucherMapper.updateEntityFromRequest(request, voucher);
         voucher.setUpdatedBy(username);
+
+        boolean wasExpired = VoucherStatus.EXPIRED.name().equals(voucher.getStatus());
+        if (wasExpired && request.getValidTo().isAfter(LocalDateTime.now())) {
+            voucher.setStatus(VoucherStatus.ACTIVE.name());
+        }
+
         voucherRepository.save(voucher);
     }
 
@@ -85,5 +93,20 @@ public class VoucherService {
         voucher.setUpdatedBy(username);
         voucherRepository.save(voucher);
         log.info("Voucher {} disabled by {}", voucher.getCode(), username);
+    }
+
+    @Transactional
+    public void reactivateVoucher(Long id, String username) {
+        Voucher voucher = voucherRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy voucher"));
+
+        if (voucher.getValidTo() != null && voucher.getValidTo().isBefore(LocalDateTime.now())) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Voucher đã hết hạn, không thể kích hoạt lại");
+        }
+
+        voucher.setStatus(VoucherStatus.ACTIVE.name());
+        voucher.setUpdatedBy(username);
+        voucherRepository.save(voucher);
+        log.info("Voucher {} re-activated by {}", voucher.getCode(), username);
     }
 }

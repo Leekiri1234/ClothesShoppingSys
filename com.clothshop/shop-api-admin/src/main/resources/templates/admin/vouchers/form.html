@@ -144,10 +144,24 @@
       return new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2, minimumFractionDigits: 0 }).format(num);
     }
 
+    function parseCurrency(value) {
+      if (!value) return null;
+      const digitsOnly = value.replace(/[^0-9]/g, '');
+      if (!digitsOnly) return null;
+      return Number(digitsOnly);
+    }
+
+    function parseDecimal(value) {
+      if (!value) return null;
+      const normalized = value.replace(/,/g, '.');
+      const num = parseFloat(normalized);
+      return isNaN(num) ? null : num;
+    }
+
     function formatCurrencyField(displayId, hiddenId, finalize) {
       const display = document.getElementById(displayId);
       const hidden = document.getElementById(hiddenId);
-      const rawNumber = toNumber(display.value);
+      const rawNumber = parseCurrency(display.value);
       hidden.value = rawNumber ?? '';
       if (finalize) {
         display.value = rawNumber !== null ? formatVnd(rawNumber) : '';
@@ -158,7 +172,7 @@
       const type = document.getElementById('discountType').value;
       const display = document.getElementById('discountValueDisplay');
       const hidden = document.getElementById('discountValueRaw');
-      const rawNumber = toNumber(display.value);
+      const rawNumber = type === 'PERCENTAGE' ? parseDecimal(display.value) : parseCurrency(display.value);
       hidden.value = rawNumber ?? '';
       if (finalize) {
         display.value = rawNumber !== null
@@ -182,20 +196,41 @@
     }
 
     function hydrateInitialDisplays() {
+      const discountType = document.getElementById('discountType').value;
+
+      // 1. Discount Value
       const discountHidden = document.getElementById('discountValueRaw');
-      if (discountHidden) {
-        document.getElementById('discountValueDisplay').value = discountHidden.value ? discountHidden.value : '';
-        formatDiscountValue(true);
+      const discountDisplay = document.getElementById('discountValueDisplay');
+      if (discountHidden && discountHidden.value) {
+        const val = parseFloat(discountHidden.value);
+        if (!isNaN(val)) {
+          // Check type to decide format
+          if (discountType === 'PERCENTAGE') {
+             discountDisplay.value = formatPercent(val);
+          } else {
+             discountDisplay.value = formatVnd(val);
+          }
+        }
       }
+
+      // 2. Min Order
       const minOrderHidden = document.getElementById('minOrderValueRaw');
-      if (minOrderHidden) {
-        document.getElementById('minOrderValueDisplay').value = minOrderHidden.value ? minOrderHidden.value : '';
-        formatCurrencyField('minOrderValueDisplay','minOrderValueRaw', true);
+      const minOrderDisplay = document.getElementById('minOrderValueDisplay');
+      if (minOrderHidden && minOrderHidden.value) {
+        const val = parseFloat(minOrderHidden.value);
+        if (!isNaN(val)) {
+          minOrderDisplay.value = formatVnd(val);
+        }
       }
+
+      // 3. Max Discount
       const maxDiscountHidden = document.getElementById('maxDiscountRaw');
-      if (maxDiscountHidden) {
-        document.getElementById('maxDiscountDisplay').value = maxDiscountHidden.value ? maxDiscountHidden.value : '';
-        formatCurrencyField('maxDiscountDisplay','maxDiscountRaw', true);
+      const maxDiscountDisplay = document.getElementById('maxDiscountDisplay');
+      if (maxDiscountHidden && maxDiscountHidden.value) {
+        const val = parseFloat(maxDiscountHidden.value);
+        if (!isNaN(val)) {
+          maxDiscountDisplay.value = formatVnd(val);
+        }
       }
     }
 
@@ -255,9 +290,12 @@
       hydrateInitialDisplays();
       hydrateDateDisplays();
       toggleMaxDiscount();
+      // syncAllNumericFields(); // Removed to prevent double-processing on load
     });
   </script>
 </div>
 </body>
 </html>
+
+
 
