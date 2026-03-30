@@ -390,6 +390,10 @@ window.AdminUI = {
 function renderBarChart(containerId, data) {
   const container = document.getElementById(containerId);
   if (!container) return;
+  if (!data || data.length === 0) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text-muted);padding:1rem;">No data available</p>';
+    return;
+  }
 
   const width = container.clientWidth;
   const height = 200;
