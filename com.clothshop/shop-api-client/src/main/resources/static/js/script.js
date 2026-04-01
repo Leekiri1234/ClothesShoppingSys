@@ -98,11 +98,11 @@ function buildProductCard(product, showRemoveWishlist = false) {
   const isInWishlist = wishlist.includes(product.id);
   const hasSale = product.originalPrice !== null;
   const discount = hasSale ? Math.round((1 - product.price / product.originalPrice) * 100) : 0;
-  
+
   const priceHTML = hasSale
     ? `<span class="product-price-sale">${formatPrice(product.price)}</span><span class="product-price-original">${formatPrice(product.originalPrice)}</span>`
     : `<span class="product-price-current">${formatPrice(product.price)}</span>`;
-  
+
   let badgeHTML = '';
   if (hasSale && product.badge === 'sale') {
     badgeHTML = `<div class="product-card-badge sale">-${discount}%</div>`;
@@ -111,11 +111,11 @@ function buildProductCard(product, showRemoveWishlist = false) {
   } else if (product.badge === 'new') {
     badgeHTML = `<div class="product-card-badge new">Mới</div>`;
   }
-  
+
   const imageHTML = product.image
     ? `<img src="${product.image}" alt="${product.name}" loading="lazy" />`
     : `<div class="img-placeholder" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;letter-spacing:0.1em;color:#C5A882">${product.name}</div>`;
-  
+
   const colorSwatchesHTML = product.colors.slice(0, 3).map(color => {
     const isWhite = color === '#FFFFFF' || color === '#FFFEF0';
     return `<div class="product-color-swatch ${isWhite ? 'white' : ''}" style="background-color:${color}" title="${color}"></div>`;
@@ -152,13 +152,14 @@ function buildProductCard(product, showRemoveWishlist = false) {
 // ─────────────────────────────────────────
 function renderProductGrid() {
   const grid = document.getElementById('product-grid');
+  if (!grid) return;
   const countEl = document.getElementById('product-count');
   const { page, perPage } = currentPagination;
   const start = (page - 1) * perPage;
   const paginated = filteredProducts.slice(start, start + perPage);
 
   grid.innerHTML = paginated.map(p => buildProductCard(p)).join('');
-  countEl.textContent = `Hiển thị ${filteredProducts.length} sản phẩm`;
+  if (countEl) countEl.textContent = `Hiển thị ${filteredProducts.length} sản phẩm`;
   renderPagination();
 }
 
@@ -680,7 +681,7 @@ function handleSearch(query) {
 function renderBestSellers() {
   const grid = document.getElementById('best-sellers-grid');
   if (!grid) return;
-  
+
   const items = BEST_SELLER_IDS.map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean).slice(0, 8);
   grid.innerHTML = items.map(p => buildProductCard(p)).join('');
 }
@@ -688,7 +689,7 @@ function renderBestSellers() {
 function renderFlashSale() {
   const grid = document.getElementById('flash-sale-grid');
   if (!grid) return;
-  
+
   const items = FLASH_SALE_IDS.map(id => PRODUCTS.find(p => p.id === id)).filter(Boolean);
   grid.innerHTML = items.map(p => buildProductCard(p)).join('');
 }
@@ -725,6 +726,9 @@ function updateCarouselDots() {
 //  COUNTDOWN
 // ─────────────────────────────────────────
 function initCountdown() {
+  const cdHoursElem = document.getElementById('cd-hours');
+  if (!cdHoursElem) return;
+
   const end = new Date();
   end.setHours(end.getHours() + 2, end.getMinutes() + 34, end.getSeconds() + 59);
 
@@ -735,7 +739,7 @@ function initCountdown() {
     const h = Math.floor(diff / 3600000);
     const m = Math.floor((diff % 3600000) / 60000);
     const s = Math.floor((diff % 60000) / 1000);
-    document.getElementById('cd-hours').textContent = String(h).padStart(2, '0');
+    cdHoursElem.textContent = String(h).padStart(2, '0');
     document.getElementById('cd-mins').textContent = String(m).padStart(2, '0');
     document.getElementById('cd-secs').textContent = String(s).padStart(2, '0');
   }, 1000);
