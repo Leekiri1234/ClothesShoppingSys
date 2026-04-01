@@ -1,6 +1,9 @@
 package com.clothshop.admin.controllers;
 
+import com.clothshop.admin.dtos.BannerFormDTO;
 import com.clothshop.admin.dtos.request.banner.BannerRequest;
+import com.clothshop.admin.dtos.response.banner.BannerResponse;
+import com.clothshop.admin.mappers.BannerMapper;
 import com.clothshop.admin.services.BannerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -14,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class BannerController {
 
     private final BannerService bannerService;
+    private final BannerMapper bannerMapper;
 
     // =========================
     // 📌 1. LIST ALL
@@ -30,9 +34,22 @@ public class BannerController {
     @GetMapping("/form")
     public String showForm(@RequestParam(required = false) Long id, Model model) {
         if (id != null) {
-            model.addAttribute("banner", bannerService.getById(id));
+            BannerResponse response = bannerService.getById(id);
+            BannerFormDTO formDTO = bannerMapper.toFormDTO(
+                bannerMapper.toEntity(new BannerRequest() {{
+                    setTitle(response.getTitle());
+                    setLinkUrl(response.getLinkUrl());
+                    setDisplayOrder(response.getDisplayOrder());
+                    setStatus(response.getStatus());
+                    setStartDate(response.getStartDate());
+                    setEndDate(response.getEndDate());
+                }})
+            );
+            formDTO.setId(response.getId());
+            formDTO.setImageUrl(response.getImageUrl());
+            model.addAttribute("banner", formDTO);
         } else {
-            model.addAttribute("banner", new BannerRequest());
+            model.addAttribute("banner", new BannerFormDTO());
         }
         return "admin/banners/form";
     }
@@ -42,7 +59,7 @@ public class BannerController {
     // =========================
     @GetMapping("/create")
     public String showCreateForm(Model model) {
-        model.addAttribute("banner", new BannerRequest());
+        model.addAttribute("banner", new BannerFormDTO());
         return "admin/banners/form";
     }
 
@@ -51,11 +68,19 @@ public class BannerController {
     // =========================
     @PostMapping
     public String create(
-            @ModelAttribute("banner") BannerRequest request,
-            @RequestParam("file") MultipartFile file
+            @ModelAttribute("banner") BannerFormDTO formDTO,
+            @RequestParam(value = "file", required = false) MultipartFile file
     ) {
+        BannerRequest request = new BannerRequest();
+        request.setTitle(formDTO.getTitle());
+        request.setLinkUrl(formDTO.getLinkUrl());
+        request.setDisplayOrder(formDTO.getDisplayOrder());
+        request.setStatus(formDTO.getStatus());
+        request.setStartDate(formDTO.getStartDate());
+        request.setEndDate(formDTO.getEndDate());
+        
         bannerService.create(request, file);
-        return "admin/banners/form";
+        return "redirect:/admin/banners";
     }
 
     // =========================
@@ -63,7 +88,18 @@ public class BannerController {
     // =========================
     @GetMapping("/edit/{id}")
     public String showUpdateForm(@PathVariable Long id, Model model) {
-        model.addAttribute("banner", bannerService.getById(id));
+        BannerResponse response = bannerService.getById(id);
+        BannerFormDTO formDTO = BannerFormDTO.builder()
+                .id(response.getId())
+                .title(response.getTitle())
+                .imageUrl(response.getImageUrl())
+                .linkUrl(response.getLinkUrl())
+                .displayOrder(response.getDisplayOrder())
+                .status(response.getStatus())
+                .startDate(response.getStartDate())
+                .endDate(response.getEndDate())
+                .build();
+        model.addAttribute("banner", formDTO);
         return "admin/banners/form";
     }
 
@@ -73,11 +109,19 @@ public class BannerController {
     @PostMapping("/{id}")
     public String update(
             @PathVariable Long id,
-            @ModelAttribute("banner") BannerRequest request,
+            @ModelAttribute("banner") BannerFormDTO formDTO,
             @RequestParam(value = "file", required = false) MultipartFile file
     ) {
+        BannerRequest request = new BannerRequest();
+        request.setTitle(formDTO.getTitle());
+        request.setLinkUrl(formDTO.getLinkUrl());
+        request.setDisplayOrder(formDTO.getDisplayOrder());
+        request.setStatus(formDTO.getStatus());
+        request.setStartDate(formDTO.getStartDate());
+        request.setEndDate(formDTO.getEndDate());
+        
         bannerService.update(id, request, file);
-        return "admin/banners/form";
+        return "redirect:/admin/banners";
     }
 
     // =========================
@@ -88,7 +132,7 @@ public class BannerController {
         if (id != null) {
             bannerService.delete(id);
         }
-        return "admin/banners/form";
+        return "redirect:/admin/banners";
     }
 
     // =========================
@@ -97,6 +141,6 @@ public class BannerController {
     @GetMapping("/delete/{id}")
     public String delete(@PathVariable Long id) {
         bannerService.delete(id);
-        return "admin/banners/form";
+        return "redirect:/admin/banners";
     }
 }
