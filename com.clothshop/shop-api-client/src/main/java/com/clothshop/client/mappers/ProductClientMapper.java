@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 @Mapper(componentModel = "spring")
 public interface ProductClientMapper {
 
+    @Mapping(source = "id", target = "productId")
     @Mapping(source = "productDesc", target = "description")
     // Sử dụng map an toàn cho Category Name
     @Mapping(source = "category", target = "categoryName", qualifiedByName = "mapSafeCategoryName")
