@@ -10,6 +10,7 @@
         content="Khám phá bộ sưu tập thời trang tối giản cao cấp. Chất liệu premium, phong cách thanh lịch.">
 
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <th:block layout:fragment="styles"></th:block>
 
     <meta th:if="${_csrf != null}" name="_csrf" th:content="${_csrf.token}" />
     <meta th:if="${_csrf != null}" name="_csrf_header" th:content="${_csrf.headerName}" />
