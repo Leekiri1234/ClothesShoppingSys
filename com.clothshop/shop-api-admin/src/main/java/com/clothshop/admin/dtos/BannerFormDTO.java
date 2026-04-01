@@ -1,4 +1,4 @@
-package com.clothshop.admin.dtos.response.banner;
+package com.clothshop.admin.dtos;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -7,14 +7,13 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BannerResponse {
+public class BannerFormDTO {
 
     private Long id;
 
@@ -31,14 +30,4 @@ public class BannerResponse {
     private LocalDate startDate;
 
     private LocalDate endDate;
-
-    private Boolean isActive;
-
-    private LocalDateTime createdAt;
-
-    private LocalDateTime updatedAt;
-
-    private String createdBy;
-
-    private String updatedBy;
 }

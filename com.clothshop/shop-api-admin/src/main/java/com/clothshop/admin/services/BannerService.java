@@ -51,7 +51,7 @@ public class BannerService {
     // 📌 CREATE
     // =========================
     @Transactional
-    public void create(BannerRequest request, MultipartFile file) {
+    public BannerResponse create(BannerRequest request, MultipartFile file) {
 
         Banner banner = bannerMapper.toEntity(request);
 
@@ -63,21 +63,24 @@ public class BannerService {
             banner.setStatus("ACTIVE");
         }
 
-        // upload image
+        // upload image (bắt buộc)
         if (file != null && !file.isEmpty()) {
             String fileName = fileUploadUtil.upload(file, "banners");
             banner.setImageUrl("/uploads/banners/" + fileName);
+        } else {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Ảnh banner là bắt buộc");
         }
 
         bannerRepository.save(banner);
         log.info("Banner created: {}", banner.getTitle());
+        return bannerMapper.toResponse(banner);
     }
 
     // =========================
     // 📌 UPDATE
     // =========================
     @Transactional
-    public void update(Long id, BannerRequest request, MultipartFile file) {
+    public BannerResponse update(Long id, BannerRequest request, MultipartFile file) {
 
         Banner banner = bannerRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy banner"));
@@ -86,8 +89,6 @@ public class BannerService {
         banner.setLinkUrl(request.getLinkUrl());
         banner.setDisplayOrder(request.getDisplayOrder());
         banner.setStatus(request.getStatus());
-
-        // 🔥 FIX: thêm 2 field này
         banner.setStartDate(request.getStartDate());
         banner.setEndDate(request.getEndDate());
 
@@ -99,6 +100,7 @@ public class BannerService {
 
         bannerRepository.save(banner);
         log.info("Banner updated: {}", banner.getId());
+        return bannerMapper.toResponse(banner);
     }
 
     // =========================
