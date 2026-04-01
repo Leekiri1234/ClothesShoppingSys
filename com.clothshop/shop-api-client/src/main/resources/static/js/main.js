@@ -213,3 +213,63 @@ function updateCartBadge() {
 
 // Gọi khi vừa load trang để hiện số lượng cũ
 document.addEventListener('DOMContentLoaded', updateCartBadge);
+
+/**
+ * Notification System Handlers
+ */
+function initializeNotifications() {
+    const bellLink = document.getElementById('notificationBell');
+    const badge = document.getElementById('notif-badge');
+    const container = document.getElementById('notification-container');
+
+    if (!bellLink) return;
+
+    // Hàm lấy số lượng chưa đọc (Update Badge)
+    const updateNotifBadge = () => {
+        fetch('/api/notifications/latest')
+            .then(res => res.text())
+            .then(html => {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = html;
+                const count = tempDiv.querySelector('#unreadCountData')?.value || 0;
+
+                if (badge) {
+                    if (count > 0) {
+                        badge.innerText = count > 9 ? '9+' : count;
+                        badge.style.display = 'block';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+            })
+            .catch(err => console.debug("Not logged in or error fetching notifications"));
+    };
+
+    // Load danh sách khi mở dropdown (Bootstrap Event)
+    bellLink.addEventListener('show.bs.dropdown', function () {
+        if (container) {
+            fetch('/api/notifications/latest')
+                .then(res => res.text())
+                .then(html => {
+                    container.innerHTML = html;
+                })
+                .catch(() => {
+                    container.innerHTML = '<div class="p-3 text-center text-danger small">Không thể tải thông báo</div>';
+                });
+        }
+    });
+
+    // Chạy lần đầu
+    updateNotifBadge();
+
+    // Polling: Tự động cập nhật mỗi 2 phút (giống cơ chế Cart của bạn)
+    setInterval(updateNotifBadge, 120000);
+}
+
+// Cập nhật hàm DOMReady hiện có của bạn:
+document.addEventListener('DOMContentLoaded', function() {
+    initializeCartFunctions();
+    initializeSearchBar();
+    initializeFormValidation();
+    initializeNotifications(); // <-- Thêm dòng này vào
+});

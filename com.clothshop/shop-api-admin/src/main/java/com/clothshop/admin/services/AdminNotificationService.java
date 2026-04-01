@@ -3,6 +3,8 @@ package com.clothshop.admin.services;
 import com.clothshop.admin.dtos.request.NotificationCreateRequest;
 import com.clothshop.admin.dtos.request.NotificationUpdateRequest;
 import com.clothshop.admin.dtos.response.NotificationResponse;
+import com.clothshop.common.exceptions.BusinessException;
+import com.clothshop.common.exceptions.ErrorCode;
 import com.clothshop.domain.entities.auth.Account;
 import com.clothshop.domain.entities.cms.Notification;
 import com.clothshop.domain.entities.cms.NotificationRecipient;
@@ -28,8 +30,8 @@ public class AdminNotificationService {
     private final AccountRepository accountRepository;
 
     public NotificationResponse getNotificationById(Long id) {
-        Notification notif = notificationRepository.findById(id).orElse(null);
-        if (notif == null) return null;
+        Notification notif = notificationRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy thông báo"));
         NotificationResponse res = new NotificationResponse();
         res.setId(notif.getId());
         res.setTitle(notif.getTitle());

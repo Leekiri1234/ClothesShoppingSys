@@ -48,12 +48,17 @@ public class AdminNotificationController {
     @GetMapping("/edit/{id}")
     public String showEditForm(@PathVariable Long id, Model model) {
         NotificationResponse notification = notificationService.getNotificationById(id);
-        NotificationUpdateRequest request = new NotificationUpdateRequest();
+
+        // Tái sử dụng NotificationCreateRequest để form.html không bị lỗi binding các trường
+        NotificationCreateRequest request = new NotificationCreateRequest();
         request.setId(notification.getId());
         request.setTitle(notification.getTitle());
         request.setMessage(notification.getContent());
+        // Edit mode chỉ cho phép sửa Text, lock các trường phân phối
+
         model.addAttribute("request", request);
-        return "admin/notifications/edit";
+        model.addAttribute("isEdit", true); // Flag để UI biết là đang ở mode Edit
+        return "admin/notifications/form"; // Trỏ về form.html thay vì edit.html
     }
 
     @PostMapping("/edit/{id}")

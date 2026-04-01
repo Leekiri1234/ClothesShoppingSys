@@ -1,0 +1,26 @@
+<div th:fragment="notification-list">
+    <div th:if="${#lists.isEmpty(notifications)}" class="text-center py-3">
+        <p class="text-muted small mb-0">Không có thông báo mới</p>
+    </div>
+
+    <ul class="list-group list-group-flush">
+        <li th:each="item : ${notifications}"
+            class="list-group-item list-group-item-action border-0 border-bottom"
+            th:classappend="${!item.isRead} ? 'bg-light' : ''">
+            <div class="d-flex align-items-start">
+                <div class="flex-grow-1">
+                    <h6 class="mb-1 small fw-bold" th:text="${item.notification.title}">Tiêu đề</h6>
+                    <p class="mb-1 small text-truncate" style="max-width: 200px;" th:text="${item.notification.content}">Nội dung...</p>
+                    <small class="text-muted" th:text="${#temporals.format(item.createdAt, 'dd/MM HH:mm')}"></small>
+                </div>
+                <div th:if="${!item.isRead}" class="status-dot bg-primary rounded-circle" style="width: 8px; height: 8px;"></div>
+            </div>
+        </li>
+    </ul>
+
+    <input type="hidden" id="unreadCountData" th:value="${unreadCount}">
+</div>
+
+<div th:fragment="unauthenticated">
+    <p class="text-center py-3 small">Vui lòng đăng nhập để xem thông báo</p>
+</div>
