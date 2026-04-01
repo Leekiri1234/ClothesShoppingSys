@@ -446,8 +446,6 @@ p {
   background: var(--color-primary);
   transition: all 0.3s ease;
 }
-  transition: all 0.3s ease;
-}
 
 /* Mobile nav drawer */
 .mobile-nav {
@@ -504,7 +502,6 @@ p {
   transform: translateY(0);
   opacity: 1;
   visibility: visible;
-}
 }
 
 .search-input-wrap {
