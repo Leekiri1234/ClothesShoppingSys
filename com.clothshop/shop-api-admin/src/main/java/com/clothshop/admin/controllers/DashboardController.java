@@ -1,5 +1,7 @@
 package com.clothshop.admin.controllers;
 
+import com.clothshop.admin.services.ReportService;
+import com.clothshop.admin.dtos.response.SalesReportResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Slf4j
 public class DashboardController {
 
+    private final ReportService reportService;
+
     /**
      * Display admin dashboard with summary statistics.
      * GET /admin/dashboard
@@ -29,11 +33,13 @@ public class DashboardController {
         // Add current path for active menu highlighting
         model.addAttribute("currentPath", request.getRequestURI());
 
-        // TODO: These will be populated by actual services in future tasks
-        model.addAttribute("totalProducts", 0);
-        model.addAttribute("totalOrders", 0);
-        model.addAttribute("totalCustomers", 0);
-        model.addAttribute("revenue", "$0");
+        // Get today's sales report for real data
+        SalesReportResponse todayReport = reportService.getTodayReport();
+        
+        model.addAttribute("todayRevenue", todayReport.getTotalRevenue());
+        model.addAttribute("todayOrders", todayReport.getTotalOrders());
+        model.addAttribute("totalCustomers", todayReport.getTotalCustomers());
+        model.addAttribute("totalProducts", todayReport.getTotalProducts());
 
         return "admin/dashboard";
     }
