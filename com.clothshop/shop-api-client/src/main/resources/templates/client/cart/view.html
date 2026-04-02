@@ -407,7 +407,7 @@
                         <div class="cart-table__row" th:each="item : ${cart.items}">
                             <div class="cart-product">
                                 <div class="cart-product__thumb"
-                                     th:style="${item.imageUrl != null} ? 'background-image:url(' + ${item.imageUrl} + ');' : ''">
+                                     th:style="${item.imageUrl != null} ? |background-image:url(${item.imageUrl});| : ''">
                                 </div>
 
                                 <div class="cart-product__info">
@@ -579,12 +579,8 @@
                             Number(data.totalAmount).toLocaleString('vi-VN') + 'đ';
                     }
 
-                    if (data.finalAmount != null) {
-                        document.getElementById('sum-total').textContent =
-                            Number(data.finalAmount).toLocaleString('vi-VN') + 'đ';
-                    } else {
-                        recalcTotal();
-                    }
+                    // Luôn tính lại tổng dựa trên subtotal, discount và phí ship hiển thị
+                    recalcTotal();
                 }
             })
             .catch(() => {
