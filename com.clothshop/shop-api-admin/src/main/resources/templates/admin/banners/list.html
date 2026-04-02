@@ -69,19 +69,21 @@
                             ✏️
                         </a>
 
-                        <!-- DELETE -->
+                        <!-- TOGGLE STATUS -->
                         <form th:action="@{/admin/banners/form}"
                               method="post"
-                              style="display:inline;">
+                              style="display:inline;"
+                              th:onsubmit="return confirm('Bạn có chắc chắn muốn thay đổi trạng thái banner này?')">
                             <input type="hidden"
                                    th:name="${_csrf.parameterName}"
                                    th:value="${_csrf.token}"/>
                             <input type="hidden" name="id" th:value="${b.id}"/>
 
                             <button type="submit"
-                                    class="action-btn action-btn-delete"
-                                    onclick="return confirm('Xóa banner?')">
-                                🗑
+                                    class="action-btn"
+                                    th:classappend="${b.status == 'ACTIVE'} ? 'action-btn-delete' : 'action-btn-edit'"
+                                    th:title="${b.status == 'ACTIVE'} ? 'Vô hiệu hóa' : 'Kích hoạt'">
+                                <span th:text="${b.status == 'ACTIVE'} ? '⏸' : '▶️'"></span>
                             </button>
                         </form>
 

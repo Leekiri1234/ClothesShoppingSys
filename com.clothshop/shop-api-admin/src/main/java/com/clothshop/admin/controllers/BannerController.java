@@ -125,22 +125,22 @@ public class BannerController {
     }
 
     // =========================
-    // 📌 7. DELETE FROM FORM
+    // 📌 7. DELETE FROM FORM -> CHANGE TO TOGGLE STATUS
     // =========================
     @PostMapping("/form")
-    public String deleteFromForm(@RequestParam(required = false) Long id) {
+    public String toggleFromForm(@RequestParam(required = false) Long id) {
         if (id != null) {
-            bannerService.delete(id);
+            bannerService.toggleStatus(id);
         }
         return "redirect:/admin/banners";
     }
 
     // =========================
-    // 📌 8. DELETE (LEGACY)
+    // 📌 8. TOGGLE STATUS VIA PATH VAR (LEGACY)
     // =========================
     @GetMapping("/delete/{id}")
-    public String delete(@PathVariable Long id) {
-        bannerService.delete(id);
+    public String toggleViaPath(@PathVariable Long id) {
+        bannerService.toggleStatus(id);
         return "redirect:/admin/banners";
     }
 }
