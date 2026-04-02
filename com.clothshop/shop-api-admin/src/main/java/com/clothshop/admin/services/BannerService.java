@@ -103,19 +103,22 @@ public class BannerService {
         return bannerMapper.toResponse(banner);
     }
 
+
     // =========================
-    // 📌 DELETE (SOFT DELETE chuẩn Hibernate)
+    // 📌 TOGGLE STATUS
     // =========================
     @Transactional
-    public void delete(Long id) {
-
+    public void toggleStatus(Long id) {
         Banner banner = bannerRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
 
-        // dùng @SQLDelete
-        bannerRepository.delete(banner);
-
-        log.info("Banner deleted (soft): {}", id);
+        if ("ACTIVE".equals(banner.getStatus())) {
+            banner.setStatus("INACTIVE");
+        } else {
+            banner.setStatus("ACTIVE");
+        }
+        bannerRepository.save(banner);
+        log.info("Banner {} changed status to {}", id, banner.getStatus());
     }
 
     // =========================

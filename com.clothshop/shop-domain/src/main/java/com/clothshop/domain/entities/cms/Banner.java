@@ -11,7 +11,7 @@ import java.time.LocalDate;
 
 @Entity
 @Table(name = "banners")
-@SQLDelete(sql = "UPDATE banners SET is_active = false WHERE id = ?")
+@SQLDelete(sql = "UPDATE banners SET is_active = false WHERE banner_id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "banner_id"))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
