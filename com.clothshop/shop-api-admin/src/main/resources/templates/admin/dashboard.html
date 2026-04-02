@@ -21,8 +21,8 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Doanh thu hôm nay</div>
-                <div class="stat-value">12.5M</div>
-                <div class="stat-trend up">↑ 12% so với hôm qua</div>
+                <div class="stat-value" th:text="${#numbers.formatDecimal(todayRevenue, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</div>
+                <div class="stat-trend up">↑ Từ báo cáo thực tế</div>
             </div>
         </div>
 
@@ -36,8 +36,8 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Đơn hàng mới</div>
-                <div class="stat-value">28</div>
-                <div class="stat-trend up">↑ 8 đơn mới</div>
+                <div class="stat-value" th:text="${todayOrders}">0</div>
+                <div class="stat-trend up">↑ Từ báo cáo thực tế</div>
             </div>
         </div>
 
@@ -52,8 +52,8 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Khách hàng</div>
-                <div class="stat-value">1,245</div>
-                <div class="stat-trend up">↑ 15 khách mới</div>
+                <div class="stat-value" th:text="${totalCustomers}">0</div>
+                <div class="stat-trend up">↑ Từ báo cáo thực tế</div>
             </div>
         </div>
 
@@ -65,8 +65,8 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Sản phẩm</div>
-                <div class="stat-value">342</div>
-                <div class="stat-trend down">↓ 5 hết hàng</div>
+                <div class="stat-value" th:text="${totalProducts}">0</div>
+                <div class="stat-trend down">↓ Từ báo cáo thực tế</div>
             </div>
         </div>
     </div>
