@@ -1,9 +1,11 @@
 package com.clothshop.client.controllers;
 
 import com.clothshop.client.dtos.request.OrderCancellationRequest;
+import com.clothshop.client.dtos.request.RmaCreateRequest;
 import com.clothshop.client.dtos.response.OrderDetailResponse;
 import com.clothshop.client.dtos.response.OrderListClientResponse;
 import com.clothshop.client.services.OrderClientService;
+import com.clothshop.client.services.RmaClientService;
 import com.clothshop.common.dtos.request.PagingRequest;
 import com.clothshop.common.dtos.response.PageResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import java.security.Principal;
 public class OrderClientController {
 
     private final OrderClientService orderService;
+    private final RmaClientService rmaService;
 
     @GetMapping
     public String listMyOrders(
@@ -68,5 +71,31 @@ public class OrderClientController {
             redirectAttributes.addFlashAttribute("errorMessage", "Không thể đặt lại: " + e.getMessage());
         }
         return "redirect:/orders/" + orderInvoice;
+    }
+
+    @GetMapping("/{orderInvoice}/rma")
+    public String showRmaForm(@PathVariable String orderInvoice, Principal principal, Model model) {
+        OrderDetailResponse order = orderService.getOrderDetail(principal.getName(), orderInvoice);
+        model.addAttribute("order", order);
+        model.addAttribute("rmaRequest", RmaCreateRequest.builder()
+                .orderInvoice(orderInvoice)
+                .build());
+        return "client/rma/form";
+    }
+
+    @PostMapping("/{orderInvoice}/rma")
+    public String submitRma(@PathVariable String orderInvoice,
+                            @ModelAttribute("rmaRequest") RmaCreateRequest rmaRequest,
+                            Principal principal,
+                            RedirectAttributes redirectAttributes) {
+        try {
+            rmaRequest.setOrderInvoice(orderInvoice);
+            rmaService.submitRequest(principal.getName(), rmaRequest);
+            redirectAttributes.addFlashAttribute("successMessage", "Yêu cầu đổi trả đã được gửi thành công.");
+            return "redirect:/orders/" + orderInvoice;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Không thể gửi yêu cầu đổi trả: " + e.getMessage());
+            return "redirect:/orders/" + orderInvoice + "/rma";
+        }
     }
 }
