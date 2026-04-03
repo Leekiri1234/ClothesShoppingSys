@@ -2,8 +2,10 @@ package com.clothshop.client.controllers;
 
 import com.clothshop.client.dtos.response.CollectionResponse;
 import com.clothshop.client.dtos.response.ProductListResponse;
+import com.clothshop.client.services.BannerClientService;
 import com.clothshop.client.services.CollectionClientService;
 import com.clothshop.client.services.ProductClientService;
+import com.clothshop.domain.entities.cms.Banner;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,6 +23,7 @@ public class HomeController {
 
     private final ProductClientService productClientService;
     private final CollectionClientService collectionClientService; // Thêm service này
+    private final BannerClientService bannerClientService;
 
     /**
      * @param model Thymeleaf model
@@ -36,6 +39,10 @@ public class HomeController {
         List<CollectionResponse> homeCollections = collectionClientService.getAllActiveCollections();
         model.addAttribute("homeCollections", homeCollections);
 
-        return "client/home";
+        // 3. Fetch active banners
+        List<Banner> banners = bannerClientService.getActiveBanners();
+        model.addAttribute("banners", banners);
+
+        return "client/home/home";
     }
 }

@@ -7,13 +7,16 @@ import com.clothshop.client.dtos.response.ProductListResponse;
 import com.clothshop.client.services.CategoryClientService;
 import com.clothshop.client.services.ProductClientService;
 import com.clothshop.client.services.ProductSearchService;
+import com.clothshop.client.services.ReviewClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @Controller
@@ -25,6 +28,7 @@ public class ProductClientController {
     private final ProductClientService productClientService;
     private final ProductSearchService productSearchService;
     private final CategoryClientService categoryClientService;
+    private final ReviewClientService reviewService;
 
     @ModelAttribute("allCategories")
     public List<CategoryResponse> populateCategories() {
@@ -65,10 +69,21 @@ public class ProductClientController {
 
     // Trang chi tiết sản phẩm (Giữ nguyên vì đã chuẩn)
     @GetMapping("/{slug}")
-    public String productDetail(@PathVariable String slug, Model model) {
+    public String productDetail(@PathVariable String slug, Model model, Principal principal) {
         ProductDetailResponse product = productClientService.getProductBySlug(slug);
         model.addAttribute("product", product);
         model.addAttribute("pageTitle", product.getProductName());
+
+        // Review logic
+        if (principal != null) {
+            model.addAttribute("canReview", reviewService.canReview(principal.getName(), product.getProductId()));
+            log.debug("User {} viewing product {}", principal.getName(), product.getProductId());
+        } else {
+            model.addAttribute("canReview", false);
+        }
+
+        model.addAttribute("reviews", reviewService.getReviewsForProduct(product.getProductId(), PageRequest.of(0, 5)));
+
         return "client/products/detail";
     }
 

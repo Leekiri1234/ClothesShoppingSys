@@ -48,7 +48,6 @@ public class ProductClientService {
      * Only returns active products.
      */
     @Transactional(readOnly = true)
-    @Cacheable(value = "productDetail", key = "#slug", unless = "#result == null")
     public ProductDetailResponse getProductBySlug(String slug) {
         log.debug("Fetching product detail for slug: {}", slug);
 
@@ -57,6 +56,19 @@ public class ProductClientService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
 
         // Cực kỳ quan trọng: Ép nạp (Initialize) danh sách variants và các thông tin liên quan
+        if (product.getVariants() != null) {
+            product.getVariants().size();
+        }
+
+        return productMapper.toDetailResponse(product);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductDetailResponse getProductById(Long id) {
+        Product product = productRepository.findById(id)
+                .filter(p -> Boolean.TRUE.equals(p.getIsActive()))
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
+
         if (product.getVariants() != null) {
             product.getVariants().size();
         }

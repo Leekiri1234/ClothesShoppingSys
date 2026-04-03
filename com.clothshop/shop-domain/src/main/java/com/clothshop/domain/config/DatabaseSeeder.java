@@ -1,12 +1,14 @@
 package com.clothshop.domain.config;
 
 import com.clothshop.domain.entities.auth.*;
+import com.clothshop.domain.entities.cms.*;
 import com.clothshop.domain.entities.marketing.*;
 import com.clothshop.domain.entities.order.*;
 import com.clothshop.domain.entities.product.*;
 import com.clothshop.domain.enums.*;
 import com.clothshop.domain.enums.OrderStatus;
 import com.clothshop.domain.repositories.auth.*;
+import com.clothshop.domain.repositories.cms.*;
 import com.clothshop.domain.repositories.marketing.*;
 import com.clothshop.domain.repositories.order.*;
 import com.clothshop.domain.repositories.product.*;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -36,7 +39,12 @@ import java.util.List;
  * 1. Roles: 4 staff roles (SUPER_ADMIN, MARKETING_STAFF, SALE_PRODUCT_STAFF, CUSTOMER_SERVICE)
  * 2. Accounts: 1 admin (admin/admin@123), 1 customer (customer/customer@123)
  * 3. Categories: 5 categories (Men Fashion, Women Fashion, Accessories, Shoes, Bags)
- * 4. Products: 3 sample products with variants and images
+ * 4. Products: 13 sample products with variants and images
+ * 5. Collections: 2 collections (Summer, Winter)
+ * 6. Featured Products: 5 products for homepage
+ * 7. Vouchers & Orders: 3 vouchers and 5 sample client orders
+ * 8. Banners: 2 promotional banners
+ * 9. Flash Sales: 1 ongoing flash sale with 3 products
  *
  * To disable: Remove @Component annotation or set spring.jpa.hibernate.ddl-auto=none
  * To modify: Edit the seedXXX() methods and restart application (will only run if DB is empty)
@@ -64,6 +72,9 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final PaymentRepository paymentRepository;
     private final PasswordEncoder passwordEncoder;
     private final FeaturedProductRepository featuredProductRepository;
+    private final BannerRepository bannerRepository;
+    private final FlashSaleRepository flashSaleRepository;
+    private final FlashSaleItemRepository flashSaleItemRepository;
 
     @Override
     @Transactional
@@ -83,6 +94,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         seedCollections();
         seedFeaturedProducts();
         seedVouchersAndOrders();
+        seedBanners();
+        seedFlashSales();
 
         log.info("Database seeding completed successfully!");
     }
@@ -893,6 +906,73 @@ public class DatabaseSeeder implements CommandLineRunner {
         }
 
         return discount;
+    }
+
+    private void seedBanners() {
+        log.info("Seeding banners...");
+        
+        Banner mainHero = Banner.builder()
+            .title("Summer Essentials 2024")
+            .imageUrl("https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1200")
+            .linkUrl("/collections/summer-collection-2024")
+            .displayOrder(1)
+            .status("ACTIVE")
+            .startDate(LocalDate.now().minusDays(30))
+            .endDate(LocalDate.now().plusDays(60))
+            .createdBy("SYSTEM")
+            .build();
+
+        Banner newArrivals = Banner.builder()
+            .title("New Arrivals: Accessories")
+            .imageUrl("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1200")
+            .linkUrl("/categories/accessories")
+            .displayOrder(2)
+            .status("ACTIVE")
+            .startDate(LocalDate.now().minusDays(10))
+            .endDate(LocalDate.now().plusDays(20))
+            .createdBy("SYSTEM")
+            .build();
+
+        bannerRepository.save(mainHero);
+        bannerRepository.save(newArrivals);
+        
+        log.info("Banners seeded: 2 banners");
+    }
+
+    private void seedFlashSales() {
+        log.info("Seeding flash sales...");
+        
+        List<Product> products = productRepository.findAll();
+        if (products.isEmpty()) return;
+
+        FlashSale summerFlash = FlashSale.builder()
+            .name("6.6 Summer Blast")
+            .startAt(LocalDateTime.now().minusHours(2))
+            .endAt(LocalDateTime.now().plusHours(22))
+            .status("ONGOING")
+            .createdBy("SYSTEM")
+            .build();
+        
+        flashSaleRepository.save(summerFlash);
+
+        // Flash sale items
+        for (int i = 0; i < Math.min(3, products.size()); i++) {
+            Product p = products.get(i);
+            BigDecimal discountValue = new BigDecimal("20"); // 20%
+            BigDecimal salePrice = p.getBasePrice().multiply(new BigDecimal("0.8"));
+            
+            FlashSaleItem item = FlashSaleItem.builder()
+                .flashSale(summerFlash)
+                .product(p)
+                .discountType(DiscountType.PERCENTAGE)
+                .discountValue(discountValue)
+                .salePrice(salePrice)
+                .createdBy("SYSTEM")
+                .build();
+            flashSaleItemRepository.save(item);
+        }
+
+        log.info("Flash sales seeded: 1 flash sale with {} items", Math.min(3, products.size()));
     }
 
     private record ItemSpec(ProductVariant variant, int quantity) { }

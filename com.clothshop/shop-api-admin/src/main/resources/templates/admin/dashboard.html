@@ -21,8 +21,8 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Doanh thu hôm nay</div>
-                <div class="stat-value">12.5M</div>
-                <div class="stat-trend up">↑ 12% so với hôm qua</div>
+                <div class="stat-value" th:text="${#numbers.formatDecimal(todayRevenue, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</div>
+                <div class="stat-trend up">↑ Từ báo cáo thực tế</div>
             </div>
         </div>
 
@@ -36,8 +36,8 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Đơn hàng mới</div>
-                <div class="stat-value">28</div>
-                <div class="stat-trend up">↑ 8 đơn mới</div>
+                <div class="stat-value" th:text="${todayOrders}">0</div>
+                <div class="stat-trend up">↑ Từ báo cáo thực tế</div>
             </div>
         </div>
 
@@ -52,8 +52,8 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Khách hàng</div>
-                <div class="stat-value">1,245</div>
-                <div class="stat-trend up">↑ 15 khách mới</div>
+                <div class="stat-value" th:text="${totalCustomers}">0</div>
+                <div class="stat-trend up">↑ Từ báo cáo thực tế</div>
             </div>
         </div>
 
@@ -65,8 +65,8 @@
             </div>
             <div class="stat-body">
                 <div class="stat-label">Sản phẩm</div>
-                <div class="stat-value">342</div>
-                <div class="stat-trend down">↓ 5 hết hàng</div>
+                <div class="stat-value" th:text="${totalProducts}">0</div>
+                <div class="stat-trend down">↓ Từ báo cáo thực tế</div>
             </div>
         </div>
     </div>
@@ -191,6 +191,99 @@
     </div>
 </div>
 
-</body>
-</html>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+<script>
+let revenueChart = null;
 
+function formatCurrency(value) {
+    return new Intl.NumberFormat('vi-VN', { 
+        style: 'currency', 
+        currency: 'VND',
+        minimumFractionDigits: 0
+    }).format(value);
+}
+
+function loadRevenueChart(period = 'weekly') {
+    const url = new URL(`/admin/reports/api/${period}`, window.location.origin);
+    
+    fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            renderChart(data.dailySales);
+            updateChartButtons(period);
+        })
+        .catch(error => console.error('Error loading chart data:', error));
+}
+
+function renderChart(dailySales) {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    
+    const labels = dailySales.map(sale => {
+        const date = new Date(sale.date);
+        return date.toLocaleDateString('vi-VN', { month: '2-digit', day: '2-digit' });
+    });
+    
+    const amounts = dailySales.map(sale => parseFloat(sale.amount));
+    
+    if (revenueChart) {
+        revenueChart.destroy();
+    }
+    
+    revenueChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Doanh thu (₫)',
+                data: amounts,
+                backgroundColor: '#2196F3',
+                borderColor: '#1976D2',
+                borderWidth: 1,
+                borderRadius: 4,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: {
+                    display: true,
+                    labels: { font: { size: 12 } }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    callbacks: {
+                        label: function(context) {
+                            return formatCurrency(context.parsed.y);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value >= 1000000 ? (value / 1000000).toFixed(1) + 'M' : value;
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateChartButtons(activePeriod) {
+    document.querySelectorAll('.range-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    event.target.classList.add('active');
+}
+
+// Load initial chart on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadRevenueChart('weekly');
+});
+</script>

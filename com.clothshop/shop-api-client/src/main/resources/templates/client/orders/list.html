@@ -1,64 +1,65 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layouts/layout}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/layout}">
+
 <head>
-  <title>Đơn hàng của tôi - ClothShop</title>
+    <title>Đơn hàng của tôi — MINIMAL</title>
 </head>
+
 <body>
-<div layout:fragment="content" class="container py-5">
-  <div class="row">
-    <div class="col-md-3 mb-4">
-      <div class="list-group shadow-sm border-0">
-        <a th:href="@{/profile}" class="list-group-item list-group-item-action">Hồ sơ của tôi</a>
-        <a th:href="@{/orders}" class="list-group-item list-group-item-action active bg-dark border-dark">Đơn mua</a>
-        <a th:href="@{/wishlist}" class="list-group-item list-group-item-action">Yêu thích</a>
-      </div>
-    </div>
-
-    <div class="col-md-9">
-      <h3 class="fw-bold mb-4">Đơn hàng của tôi</h3>
-
-      <div th:if="${orders.content.isEmpty()}" class="text-center py-5 bg-light rounded">
-        <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
-        <p class="text-muted">Bạn chưa có đơn hàng nào.</p>
-        <a th:href="@{/products}" class="btn btn-dark">Mua sắm ngay</a>
-      </div>
-
-      <div th:unless="${orders.content.isEmpty()}">
-        <div class="card shadow-sm border-0 mb-3" th:each="order : ${orders.content}">
-          <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center py-3">
-                        <span class="text-muted small">
-                            Mã ĐH: <strong class="text-dark" th:text="${order.orderInvoice}">ORD-123</strong>
-                        </span>
-            <span class="badge"
-                  th:classappend="${order.status.name() == 'PENDING'} ? 'bg-warning text-dark' : (${order.status.name() == 'COMPLETED'} ? 'bg-success' : 'bg-info')"
-                  th:text="${order.status.displayName}">Chờ xác nhận</span>
-          </div>
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center">
-              <div>
-                <p class="mb-1 text-muted small">Ngày đặt: <span th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}"></span></p>
-                <h5 class="text-danger fw-bold mb-0" th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' ₫'">0 ₫</h5>
-              </div>
-              <a th:href="@{/orders/{orderInvoice}(orderInvoice=${order.orderInvoice})}" class="btn btn-outline-dark btn-sm px-4">Xem chi tiết</a>
-            </div>
-          </div>
+    <main layout:fragment="content" class="container" style="padding-top: 120px; padding-bottom: 80px;">
+        <div class="section-header">
+            <p class="eyebrow">Tài khoản</p>
+            <h2>Lịch sử đơn hàng</h2>
         </div>
 
-        <nav th:if="${orders.totalPages > 1}" class="mt-4">
-          <ul class="pagination justify-content-center">
-            <li class="page-item" th:classappend="${orders.pageNumber == 0} ? 'disabled'">
-              <a class="page-link" th:href="@{/orders(page=${orders.pageNumber - 1})}">Trước</a>
-            </li>
-            <li class="page-item" th:classappend="${orders.pageNumber == orders.totalPages - 1} ? 'disabled'">
-              <a class="page-link" th:href="@{/orders(page=${orders.pageNumber + 1})}">Sau</a>
-            </li>
-          </ul>
-        </nav>
-      </div>
-    </div>
-  </div>
-</div>
+        <div th:if="${orders.content.empty}" style="text-align: center; padding: 100px 0;">
+            <p style="color: #999; margin-bottom: 24px;">Bạn chưa có đơn hàng nào.</p>
+            <a th:href="@{/products}" class="btn btn--primary">Khám phá sản phẩm</a>
+        </div>
+
+        <div th:if="${!orders.content.empty}">
+            <table class="order-table" style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr
+                        style="text-align: left; border-bottom: 1px solid #eee; color: #999; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
+                        <th style="padding: 16px 0;">Mã đơn</th>
+                        <th>Ngày đặt</th>
+                        <th>Trạng thái</th>
+                        <th>Tổng tiền</th>
+                        <th style="text-align: right;">Hành động</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="order : ${orders.content}" style="border-bottom: 1px solid #f9f9f9; font-size: 14px;">
+                        <td style="padding: 24px 0; font-weight: 500;" th:text="${order.orderInvoice}">#INV-123</td>
+                        <td th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2026</td>
+                        <td>
+                            <span class="status-badge" th:text="${order.status.displayName}">PENDING</span>
+                        </td>
+                        <td th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + '₫'}">0₫</td>
+                        <td style="text-align: right;">
+                            <a th:href="@{/orders/{invoice}(invoice=${order.orderInvoice})}"
+                                class="btn btn--outline btn--sm">Chi tiết</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pagination" style="margin-top: 40px; display: flex; justify-content: center; gap: 8px;">
+                <a th:if="${orders.pageNumber > 0}" th:href="@{/orders(page=${orders.pageNumber - 1})}"
+                    class="page-link">«</a>
+
+                <span th:each="i : ${#numbers.sequence(0, orders.totalPages - 1)}">
+                    <a th:href="@{/orders(page=${i})}"
+                        th:class="${i == orders.pageNumber} ? 'page-link active' : 'page-link'" th:text="${i + 1}">1</a>
+                </span>
+
+                <a th:if="${orders.pageNumber < orders.totalPages - 1}"
+                    th:href="@{/orders(page=${orders.pageNumber + 1})}" class="page-link">»</a>
+            </div>
+        </div>
+    </main>
 </body>
+
 </html>
