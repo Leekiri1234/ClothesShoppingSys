@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập tối giản - ClothShop Admin</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: grid;
+            place-items: center;
+            background: radial-gradient(circle at top right, #efede8 0%, #ddd9d1 55%, #cfc9bf 100%);
+            font-family: var(--font);
+            color: #1f1f1d;
+        }
+
+        .login-shell {
+            width: min(960px, calc(100vw - 32px));
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            border: 1px solid #d5d1c9;
+            background: #fff;
+            box-shadow: 0 18px 44px rgba(22, 22, 20, 0.08);
+        }
+
+        .login-side {
+            padding: 44px;
+            border-right: 1px solid #e3dfd7;
+            background: linear-gradient(135deg, #f7f5f1 0%, #ece8e0 100%);
+        }
+
+        .login-title {
+            margin: 0;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 42px;
+            letter-spacing: 0.04em;
+        }
+
+        .login-sub {
+            margin-top: 10px;
+            color: #5d5952;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .login-note {
+            margin-top: 26px;
+            padding: 14px;
+            border: 1px solid #ddd8cf;
+            background: #fefdfb;
+            color: #4d4942;
+            font-size: 13px;
+        }
+
+        .login-form-wrap {
+            padding: 44px;
+        }
+
+        .login-logo {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            margin-bottom: 28px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            color: #6a655d;
+            font-weight: 600;
+        }
+
+        .form-group input {
+            width: 100%;
+            border: 1px solid #d8d3cb;
+            padding: 12px 13px;
+            font-size: 14px;
+            background: #fff;
+            outline: none;
+        }
+
+        .form-group input:focus {
+            border-color: #8e887f;
+        }
+
+        .remember-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 22px;
+            color: #5f5a52;
+            font-size: 13px;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #1f1f1d;
+            background: #1f1f1d;
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .submit-btn:hover {
+            background: #33302b;
+            border-color: #33302b;
+        }
+
+        .alert {
+            margin-bottom: 18px;
+            font-size: 13px;
+            padding: 10px 12px;
+            border: 1px solid;
+        }
+
+        .alert-danger {
+            background: #f7ecea;
+            border-color: #d7b4ab;
+            color: #6e2f23;
+        }
+
+        .alert-success {
+            background: #edf4ec;
+            border-color: #b7cbb2;
+            color: #2f4a2b;
+        }
+
+        .minimal-link {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 12px;
+            color: #6a655d;
+        }
+
+        .minimal-link a {
+            color: #3f3a33;
+            text-decoration: none;
+            border-bottom: 1px solid #c3bfb8;
+        }
+
+        @media (max-width: 900px) {
+            .login-shell {
+                grid-template-columns: 1fr;
+            }
+
+            .login-side {
+                border-right: 0;
+                border-bottom: 1px solid #e3dfd7;
+                padding: 28px;
+            }
+
+            .login-form-wrap {
+                padding: 28px;
+            }
+
+            .login-title {
+                font-size: 34px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="login-shell">
+    <section class="login-side">
+        <h1 class="login-title">Admin Access</h1>
+        <p class="login-sub">Không gian quản trị tối giản cho vận hành bán hàng, kho và marketing.</p>
+        <div class="login-note">
+            Tài khoản mặc định seed: <strong>admin</strong> / <strong>admin@123</strong>
+        </div>
+    </section>
+
+    <section class="login-form-wrap">
+        <div class="login-logo">CLOTHSHOP ADMIN</div>
+
+        <div th:if="${param.error}" class="alert alert-danger">Tên đăng nhập hoặc mật khẩu không đúng.</div>
+        <div th:if="${param.logout}" class="alert alert-success">Bạn đã đăng xuất thành công.</div>
+
+        <form th:action="@{/admin/login}" method="post">
+            <div class="form-group">
+                <label for="username">Tên đăng nhập</label>
+                <input type="text" id="username" name="username" required autofocus>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mật khẩu</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+
+            <div class="remember-row">
+                <input type="checkbox" id="remember-me" name="remember-me">
+                <label for="remember-me">Ghi nhớ đăng nhập</label>
+            </div>
+
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+            <button type="submit" class="submit-btn">Đăng nhập</button>
+        </form>
+
+        <div class="minimal-link">
+            Quay về giao diện cũ: <a th:href="@{/admin/login}">/admin/login</a>
+        </div>
+    </section>
+</div>
+</body>
+</html>

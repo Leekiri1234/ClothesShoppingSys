@@ -1,0 +1,7 @@
+<svg width="640" height="420" viewBox="0 0 640 420" xmlns="http://www.w3.org/2000/svg">
+  <rect width="640" height="420" fill="#eef2f4"/>
+  <rect x="220" y="130" width="200" height="210" rx="22" fill="#23313c"/>
+  <path d="M270 145 C270 90, 370 90, 370 145" stroke="#23313c" stroke-width="22" fill="none"/>
+  <circle cx="320" cy="220" r="16" fill="#d6b98b"/>
+  <text x="40" y="380" font-size="34" fill="#23313c" font-family="Inter, Arial, sans-serif" font-weight="700">Canvas Tote</text>
+</svg>

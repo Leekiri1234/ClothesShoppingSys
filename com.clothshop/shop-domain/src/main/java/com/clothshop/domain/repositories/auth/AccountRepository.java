@@ -1,6 +1,7 @@
 package com.clothshop.domain.repositories.auth;
 
 import com.clothshop.domain.entities.auth.Account;
+import com.clothshop.domain.enums.AccountType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
+import java.util.List;
 
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
@@ -20,6 +22,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     boolean existsByUsername(String username);
     boolean existsByEmail(String email);
+
+        List<Account> findByAccountTypeAndIsActiveTrue(AccountType accountType);
 
     // ============================================================
     // DÀNH CHO MODULE ADMIN (STAFF LOGIN)

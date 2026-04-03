@@ -12,8 +12,10 @@
     </style>
 </head>
 <body>
+<h1 layout:fragment="page-title">Chi tiết đơn hàng</h1>
+
 <div layout:fragment="content">
-    <div class="container-fluid">
+    <div class="container-fluid order-detail-page">
         <div class="d-sm-flex align-items-center justify-content-between mb-4">
             <h1 class="h3 mb-0 text-gray-800">Chi tiết đơn hàng: <span th:text="${order.orderInvoice}"></span></h1>
             <a th:href="@{/admin/orders}" class="btn btn-secondary btn-sm shadow-sm">
@@ -110,6 +112,10 @@
             </div>
         </div>
     </div>
+</div>
+
+<div layout:fragment="scripts">
+    <script th:src="@{/js/modules/orders.js}"></script>
 </div>
 </body>
 </html>

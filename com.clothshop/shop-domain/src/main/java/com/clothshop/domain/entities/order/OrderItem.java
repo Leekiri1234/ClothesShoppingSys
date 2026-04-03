@@ -31,4 +31,7 @@ public class OrderItem extends BaseEntity {
 
     @Column(name = "unit_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal unitPrice; // Snapshot giá lúc mua
+
+    @Column(name = "final_price", nullable = false, precision = 12, scale = 2)
+    private BigDecimal finalPrice;
 }

@@ -12,14 +12,14 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: radial-gradient(circle at top right, #f0eeea 0%, #dcd7cf 58%, #cbc4b9 100%);
             font-family: 'Helvetica Neue', Arial, sans-serif;
         }
 
         .login-container {
             background: var(--white);
-            border-radius: 8px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            border: 1px solid #d6d1c9;
+            box-shadow: 0 12px 36px rgba(0,0,0,0.08);
             width: 100%;
             max-width: 420px;
             padding: 40px;
@@ -85,7 +85,7 @@
         }
 
         .login-form input:focus {
-            border-color: #667eea;
+            border-color: #8c877e;
         }
 
         .remember-me {
@@ -99,7 +99,7 @@
         .remember-me input[type="checkbox"] {
             width: 16px;
             height: 16px;
-            accent-color: #667eea;
+            accent-color: #5c5750;
         }
 
         .btn-login {
@@ -108,7 +108,7 @@
             font-size: 14px;
             font-weight: 600;
             color: white;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #1f1f1d;
             border: none;
             border-radius: var(--radius);
             cursor: pointer;
@@ -116,7 +116,8 @@
         }
 
         .btn-login:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
+            background: #35312b;
         }
 
         .login-footer {
@@ -128,7 +129,7 @@
 
         .login-footer a {
             font-size: 13px;
-            color: #667eea;
+            color: #4c4740;
             text-decoration: none;
         }
 
@@ -195,6 +196,9 @@
         <a href="#" onclick="alert('Vui lòng liên hệ quản trị viên để khôi phục mật khẩu'); return false;">
             Quên mật khẩu?
         </a>
+        <div style="margin-top: 10px;">
+            <a th:href="@{/admin/login/minimal}">Mở giao diện đăng nhập tối giản mới</a>
+        </div>
     </div>
 </div>
 

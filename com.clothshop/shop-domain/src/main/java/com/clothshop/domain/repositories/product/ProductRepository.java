@@ -4,6 +4,7 @@ import com.clothshop.domain.entities.product.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -12,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
     @Query("SELECT p FROM Product p WHERE p.productSlug = :slug AND p.isActive = true")
     Optional<Product> findByProductSlug(@Param("slug") String slug);
@@ -80,4 +81,10 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @Query("SELECT p FROM Product p WHERE p.isActive = true")
     Page<Product> findAllActive(Pageable pageable);
+
+        @Query("SELECT DISTINCT p FROM Product p " +
+                        "LEFT JOIN FETCH p.variants v " +
+                        "WHERE p.isActive = true " +
+                        "ORDER BY p.createdAt DESC")
+        List<Product> findAllActiveWithVariantsAndImages();
 }

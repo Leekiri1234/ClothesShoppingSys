@@ -1,5 +1,6 @@
 package com.clothshop.admin.controllers;
 
+import com.clothshop.admin.services.AdminExperienceService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @Slf4j
 public class    DashboardController {
 
+    private final AdminExperienceService adminExperienceService;
+
     /**
      * Display admin dashboard with summary statistics.
      * GET /admin/dashboard
@@ -29,11 +32,7 @@ public class    DashboardController {
         // Add current path for active menu highlighting
         model.addAttribute("currentPath", request.getRequestURI());
 
-        // TODO: These will be populated by actual services in future tasks
-        model.addAttribute("totalProducts", 0);
-        model.addAttribute("totalOrders", 0);
-        model.addAttribute("totalCustomers", 0);
-        model.addAttribute("revenue", "$0");
+        model.addAttribute("dashboard", adminExperienceService.getDashboardData());
 
         return "admin/dashboard";
     }

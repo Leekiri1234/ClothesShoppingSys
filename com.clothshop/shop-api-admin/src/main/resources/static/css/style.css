@@ -1,7 +1,9 @@
 /* ============================================================
    MINIMAL ADMIN — Admin Dashboard CSS
-   Design: Light sidebar, flat/minimal, Vietnamese fashion store
+  Design: Legacy admin mapped to Thymeleaf architecture
    ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* ===== RESET & BASE ===== */
 *, *::before, *::after {
@@ -11,36 +13,44 @@
 }
 
 :root {
-  --primary: #2c2c2c;
+  --primary: #1c1c1a;
   --white: #ffffff;
-  --bg: #f5f5f5;
-  --sidebar-bg: #f5f5f5;
-  --border: #e8e8e8;
-  --muted: #666666;
+  --bg: #fafaf8;
+  --sidebar-bg: #ffffff;
+  --border: #e8e6e1;
+  --muted: #6b6b67;
+  --accent: #c5a882;
   --danger: #e63946;
   --success: #4CAF50;
   --warning: #f0a500;
   --info: #2196F3;
   --sidebar-width: 240px;
-  --header-height: 58px;
-  --font: 'Helvetica Neue', Arial, sans-serif;
-  --radius: 4px;
-  --transition: 0.18s ease;
+  --header-height: 64px;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --radius: 0;
+  --transition: 0.3s ease;
 }
 
 html, body {
   height: 100%;
   font-family: var(--font);
   font-size: 14px;
-  background: #f0f0f0;
+  background: var(--bg);
   color: var(--primary);
-  line-height: 1.5;
+  line-height: 1.6;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
   color: var(--primary);
   text-decoration: none;
+  transition: color var(--transition);
+}
+
+a:hover {
+  color: var(--accent);
 }
 
 svg {
@@ -104,10 +114,60 @@ svg {
 .sidebar-nav {
   padding: 8px 0 24px;
   flex: 1;
+  display: flex;
+  flex-direction: column;
 }
 
 .nav-group {
   margin-bottom: 4px;
+}
+
+.sidebar-account {
+  margin-top: auto;
+  padding: 12px 18px;
+  border-top: 1px solid var(--border);
+}
+
+.sidebar-account-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.sidebar-avatar {
+  width: 28px;
+  height: 28px;
+  font-size: 11px;
+}
+
+.sidebar-account-meta {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-account-name {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-account-role {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.sidebar-logout-btn {
+  width: 100%;
+  font-size: 12px;
+  padding: 6px;
+}
+
+.sidebar-logout-icon {
+  width: 14px;
+  height: 14px;
 }
 
 .nav-group-label {
@@ -301,9 +361,9 @@ svg {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 14px;
 }
 
 .page-header h2 {
@@ -314,7 +374,7 @@ svg {
 .page-subtitle {
   font-size: 13px;
   color: var(--muted);
-  margin-left: 12px;
+  margin-left: 0;
 }
 
 /* ============================================================
@@ -577,8 +637,8 @@ svg {
 }
 
 .admin-table th {
-  text-align: left;
-  padding: 10px 12px;
+  text-align: center;
+  padding: 12px 14px;
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -594,9 +654,10 @@ svg {
 .admin-table th:hover { color: var(--primary); }
 
 .admin-table td {
-  padding: 10px 12px;
+  padding: 12px 14px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
+  text-align: center;
 }
 
 .admin-table tbody tr:last-child td { border-bottom: none; }
@@ -609,7 +670,7 @@ svg {
 
 .dashboard-card .admin-table th,
 .dashboard-card .admin-table td {
-  padding: 8px 10px;
+  padding: 10px 12px;
 }
 
 /* Staff avatar in table */
@@ -747,6 +808,7 @@ svg {
   margin-bottom: 16px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
+  text-align: center;
 }
 
 .form-row {
@@ -880,6 +942,10 @@ select.filter-select {
   min-width: 150px;
 }
 
+.products-add-btn {
+  margin-left: auto;
+}
+
 /* ============================================================
    FILTER TABS
    ============================================================ */
@@ -943,6 +1009,7 @@ select.filter-select {
 .page-btn:hover { background: var(--bg); }
 .page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
 .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.page-btn.disabled { opacity: 0.4; pointer-events: none; cursor: not-allowed; }
 
 /* ============================================================
    UPLOAD ZONE
@@ -1731,6 +1798,11 @@ tr.stock-out td { background: #fdecea !important; }
     max-width: none;
   }
 
+  .products-add-btn {
+    margin-left: 0;
+    width: 100%;
+  }
+
   .admin-table {
     display: block;
     overflow-x: auto;
@@ -1794,8 +1866,10 @@ tr.stock-out td { background: #fdecea !important; }
 .actions-cell {
   white-space: nowrap;
   display: flex;
-  gap: 5px;
+  gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Status select inline */
@@ -1825,8 +1899,9 @@ tr.stock-out td { background: #fdecea !important; }
   padding: 4px 10px;
   font-size: 11px;
   font-weight: 600;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  background: #ece9e3;
+  color: #2f2d29;
+  border: 1px solid #d6d2ca;
   border-radius: 12px;
   text-transform: uppercase;
   letter-spacing: 0.02em;
@@ -1839,11 +1914,30 @@ tr.stock-out td { background: #fdecea !important; }
   padding: 4px 10px;
   font-size: 11px;
   font-weight: 600;
-  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  color: white;
+  background: #f4f2ee;
+  color: #3a3732;
+  border: 1px solid #ddd8d1;
   border-radius: 12px;
   text-transform: uppercase;
   letter-spacing: 0.02em;
+}
+
+.category-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.category-logo-root {
+  background: linear-gradient(135deg, #5f6a74 0%, #47515a 100%);
+}
+
+.category-logo-child {
+  background: linear-gradient(135deg, #8a857d 0%, #716a61 100%);
 }
 
 .inactive-row {
@@ -1860,8 +1954,8 @@ tr.stock-out td { background: #fdecea !important; }
    ============================================================ */
 
 .info-card {
-  background: linear-gradient(135deg, rgba(79, 70, 229, 0.05) 0%, rgba(124, 58, 237, 0.05) 100%);
-  border: 1px solid rgba(79, 70, 229, 0.2);
+  background: #f5f4f1;
+  border: 1px solid #ddd9d2;
   border-radius: 8px;
   padding: 16px;
   margin-top: 24px;
@@ -1880,7 +1974,7 @@ tr.stock-out td { background: #fdecea !important; }
 .info-card-header svg {
   width: 16px;
   height: 16px;
-  color: var(--info);
+  color: #7d786f;
 }
 
 .info-list {
