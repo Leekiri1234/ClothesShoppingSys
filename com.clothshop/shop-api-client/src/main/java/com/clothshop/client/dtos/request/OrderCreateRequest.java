@@ -1,21 +1,47 @@
 package com.clothshop.client.dtos.request;
 
 import com.clothshop.domain.enums.PaymentMethod;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class OrderCreateRequest {
 
-    private String voucherCode;
+    /** Họ và tên người nhận */
+    @NotBlank(message = "Vui lòng nhập họ và tên")
+    private String fullName;
 
-    @NotNull(message = "Vui lòng chọn phương thức thanh toán")
-    private PaymentMethod paymentMethod;
+    /** Số điện thoại */
+    @NotBlank(message = "Vui lòng nhập số điện thoại")
+    private String phoneNumber;
 
-    @NotBlank(message = "Địa chỉ giao hàng không được để trống")
+    /** Email */
+    @Email(message = "Email không hợp lệ")
+    private String email;
+
+    /** Địa chỉ giao hàng (số nhà, tên đường) */
+    @NotBlank(message = "Vui lòng nhập địa chỉ giao hàng")
     private String shippingAddress;
 
-    @NotBlank(message = "Số điện thoại không được để trống")
-    private String phoneNumber;
+    /** Tỉnh / Thành */
+    private String province;
+
+    /** Quận / Huyện */
+    private String district;
+
+    /** Phương thức vận chuyển: STANDARD | EXPRESS */
+    private String shippingMethod = "STANDARD";
+
+    /** Mã voucher (optional) */
+    private String voucherCode;
+
+    /** Phương thức thanh toán */
+    @NotNull(message = "Vui lòng chọn phương thức thanh toán")
+    private PaymentMethod paymentMethod = PaymentMethod.COD;
 }

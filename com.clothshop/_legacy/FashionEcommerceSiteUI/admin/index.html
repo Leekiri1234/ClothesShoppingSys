@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Minimal Admin — Fashion Store</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ===== SIDEBAR ===== -->
+<aside class="admin-sidebar" id="adminSidebar">
+  <div class="sidebar-logo">
+    <span class="logo-text">MINIMAL ADMIN</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-group">
+      <span class="nav-group-label">TONG QUAN</span>
+      <a href="#dashboard" class="nav-link active" data-page="dashboard">
+        <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <span class="nav-group-label">NHAN SU</span>
+      <a href="#staff-list" class="nav-link" data-page="staff-list">
+        <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="9" cy="7" r="4"/><path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><circle cx="19" cy="7" r="2"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+        Danh s&#225;ch nh&#226;n vi&#234;n
+      </a>
+      <a href="#staff-form" class="nav-link" data-page="staff-form">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        T&#7841;o / S&#7917;a nh&#226;n vi&#234;n
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <span class="nav-group-label">MARKETING</span>
+      <a href="#vouchers" class="nav-link" data-page="vouchers">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+        Qu&#7843;n l&#253; voucher
+      </a>
+      <a href="#banners" class="nav-link" data-page="banners">
+        <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        Qu&#7843;n l&#253; banner
+      </a>
+      <a href="#featured-collections" class="nav-link" data-page="featured-collections">
+        <svg class="nav-icon" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        B&#7897; s&#432;u t&#7853;p n&#7893;i b&#7853;t
+      </a>
+      <a href="#featured-products" class="nav-link" data-page="featured-products">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+        S&#7843;n ph&#7849;m n&#7893;i b&#7853;t
+      </a>
+      <a href="#push-notifications" class="nav-link" data-page="push-notifications">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        Push notification
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <span class="nav-group-label">SAN PHAM</span>
+      <a href="#products-list" class="nav-link" data-page="products-list">
+        <svg class="nav-icon" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        Danh s&#225;ch s&#7843;n ph&#7849;m
+      </a>
+      <a href="#product-form" class="nav-link" data-page="product-form">
+        <svg class="nav-icon" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        T&#7841;o / S&#7917;a s&#7843;n ph&#7849;m
+      </a>
+      <a href="#inventory" class="nav-link" data-page="inventory">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Qu&#7843;n l&#253; kho
+      </a>
+      <a href="#collections" class="nav-link" data-page="collections">
+        <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Qu&#7843;n l&#253; b&#7897; s&#432;u t&#7853;p
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <span class="nav-group-label">DON HANG</span>
+      <a href="#incoming-orders" class="nav-link" data-page="incoming-orders">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        &#272;&#417;n h&#224;ng m&#7899;i
+      </a>
+      <a href="#order-management" class="nav-link" data-page="order-management">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        Qu&#7843;n l&#253; &#273;&#417;n h&#224;ng
+      </a>
+      <a href="#payment-verification" class="nav-link" data-page="payment-verification">
+        <svg class="nav-icon" viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+        X&#225;c nh&#7853;n thanh to&#225;n
+      </a>
+      <a href="#rma-management" class="nav-link" data-page="rma-management">
+        <svg class="nav-icon" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.73"/></svg>
+        Qu&#7843;n l&#253; &#273;&#7893;i / tr&#7843;
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <span class="nav-group-label">BAO CAO</span>
+      <a href="#revenue" class="nav-link" data-page="revenue">
+        <svg class="nav-icon" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Doanh thu
+      </a>
+      <a href="#wishlist-analytics" class="nav-link" data-page="wishlist-analytics">
+        <svg class="nav-icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Ph&#226;n t&#237;ch wishlist
+      </a>
+    </div>
+
+    <div class="nav-group">
+      <span class="nav-group-label">KHACH HANG</span>
+      <a href="#customer-details" class="nav-link" data-page="customer-details">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Chi ti&#7871;t kh&#225;ch h&#224;ng
+      </a>
+      <a href="#feedback-moderation" class="nav-link" data-page="feedback-moderation">
+        <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        Ki&#7875;m duy&#7879;t &#273;&#225;nh gi&#225;
+      </a>
+    </div>
+  </nav>
+</aside>
+
+<!-- ===== MAIN ===== -->
+<div class="admin-main" id="adminMain">
+
+  <!-- HEADER -->
+  <header class="admin-header">
+    <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()">
+      <svg viewBox="0 0 24 24" width="22" height="22"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <h1 class="page-title" id="pageTitle">Dashboard</h1>
+    <div class="header-right">
+      <div class="header-search">
+        <svg viewBox="0 0 24 24" width="16" height="16"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" placeholder="T&#236;m ki&#7871;m..." />
+      </div>
+      <button class="notif-btn" id="notifBtn">
+        <svg viewBox="0 0 24 24" width="20" height="20"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="notif-badge" id="notifBadge">3</span>
+      </button>
+      <div class="admin-user">
+        <div class="admin-avatar">A</div>
+        <span class="admin-name">Admin</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <div class="admin-content">
+
+    <!-- PAGE: DASHBOARD -->
+    <section class="admin-page active" id="page-dashboard">
+      <div class="page-header">
+        <h2>Dashboard</h2>
+        <span class="page-subtitle">Xin ch&#224;o, h&#244;m nay l&#224; ng&#224;y 07/03/2026</span>
+      </div>
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-icon"><svg viewBox="0 0 24 24" width="22" height="22"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+          <div class="stat-body">
+            <span class="stat-label">Doanh thu h&#244;m nay</span>
+            <span class="stat-value">12.450.000 &#8363;</span>
+            <span class="stat-trend up">+14% so v&#7899;i h&#244;m qua</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/></svg></div>
+          <div class="stat-body">
+            <span class="stat-label">&#272;&#417;n h&#224;ng m&#7899;i</span>
+            <span class="stat-value">38</span>
+            <span class="stat-trend up">+6% so v&#7899;i h&#244;m qua</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+          <div class="stat-body">
+            <span class="stat-label">Kh&#225;ch h&#224;ng m&#7899;i</span>
+            <span class="stat-value">127</span>
+            <span class="stat-trend down">-3% so v&#7899;i tu&#7847;n tr&#432;&#7899;c</span>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon"><svg viewBox="0 0 24 24" width="22" height="22"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+          <div class="stat-body">
+            <span class="stat-label">S&#7843;n ph&#7849;m b&#225;n ch&#7841;y</span>
+            <span class="stat-value" style="font-size:16px">&#193;o Linen C&#7893; V</span>
+            <span class="stat-trend up">156 &#273;&#417;n th&#225;ng n&#224;y</span>
+          </div>
+        </div>
+      </div>
+      <div class="dashboard-grid">
+        <div class="dashboard-card chart-card">
+          <div class="card-header"><h3>Doanh thu 7 ng&#224;y qua</h3></div>
+          <div class="chart-container">
+            <svg id="revenueChartSvg" width="100%" height="200" viewBox="0 0 700 200" preserveAspectRatio="none"></svg>
+          </div>
+          <div class="chart-labels" id="chartLabels"></div>
+        </div>
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h3>&#272;&#417;n h&#224;ng g&#7847;n &#273;&#226;y</h3>
+            <a class="card-link" href="#incoming-orders" onclick="navigate('incoming-orders')">Xem t&#7845;t c&#7843;</a>
+          </div>
+          <table class="admin-table" id="recentOrdersTable">
+            <thead><tr><th>M&#227; &#273;&#417;n</th><th>Kh&#225;ch h&#224;ng</th><th>T&#7893;ng ti&#7873;n</th><th>Tr&#7841;ng th&#225;i</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <div class="dashboard-card">
+          <div class="card-header">
+            <h3>S&#7843;n ph&#7849;m b&#225;n ch&#7841;y</h3>
+            <a class="card-link" href="#products-list" onclick="navigate('products-list')">Xem t&#7845;t c&#7843;</a>
+          </div>
+          <div class="top-products-list" id="topProductsList"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE: STAFF LIST -->
+    <section class="admin-page" id="page-staff-list">
+      <div class="page-header">
+        <h2>Danh s&#225;ch nh&#226;n vi&#234;n</h2>
+        <button class="btn btn-primary" onclick="navigate('staff-form');openStaffForm(null)">+ Th&#234;m nh&#226;n vi&#234;n</button>
+      </div>
+      <div class="filter-bar">
+        <input type="text" class="filter-input" id="staffSearch" placeholder="T&#236;m t&#234;n, email..." oninput="filterStaff()" />
+        <select class="filter-select" id="staffRoleFilter" onchange="filterStaff()">
+          <option value="">T&#7845;t c&#7843; vai tr&#242;</option>
+          <option value="Admin">Admin</option>
+          <option value="Staff">Staff</option>
+          <option value="Warehouse">Kho</option>
+        </select>
+      </div>
+      <table class="admin-table">
+        <thead>
+          <tr><th>Nh&#226;n vi&#234;n</th><th>Email</th><th>Vai tr&#242;</th><th>Tr&#7841;ng th&#225;i</th><th>Ng&#224;y t&#7841;o</th><th>Thao t&#225;c</th></tr>
+        </thead>
+        <tbody id="staffTableBody"></tbody>
+      </table>
+    </section>
+
+    <!-- PAGE: STAFF FORM -->
+    <section class="admin-page" id="page-staff-form">
+      <div class="page-header">
+        <h2 id="staffFormTitle">T&#7841;o nh&#226;n vi&#234;n m&#7899;i</h2>
+        <button class="btn btn-outline" onclick="navigate('staff-list')">&#8592; Quay l&#7841;i</button>
+      </div>
+      <div class="form-card">
+        <form id="staffFormEl" onsubmit="saveStaff(event)">
+          <div class="form-row">
+            <div class="form-group"><label>H&#7885; v&#224; t&#234;n *</label><input type="text" id="sf-name" placeholder="Nguy&#7877;n V&#259;n A" required /></div>
+            <div class="form-group"><label>Email *</label><input type="email" id="sf-email" placeholder="email@minimal.vn" required /></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label>M&#7853;t kh&#7849;u</label><input type="password" id="sf-password" placeholder="T&#7889;i thi&#7875;u 8 k&#253; t&#7921;" /></div>
+            <div class="form-group"><label>Vai tr&#242; *</label>
+              <select id="sf-role" required>
+                <option value="">-- Ch&#7885;n vai tr&#242; --</option>
+                <option value="Admin">Admin</option>
+                <option value="Staff">Staff</option>
+                <option value="Warehouse">Kho</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Tr&#7841;ng th&#225;i</label>
+            <label class="toggle-switch"><input type="checkbox" id="sf-active" checked /><span class="toggle-slider"></span><span class="toggle-label">Ho&#7841;t &#273;&#7897;ng</span></label>
+          </div>
+          <div class="form-group">
+            <label>Quy&#7873;n h&#7841;n</label>
+            <div class="checkbox-grid" id="staffPermissions">
+              <label class="checkbox-item"><input type="checkbox" value="manage_products" /> Qu&#7843;n l&#253; s&#7843;n ph&#7849;m</label>
+              <label class="checkbox-item"><input type="checkbox" value="manage_orders" /> Qu&#7843;n l&#253; &#273;&#417;n h&#224;ng</label>
+              <label class="checkbox-item"><input type="checkbox" value="manage_customers" /> Qu&#7843;n l&#253; kh&#225;ch h&#224;ng</label>
+              <label class="checkbox-item"><input type="checkbox" value="manage_vouchers" /> Qu&#7843;n l&#253; voucher</label>
+              <label class="checkbox-item"><input type="checkbox" value="manage_staff" /> Qu&#7843;n l&#253; nh&#226;n vi&#234;n</label>
+              <label class="checkbox-item"><input type="checkbox" value="view_reports" /> Xem b&#225;o c&#225;o</label>
+              <label class="checkbox-item"><input type="checkbox" value="manage_inventory" /> Qu&#7843;n l&#253; kho</label>
+              <label class="checkbox-item"><input type="checkbox" value="manage_marketing" /> Qu&#7843;n l&#253; marketing</label>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">L&#432;u nh&#226;n vi&#234;n</button>
+            <button type="button" class="btn btn-outline" onclick="navigate('staff-list')">H&#7911;y</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- PAGE: VOUCHERS -->
+    <section class="admin-page" id="page-vouchers">
+      <div class="page-header">
+        <h2>Qu&#7843;n l&#253; Voucher</h2>
+        <button class="btn btn-primary" onclick="openVoucherModal(null)">+ T&#7841;o voucher</button>
+      </div>
+      <table class="admin-table">
+        <thead>
+          <tr><th>M&#227; voucher</th><th>Lo&#7841;i gi&#7843;m</th><th>Gi&#225; tr&#7883;</th><th>&#272;i&#7873;u ki&#7879;n t&#7889;i thi&#7875;u</th><th>C&#242;n l&#7841;i</th><th>H&#7871;t h&#7841;n</th><th>Tr&#7841;ng th&#225;i</th><th>Thao t&#225;c</th></tr>
+        </thead>
+        <tbody id="vouchersTableBody"></tbody>
+      </table>
+      <div class="pagination" id="vouchersPagination"></div>
+    </section>
+
+    <!-- PAGE: BANNERS -->
+    <section class="admin-page" id="page-banners">
+      <div class="page-header">
+        <h2>Qu&#7843;n l&#253; Banner</h2>
+        <button class="btn btn-primary" onclick="openBannerModal()">+ Th&#234;m banner</button>
+      </div>
+      <div class="upload-zone" id="bannerUploadZone">
+        <svg viewBox="0 0 24 24" width="32" height="32"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+        <span>K&#233;o th&#7843; ho&#7863;c click &#273;&#7875; t&#7843;i &#7843;nh banner m&#7899;i</span>
+        <input type="file" accept="image/*" style="display:none" id="bannerFileInput" />
+      </div>
+      <div class="banner-list" id="bannerList"></div>
+    </section>
+
+    <!-- PAGE: FEATURED COLLECTIONS -->
+    <section class="admin-page" id="page-featured-collections">
+      <div class="page-header">
+        <h2>B&#7897; s&#432;u t&#7853;p n&#7893;i b&#7853;t</h2>
+        <button class="btn btn-primary" onclick="openCollectionFeaturedModal()">+ Th&#234;m</button>
+      </div>
+      <div class="collection-grid" id="featuredCollectionsGrid"></div>
+    </section>
+
+    <!-- PAGE: FEATURED PRODUCTS -->
+    <section class="admin-page" id="page-featured-products">
+      <div class="page-header"><h2>S&#7843;n ph&#7849;m n&#7893;i b&#7853;t</h2></div>
+      <div class="featured-layout">
+        <div class="featured-selected-area">
+          <h3>&#272;ang n&#7893;i b&#7853;t</h3>
+          <div class="featured-cards" id="featuredProductCards"></div>
+        </div>
+        <div class="featured-search-area">
+          <h3>Th&#234;m s&#7843;n ph&#7849;m</h3>
+          <input type="text" class="filter-input" id="featuredProductSearch" placeholder="T&#236;m s&#7843;n ph&#7849;m..." oninput="searchFeaturedProducts()" />
+          <table class="admin-table" style="margin-top:10px;">
+            <thead><tr><th></th><th>S&#7843;n ph&#7849;m</th><th>SKU</th><th>Gi&#225;</th></tr></thead>
+            <tbody id="featuredProductSearchBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE: PUSH NOTIFICATIONS -->
+    <section class="admin-page" id="page-push-notifications">
+      <div class="page-header"><h2>Push Notification</h2></div>
+      <div class="two-col-layout">
+        <div class="form-card">
+          <h3>G&#7917;i th&#244;ng b&#225;o m&#7899;i</h3>
+          <form id="pushNotifForm" onsubmit="sendPushNotif(event)">
+            <div class="form-group"><label>Ti&#234;u &#273;&#7873; *</label><input type="text" id="pn-title" placeholder="VD: Flash Sale 50% h&#244;m nay!" required /></div>
+            <div class="form-group"><label>N&#7897;i dung *</label><textarea id="pn-body" rows="4" placeholder="M&#244; t&#7843; n&#7897;i dung th&#244;ng b&#225;o..." required></textarea></div>
+            <div class="form-group"><label>&#272;&#7889;i t&#432;&#7907;ng</label>
+              <select id="pn-target">
+                <option value="all">T&#7845;t c&#7843; kh&#225;ch h&#224;ng</option>
+                <option value="buyers">&#272;&#227; t&#7915;ng mua h&#224;ng</option>
+                <option value="inactive">Kh&#244;ng ho&#7841;t &#273;&#7897;ng 30 ng&#224;y</option>
+              </select>
+            </div>
+            <div class="form-group"><label>H&#7865;n gi&#7901; g&#7917;i</label>
+              <label class="toggle-switch"><input type="checkbox" id="pn-schedule" onchange="toggleSchedule(this)" /><span class="toggle-slider"></span><span class="toggle-label">K&#237;ch ho&#7841;t</span></label>
+            </div>
+            <div class="form-group" id="scheduleTimeGroup" style="display:none"><label>Th&#7901;i gian g&#7917;i</label><input type="datetime-local" id="pn-send-time" /></div>
+            <div class="form-actions"><button type="submit" class="btn btn-primary">G&#7917;i ngay</button></div>
+          </form>
+        </div>
+        <div>
+          <h3>L&#7883;ch s&#7917; g&#7917;i</h3>
+          <table class="admin-table">
+            <thead><tr><th>Ng&#224;y g&#7917;i</th><th>Ti&#234;u &#273;&#7873;</th><th>&#272;&#7889;i t&#432;&#7907;ng</th><th>&#272;&#227; g&#7917;i</th><th>T&#7927; l&#7879; m&#7903;</th></tr></thead>
+            <tbody id="pushHistoryBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- PAGE: PRODUCTS LIST -->
+    <section class="admin-page" id="page-products-list">
+      <div class="page-header">
+        <h2>Danh s&#225;ch s&#7843;n ph&#7849;m</h2>
+        <button class="btn btn-primary" onclick="navigate('product-form');openProductForm(null)">+ T&#7841;o s&#7843;n ph&#7849;m</button>
+      </div>
+      <div class="filter-bar">
+        <input class="filter-input" id="productSearch" placeholder="T&#234;n, SKU..." oninput="filterProducts()" />
+        <select class="filter-select" id="productCatFilter" onchange="filterProducts()">
+          <option value="">T&#7845;t c&#7843; danh m&#7909;c</option>
+          <option value="&#193;o">&#193;o</option>
+          <option value="Qu&#7847;n">Qu&#7847;n</option>
+          <option value="V&#225;y">V&#225;y</option>
+          <option value="Ph&#7909; ki&#7879;n">Ph&#7909; ki&#7879;n</option>
+        </select>
+        <select class="filter-select" id="productStatusFilter" onchange="filterProducts()">
+          <option value="">T&#7845;t c&#7843; tr&#7841;ng th&#225;i</option>
+          <option value="active">&#272;ang b&#225;n</option>
+          <option value="hidden">&#272;&#227; &#7849;n</option>
+          <option value="draft">Nh&#225;p</option>
+        </select>
+        <button class="btn btn-danger btn-sm" id="bulkDeleteBtn" onclick="bulkDeleteProducts()" style="display:none">X&#243;a &#273;&#227; ch&#7885;n</button>
+      </div>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAllProducts" onchange="selectAllProductRows(this)" /></th>
+            <th>S&#7843;n ph&#7849;m</th><th>SKU</th><th>Danh m&#7909;c</th><th>Gi&#225; b&#225;n</th><th>T&#7891;n kho</th><th>Tr&#7841;ng th&#225;i</th><th>Thao t&#225;c</th>
+          </tr>
+        </thead>
+        <tbody id="productsTableBody"></tbody>
+      </table>
+      <div class="pagination" id="productsPagination"></div>
+    </section>
+
+    <!-- PAGE: PRODUCT FORM -->
+    <section class="admin-page" id="page-product-form">
+      <div class="page-header">
+        <h2 id="productFormTitle">T&#7841;o s&#7843;n ph&#7849;m m&#7899;i</h2>
+        <button class="btn btn-outline" onclick="navigate('products-list')">&#8592; Quay l&#7841;i</button>
+      </div>
+      <form id="productFormEl" onsubmit="saveProduct(event)">
+        <div class="product-form-layout">
+          <div class="product-form-left">
+            <div class="form-card">
+              <h3>Th&#244;ng tin c&#417; b&#7843;n</h3>
+              <div class="form-group"><label>T&#234;n s&#7843;n ph&#7849;m *</label><input type="text" id="pf-name" placeholder="VD: &#193;o Linen C&#7893; V" required /></div>
+              <div class="form-row">
+                <div class="form-group"><label>SKU</label><input type="text" id="pf-sku" placeholder="VD: ALV-001" /></div>
+                <div class="form-group"><label>Danh m&#7909;c</label>
+                  <select id="pf-category">
+                    <option value="">-- Ch&#7885;n --</option>
+                    <option value="&#193;o">&#193;o</option>
+                    <option value="Qu&#7847;n">Qu&#7847;n</option>
+                    <option value="V&#225;y">V&#225;y</option>
+                    <option value="Ph&#7909; ki&#7879;n">Ph&#7909; ki&#7879;n</option>
+                  </select>
+                </div>
+              </div>
+              <div class="form-group"><label>M&#244; t&#7843;</label><textarea id="pf-desc" rows="4" placeholder="M&#244; t&#7843; s&#7843;n ph&#7849;m..."></textarea></div>
+              <div class="form-group"><label>Tags</label><input type="text" id="pf-tags" placeholder="minimal, linen, basic..." /></div>
+            </div>
+            <div class="form-card">
+              <h3>Bi&#7871;n th&#7875; s&#7843;n ph&#7849;m</h3>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>M&#224;u s&#7855;c</label>
+                  <div class="chip-input-row">
+                    <input type="text" id="colorInput" placeholder="VD: Tr&#7855;ng" />
+                    <button type="button" class="btn btn-sm btn-outline" onclick="addVariantChip('color')">Th&#234;m</button>
+                  </div>
+                  <div class="chip-container" id="colorChips"></div>
+                </div>
+                <div class="form-group">
+                  <label>K&#237;ch c&#7905;</label>
+                  <div class="chip-input-row">
+                    <input type="text" id="sizeInput" placeholder="VD: M" />
+                    <button type="button" class="btn btn-sm btn-outline" onclick="addVariantChip('size')">Th&#234;m</button>
+                  </div>
+                  <div class="chip-container" id="sizeChips"></div>
+                </div>
+              </div>
+              <div id="variantMatrix" class="variant-matrix"></div>
+            </div>
+          </div>
+          <div class="product-form-right">
+            <div class="form-card">
+              <h3>Gi&#225; b&#225;n</h3>
+              <div class="form-group"><label>Gi&#225; b&#225;n *</label><input type="number" id="pf-price" placeholder="450000" required /></div>
+              <div class="form-group"><label>Gi&#225; g&#7889;c</label><input type="number" id="pf-compare-price" placeholder="600000" /></div>
+              <div class="form-group"><label>C&#226;n n&#7863;ng (gram)</label><input type="number" id="pf-weight" placeholder="250" /></div>
+            </div>
+            <div class="form-card">
+              <h3>H&#236;nh &#7843;nh s&#7843;n ph&#7849;m</h3>
+              <div class="image-upload-grid">
+                <div class="image-thumb-zone main-image-zone" onclick="triggerImageUpload(0)"><span>&#7842;nh ch&#237;nh</span></div>
+                <div class="image-thumb-zone" onclick="triggerImageUpload(1)"><span>+</span></div>
+                <div class="image-thumb-zone" onclick="triggerImageUpload(2)"><span>+</span></div>
+                <div class="image-thumb-zone" onclick="triggerImageUpload(3)"><span>+</span></div>
+              </div>
+            </div>
+            <div class="form-card">
+              <h3>C&#224;i &#273;&#7863;t hi&#7875;n th&#7883;</h3>
+              <div class="form-group"><label>Tr&#7841;ng th&#225;i</label>
+                <select id="pf-status">
+                  <option value="active">&#272;ang b&#225;n</option>
+                  <option value="draft">Nh&#225;p</option>
+                  <option value="hidden">&#7848;n</option>
+                </select>
+              </div>
+              <div class="form-group"><label>S&#7843;n ph&#7849;m n&#7893;i b&#7853;t</label>
+                <label class="toggle-switch"><input type="checkbox" id="pf-featured" /><span class="toggle-slider"></span><span class="toggle-label">Hi&#7875;n th&#7883; n&#7893;i b&#7853;t</span></label>
+              </div>
+              <div class="form-group"><label>Ng&#224;y hi&#7875;n th&#7883;</label><input type="date" id="pf-publish-date" /></div>
+            </div>
+            <div class="form-actions">
+              <button type="submit" class="btn btn-primary">L&#432;u nh&#225;p</button>
+              <button type="button" class="btn btn-success" onclick="saveAndPublishProduct()">L&#432;u &amp; &#272;&#259;ng b&#225;n</button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- PAGE: INVENTORY -->
+    <section class="admin-page" id="page-inventory">
+      <div class="page-header"><h2>Qu&#7843;n l&#253; kho</h2></div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-body"><span class="stat-label">T&#7893;ng SKU</span><span class="stat-value" id="totalSKU">&#8212;</span></div></div>
+        <div class="stat-card"><div class="stat-body"><span class="stat-label">S&#7855;p h&#7871;t h&#224;ng (&lt;10)</span><span class="stat-value text-warning" id="lowStockCount">&#8212;</span></div></div>
+        <div class="stat-card"><div class="stat-body"><span class="stat-label">H&#7871;t h&#224;ng (0)</span><span class="stat-value text-danger" id="outStockCount">&#8212;</span></div></div>
+      </div>
+      <table class="admin-table">
+        <thead><tr><th>S&#7843;n ph&#7849;m</th><th>Bi&#7871;n th&#7875;</th><th>SKU</th><th>T&#7891;n kho</th><th>Nh&#7853;p th&#234;m</th><th>Tr&#7841;ng th&#225;i</th></tr></thead>
+        <tbody id="inventoryTableBody"></tbody>
+      </table>
+    </section>
+
+    <!-- PAGE: COLLECTIONS -->
+    <section class="admin-page" id="page-collections">
+      <div class="page-header">
+        <h2>Qu&#7843;n l&#253; b&#7897; s&#432;u t&#7853;p</h2>
+        <button class="btn btn-primary" onclick="openCollectionModal(null)">+ T&#7841;o b&#7897; s&#432;u t&#7853;p</button>
+      </div>
+      <div class="collection-grid" id="collectionsGrid"></div>
+    </section>
+
+    <!-- PAGE: INCOMING ORDERS -->
+    <section class="admin-page" id="page-incoming-orders">
+      <div class="page-header">
+        <h2>&#272;&#417;n h&#224;ng m&#7899;i</h2>
+        <button class="btn btn-success" onclick="bulkConfirmOrders()">X&#225;c nh&#7853;n t&#7845;t c&#7843;</button>
+      </div>
+      <div class="filter-tabs" id="incomingOrderTabs">
+        <button class="tab-btn active" onclick="filterIncomingOrders('all',this)">T&#7845;t c&#7843;</button>
+        <button class="tab-btn" onclick="filterIncomingOrders('pending',this)">Ch&#7901; x&#225;c nh&#7853;n</button>
+        <button class="tab-btn" onclick="filterIncomingOrders('confirmed',this)">&#272;&#227; x&#225;c nh&#7853;n</button>
+        <button class="tab-btn" onclick="filterIncomingOrders('preparing',this)">&#272;ang chu&#7849;n b&#7883;</button>
+      </div>
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" onchange="selectAllRows('incomingOrdersBody',this)" /></th>
+            <th>M&#227; &#273;&#417;n</th><th>Kh&#225;ch h&#224;ng</th><th>S&#7843;n ph&#7849;m</th><th>T&#7893;ng ti&#7873;n</th><th>Thanh to&#225;n</th><th>Th&#7901;i gian</th><th>Thao t&#225;c</th>
+          </tr>
+        </thead>
+        <tbody id="incomingOrdersBody"></tbody>
+      </table>
+    </section>
+
+    <!-- PAGE: ORDER MANAGEMENT -->
+    <section class="admin-page" id="page-order-management">
+      <div class="page-header"><h2>Qu&#7843;n l&#253; &#273;&#417;n h&#224;ng</h2></div>
+      <div class="filter-bar">
+        <input class="filter-input" id="orderSearch" placeholder="M&#227; &#273;&#417;n, t&#234;n kh&#225;ch..." oninput="filterOrders()" />
+        <input type="date" class="filter-input" id="orderDateFrom" onchange="filterOrders()" />
+        <input type="date" class="filter-input" id="orderDateTo" onchange="filterOrders()" />
+        <select class="filter-select" id="orderStatusFilter" onchange="filterOrders()">
+          <option value="">T&#7845;t c&#7843; tr&#7841;ng th&#225;i</option>
+          <option value="pending">Ch&#7901; x&#225;c nh&#7853;n</option>
+          <option value="confirmed">&#272;&#227; x&#225;c nh&#7853;n</option>
+          <option value="preparing">&#272;ang chu&#7849;n b&#7883;</option>
+          <option value="shipping">&#272;ang giao</option>
+          <option value="delivered">&#272;&#227; giao</option>
+          <option value="cancelled">&#272;&#227; h&#7911;y</option>
+        </select>
+      </div>
+      <table class="admin-table">
+        <thead>
+          <tr><th>M&#227; &#273;&#417;n</th><th>Kh&#225;ch h&#224;ng</th><th>S&#7843;n ph&#7849;m</th><th>T&#7893;ng ti&#7873;n</th><th>Thanh to&#225;n</th><th>Tr&#7841;ng th&#225;i</th><th>Th&#7901;i gian</th><th>Thao t&#225;c</th></tr>
+        </thead>
+        <tbody id="orderManagementBody"></tbody>
+      </table>
+      <div class="pagination" id="ordersPagination"></div>
+    </section>
+
+    <!-- PAGE: PAYMENT VERIFICATION -->
+    <section class="admin-page" id="page-payment-verification">
+      <div class="page-header"><h2>X&#225;c nh&#7853;n thanh to&#225;n</h2></div>
+      <table class="admin-table">
+        <thead>
+          <tr><th>M&#227; &#273;&#417;n</th><th>Kh&#225;ch h&#224;ng</th><th>S&#7889; ti&#7873;n</th><th>Ph&#432;&#417;ng th&#7913;c</th><th>&#7842;nh chuy&#7875;n kho&#7843;n</th><th>Th&#7901;i gian</th><th>Thao t&#225;c</th></tr>
+        </thead>
+        <tbody id="paymentVerifBody"></tbody>
+      </table>
+    </section>
+
+    <!-- PAGE: RMA MANAGEMENT -->
+    <section class="admin-page" id="page-rma-management">
+      <div class="page-header"><h2>Qu&#7843;n l&#253; &#273;&#7893;i / tr&#7843; h&#224;ng</h2></div>
+      <div class="filter-tabs" id="rmaTabs">
+        <button class="tab-btn active" onclick="filterRMA('all',this)">T&#7845;t c&#7843;</button>
+        <button class="tab-btn" onclick="filterRMA('pending',this)">&#272;ang ch&#7901;</button>
+        <button class="tab-btn" onclick="filterRMA('approved',this)">&#272;&#227; duy&#7879;t</button>
+        <button class="tab-btn" onclick="filterRMA('rejected',this)">T&#7915; ch&#7889;i</button>
+        <button class="tab-btn" onclick="filterRMA('completed',this)">Ho&#224;n th&#224;nh</button>
+      </div>
+      <table class="admin-table">
+        <thead>
+          <tr><th>M&#227; y&#234;u c&#7847;u</th><th>M&#227; &#273;&#417;n</th><th>Kh&#225;ch h&#224;ng</th><th>L&#253; do</th><th>H&#236;nh th&#7913;c</th><th>S&#7889; ti&#7873;n ho&#224;n</th><th>Tr&#7841;ng th&#225;i</th><th>Thao t&#225;c</th></tr>
+        </thead>
+        <tbody id="rmaTableBody"></tbody>
+      </table>
+    </section>
+
+    <!-- PAGE: REVENUE -->
+    <section class="admin-page" id="page-revenue">
+      <div class="page-header">
+        <h2>B&#225;o c&#225;o doanh thu</h2>
+        <div class="date-range-selector">
+          <button class="range-btn active" onclick="setRevenuePeriod(7,this)">7 ng&#224;y</button>
+          <button class="range-btn" onclick="setRevenuePeriod(30,this)">30 ng&#224;y</button>
+          <button class="range-btn" onclick="setRevenuePeriod(90,this)">3 th&#225;ng</button>
+          <button class="range-btn" onclick="setRevenuePeriod(0,this)">T&#249;y ch&#7881;nh</button>
+          <input type="date" id="revenueFrom" style="display:none" />
+          <input type="date" id="revenueTo" style="display:none" />
+        </div>
+      </div>
+      <div class="stat-cards">
+        <div class="stat-card"><div class="stat-body"><span class="stat-label">Doanh thu</span><span class="stat-value" id="kpiRevenue">&#8212;</span></div></div>
+        <div class="stat-card"><div class="stat-body"><span class="stat-label">&#272;&#417;n h&#224;ng</span><span class="stat-value" id="kpiOrders">&#8212;</span></div></div>
+        <div class="stat-card"><div class="stat-body"><span class="stat-label">Gi&#225; tr&#7883; trung b&#236;nh</span><span class="stat-value" id="kpiAvgOrder">&#8212;</span></div></div>
+        <div class="stat-card"><div class="stat-body"><span class="stat-label">T&#7927; l&#7879; ho&#224;n h&#224;ng</span><span class="stat-value" id="kpiReturnRate">&#8212;</span></div></div>
+      </div>
+      <div class="dashboard-grid">
+        <div class="dashboard-card chart-card">
+          <div class="card-header"><h3>Doanh thu theo th&#225;ng</h3></div>
+          <div class="chart-container"><svg id="revenueBarChart" width="100%" height="220" viewBox="0 0 700 220" preserveAspectRatio="none"></svg></div>
+          <div class="chart-labels" id="revenueChartLabels"></div>
+        </div>
+        <div class="dashboard-card chart-card">
+          <div class="card-header"><h3>Xu h&#432;&#7899;ng doanh thu</h3></div>
+          <div class="chart-container"><svg id="revenueTrendChart" width="100%" height="220" viewBox="0 0 700 220" preserveAspectRatio="none"></svg></div>
+        </div>
+      </div>
+      <div class="dashboard-card" style="margin-top:16px;">
+        <div class="card-header"><h3>Top 10 s&#7843;n ph&#7849;m doanh thu cao nh&#7845;t</h3></div>
+        <table class="admin-table">
+          <thead><tr><th>#</th><th>S&#7843;n ph&#7849;m</th><th>S&#7889; l&#432;&#7907;ng b&#225;n</th><th>Doanh thu</th><th>T&#7927; l&#7879;</th></tr></thead>
+          <tbody id="topRevenueProductsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PAGE: WISHLIST ANALYTICS -->
+    <section class="admin-page" id="page-wishlist-analytics">
+      <div class="page-header"><h2>Ph&#226;n t&#237;ch Wishlist</h2></div>
+      <div class="dashboard-grid">
+        <div class="dashboard-card chart-card">
+          <div class="card-header"><h3>Top 10 s&#7843;n ph&#7849;m &#273;&#432;&#7907;c wishlist nhi&#7873;u nh&#7845;t</h3></div>
+          <div class="chart-container"><svg id="wishlistChart" width="100%" height="220" viewBox="0 0 700 220" preserveAspectRatio="none"></svg></div>
+        </div>
+      </div>
+      <div class="dashboard-card" style="margin-top:16px;">
+        <table class="admin-table">
+          <thead><tr><th>#</th><th>S&#7843;n ph&#7849;m</th><th>S&#7889; l&#7847;n th&#234;m</th><th>T&#7927; l&#7879; mua</th><th>Doanh thu ti&#7873;m n&#259;ng</th></tr></thead>
+          <tbody id="wishlistTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- PAGE: CUSTOMER DETAILS -->
+    <section class="admin-page" id="page-customer-details">
+      <div class="page-header"><h2>Chi ti&#7871;t kh&#225;ch h&#224;ng</h2></div>
+      <div class="filter-bar">
+        <input class="filter-input" id="customerSearch" placeholder="T&#234;n, email, S&#272;T..." oninput="searchCustomers()" style="max-width:360px;" />
+      </div>
+      <table class="admin-table">
+        <thead>
+          <tr><th>Kh&#225;ch h&#224;ng</th><th>Email</th><th>S&#272;T</th><th>S&#7889; &#273;&#417;n</th><th>T&#7893;ng chi ti&#234;u</th><th>Ng&#224;y &#273;&#259;ng k&#253;</th><th>Thao t&#225;c</th></tr>
+        </thead>
+        <tbody id="customersTableBody"></tbody>
+      </table>
+    </section>
+
+    <!-- PAGE: FEEDBACK MODERATION -->
+    <section class="admin-page" id="page-feedback-moderation">
+      <div class="page-header"><h2>Ki&#7875;m duy&#7879;t &#273;&#225;nh gi&#225;</h2></div>
+      <div class="filter-tabs" id="feedbackTabs">
+        <button class="tab-btn active" onclick="filterFeedback('pending',this)">Ch&#7901; duy&#7879;t</button>
+        <button class="tab-btn" onclick="filterFeedback('approved',this)">&#272;&#227; duy&#7879;t</button>
+        <button class="tab-btn" onclick="filterFeedback('rejected',this)">&#272;&#227; t&#7915; ch&#7889;i</button>
+      </div>
+      <div class="reviews-grid" id="feedbackGrid"></div>
+    </section>
+
+  </div><!-- /admin-content -->
+</div><!-- /admin-main -->
+
+<!-- MODALS -->
+<div class="modal-overlay" id="voucherModal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="voucherModalTitle">T&#7841;o Voucher</h3><button class="modal-close" onclick="closeModal('voucherModal')">&times;</button></div>
+    <div class="modal-body">
+      <form id="voucherForm" onsubmit="saveVoucher(event)">
+        <div class="form-row">
+          <div class="form-group"><label>M&#227; voucher *</label><input type="text" id="vm-code" placeholder="VD: SUMMER20" required /></div>
+          <div class="form-group"><label>Lo&#7841;i gi&#7843;m</label><select id="vm-type"><option value="percent">Ph&#7847;n tr&#259;m (%)</option><option value="fixed">S&#7889; ti&#7873;n c&#7889; &#273;&#7883;nh (&#8363;)</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Gi&#225; tr&#7883; *</label><input type="number" id="vm-value" placeholder="20" required /></div>
+          <div class="form-group"><label>&#272;i&#7873;u ki&#7879;n t&#7889;i thi&#7875;u (&#8363;)</label><input type="number" id="vm-min-order" placeholder="500000" /></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>S&#7889; l&#432;&#7907;ng</label><input type="number" id="vm-quantity" placeholder="100" /></div>
+          <div class="form-group"><label>Ng&#224;y h&#7871;t h&#7841;n</label><input type="date" id="vm-expiry" /></div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">L&#432;u voucher</button>
+          <button type="button" class="btn btn-outline" onclick="closeModal('voucherModal')">H&#7911;y</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="collectionModal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="collectionModalTitle">T&#7841;o b&#7897; s&#432;u t&#7853;p</h3><button class="modal-close" onclick="closeModal('collectionModal')">&times;</button></div>
+    <div class="modal-body">
+      <form id="collectionForm" onsubmit="saveCollection(event)">
+        <div class="form-group"><label>T&#234;n b&#7897; s&#432;u t&#7853;p *</label><input type="text" id="cm-name" placeholder="VD: B&#7897; s&#432;u t&#7853;p H&#232; 2026" required /></div>
+        <div class="form-group"><label>M&#244; t&#7843;</label><textarea id="cm-desc" rows="3"></textarea></div>
+        <div class="form-group"><label>Tr&#7841;ng th&#225;i</label><label class="toggle-switch"><input type="checkbox" id="cm-active" checked /><span class="toggle-slider"></span><span class="toggle-label">Hi&#7875;n th&#7883;</span></label></div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">L&#432;u</button>
+          <button type="button" class="btn btn-outline" onclick="closeModal('collectionModal')">H&#7911;y</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal">
+    <div class="modal-header"><h3 id="paymentModalTitle">X&#225;c nh&#7853;n thanh to&#225;n</h3><button class="modal-close" onclick="closeModal('paymentModal')">&times;</button></div>
+    <div class="modal-body">
+      <p id="paymentModalMsg"></p>
+      <div class="form-group" id="rejectReasonGroup" style="display:none"><label>L&#253; do t&#7915; ch&#7889;i</label><textarea id="rejectReason" rows="3"></textarea></div>
+      <div class="form-actions">
+        <button class="btn btn-primary" id="paymentConfirmBtn">X&#225;c nh&#7853;n</button>
+        <button class="btn btn-outline" onclick="closeModal('paymentModal')">H&#7911;y</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="customerModal">
+  <div class="modal modal-lg">
+    <div class="modal-header"><h3 id="customerModalName">H&#7891; s&#417; kh&#225;ch h&#224;ng</h3><button class="modal-close" onclick="closeModal('customerModal')">&times;</button></div>
+    <div class="modal-body" id="customerModalBody"></div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="script.js"></script>
+</body>
+</html>

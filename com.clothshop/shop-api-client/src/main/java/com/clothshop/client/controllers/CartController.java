@@ -23,12 +23,13 @@ public class CartController {
     @GetMapping
     public String viewCart(Principal principal, Model model) {
         if (principal == null) {
-            return "redirect:/login"; // Chưa đăng nhập thì đá về trang login
+            return "redirect:/login";
         }
+
         model.addAttribute("cart", cartService.getCartSummary(principal.getName()));
+        model.addAttribute("cartCount", cartService.getCartItemCount(principal.getName()));
         return "client/cart/view";
     }
-
     // 2. Thêm vào giỏ (Dành cho AJAX từ file main.js)
     @PostMapping("/add")
     @PreAuthorize("hasRole('CUSTOMER')")
