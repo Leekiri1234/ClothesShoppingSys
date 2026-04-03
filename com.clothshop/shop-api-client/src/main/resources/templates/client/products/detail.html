@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/layout}">
+
+<head>
+    <title th:text="${product.productName} + ' — MINIMAL'"></title>
+    <style>
+        .product-detail {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 80px;
+            margin-bottom: 80px;
+        }
+        .review-item {
+            padding: 24px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .stars {
+            color: #f1c40f;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <main layout:fragment="content" class="container" style="padding-top: 120px; padding-bottom: 80px;">
+        <div th:if="${successMessage}" class="alert alert--success" th:text="${successMessage}" style="margin-bottom: 20px; color: green;"></div>
+        <div th:if="${errorMessage}" class="alert alert--error" th:text="${errorMessage}" style="margin-bottom: 20px; color: red;"></div>
+
+        <div class="product-detail">
+            <!-- Product Images -->
+            <div class="product-images">
+                <div style="background: #f5f5f5; width: 100%; aspect-ratio: 3/4;">
+                    <img th:src="${product.imageUrl}" style="width: 100%; height: 100%; object-fit: cover;">
+                </div>
+            </div>
+
+            <!-- Product Info -->
+            <div class="product-info">
+                <p style="font-size: 13px; color: #999; margin-bottom: 8px;" th:text="${product.categoryName}"></p>
+                <h1 style="font-weight: 300; font-size: 32px; margin-bottom: 16px;" th:text="${product.productName}"></h1>
+                <p style="font-size: 20px; font-weight: 500; margin-bottom: 32px;" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT') + '₫'}"></p>
+
+                <div style="margin-bottom: 40px;">
+                    <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 12px;">Mô tả</h4>
+                    <p style="font-size: 14px; color: #666; line-height: 1.6;" th:text="${product.description}"></p>
+                </div>
+
+                <!-- canReview button -->
+                <div th:if="${canReview}" style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 32px;">
+                    <p style="font-size: 14px; margin-bottom: 16px;">Bạn đã mua bộ sản phẩm này? Hãy chia sẻ cảm nhận của bạn!</p>
+                    <a th:href="@{/products/{id}/reviews/form(id=${product.productId})}" class="btn btn--outline" style="text-decoration: none;">Viết đánh giá</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reviews Section -->
+        <section id="reviews" style="margin-top: 80px; border-top: 1px solid #eee; padding-top: 60px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 40px;">
+                <h2 style="font-weight: 300;">Đánh giá từ khách hàng</h2>
+            </div>
+            
+            <div th:if="${reviews.content.empty}" style="padding: 40px; text-align: center; background: #fafafa; color: #999;">
+                Chưa có đánh giá nào cho sản phẩm này.
+            </div>
+
+            <div th:each="review : ${reviews.content}" class="review-item">
+                <div class="stars" th:text="${'★'.repeat(review.rating) + '☆'.repeat(5 - review.rating)}"></div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <strong th:text="${review.customerName}" style="font-weight: 500;"></strong>
+                    <span th:text="${#temporals.format(review.reviewDate, 'dd [MM] yyyy')}" style="font-size: 12px; color: #999;"></span>
+                </div>
+                <p style="font-size: 14px; color: #444; line-height: 1.6;" th:text="${review.comment}"></p>
+            </div>
+        </section>
+    </main>
+</body>
+
+</html>

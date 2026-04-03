@@ -1,7 +1,10 @@
 package com.clothshop.domain.repositories.product;
 
+import com.clothshop.domain.entities.auth.Customer;
 import com.clothshop.domain.entities.product.ProductFeedback;
 import com.clothshop.domain.entities.product.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,17 +19,21 @@ public interface ProductFeedbackRepository extends JpaRepository<ProductFeedback
 
     List<ProductFeedback> findByProductOrderByCreatedAtDesc(Product product);
 
-        @Query("SELECT pf FROM ProductFeedback pf " +
-            "LEFT JOIN FETCH pf.product p " +
-            "LEFT JOIN FETCH pf.customer c " +
-            "ORDER BY pf.createdAt DESC")
-        List<ProductFeedback> findAllWithProductAndCustomerOrderByCreatedAtDesc();
+    @Query("SELECT pf FROM ProductFeedback pf " +
+        "LEFT JOIN FETCH pf.product p " +
+        "LEFT JOIN FETCH pf.customer c " +
+        "ORDER BY pf.createdAt DESC")
+    List<ProductFeedback> findAllWithProductAndCustomerOrderByCreatedAtDesc();
 
-        @Query("SELECT pf FROM ProductFeedback pf " +
-            "LEFT JOIN FETCH pf.product p " +
-            "LEFT JOIN FETCH pf.customer c " +
-            "WHERE pf.id = :id")
-        java.util.Optional<ProductFeedback> findByIdWithProductAndCustomer(@Param("id") Long id);
+    @Query("SELECT pf FROM ProductFeedback pf " +
+        "LEFT JOIN FETCH pf.product p " +
+        "LEFT JOIN FETCH pf.customer c " +
+        "WHERE pf.id = :id")
+    java.util.Optional<ProductFeedback> findByIdWithProductAndCustomer(@Param("id") Long id);
 
-        long countByFeedbackStatus(String feedbackStatus);
+    long countByFeedbackStatus(String feedbackStatus);
+
+    Page<ProductFeedback> findByProductIdAndFeedbackStatusOrderByCreatedAtDesc(Long productId, String feedbackStatus, Pageable pageable);
+
+    boolean existsByCustomerAndProduct(Customer customer, Product product);
 }

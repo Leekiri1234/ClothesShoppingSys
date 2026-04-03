@@ -30,6 +30,10 @@
                 <button th:if="${order.status.name() == 'PENDING'}" class="btn btn--outline btn--sm"
                     onclick="document.getElementById('cancelModal').classList.add('open')">Hủy đơn hàng</button>
 
+                <a th:if="${order.status.name() == 'COMPLETED'}" 
+                    th:href="@{/orders/{inv}/rma(inv=${order.orderInvoice})}" 
+                    class="btn btn--outline btn--sm" style="text-decoration: none;">Đổi trả / Hoàn tiền</a>
+
                 <form th:if="${order.status.name() == 'CANCELLED'}"
                     th:action="@{/orders/{inv}/reorder(inv=${order.orderInvoice})}" method="post">
                     <button type="submit" class="btn btn--primary btn--sm">Đặt hàng lại</button>

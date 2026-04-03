@@ -1,5 +1,6 @@
 package com.clothshop.domain.repositories.order;
 
+import com.clothshop.domain.entities.auth.Customer;
 import com.clothshop.domain.entities.order.OrderItem;
 import com.clothshop.domain.enums.OrderStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -26,4 +27,6 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 					@Param("end") LocalDateTime end,
 					@Param("statuses") List<OrderStatus> statuses,
 					org.springframework.data.domain.Pageable pageable);
+
+    boolean existsByOrderCustomerAndVariantProductId(Customer customer, Long productId);
 }
