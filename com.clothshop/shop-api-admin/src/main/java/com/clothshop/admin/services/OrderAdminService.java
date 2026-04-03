@@ -89,36 +89,61 @@ public class OrderAdminService {
      */
     @Transactional
     public void updateOrderStatus(Long orderId, OrderStatus newStatus, String note) {
-        // 1. Lấy đơn hàng kèm theo Items (phải fetch items để có thông tin variant)
         Order order = orderRepository.findByIdWithDetails(orderId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
 
         OrderStatus oldStatus = order.getStatus();
+        if (oldStatus == newStatus) return;
 
-        // 1. HOÀN KHO: Nếu đơn bị Hủy
-        if (newStatus == OrderStatus.CANCELLED && oldStatus != OrderStatus.CANCELLED) {
+        // 1. QUAN TRỌNG: Phải gọi hàm validate này để chặn các bước nhảy sai
+        validateStatusTransition(oldStatus, newStatus);
+
+        // 2. Logic KHO HÀNG
+        // Hoàn kho nếu Hủy đơn (CANCELLED) hoặc Trả hàng (RETURNED)
+        if ((newStatus == OrderStatus.CANCELLED || newStatus == OrderStatus.RETURNED)
+                && oldStatus != OrderStatus.CANCELLED && oldStatus != OrderStatus.RETURNED) {
             handleRestocking(order);
         }
-
-        // 2. TRỪ KHO: Nếu đơn được Xác nhận hoặc Giao hàng (Và trước đó nó đang ở trạng thái Chờ/Nháp)
+        // Trừ kho nếu Xác nhận (CONFIRMED) hoặc bắt đầu Giao (SHIPPING)
         else if ((newStatus == OrderStatus.CONFIRMED || newStatus == OrderStatus.SHIPPING)
                 && oldStatus == OrderStatus.PENDING) {
             handleDeductStock(order);
         }
 
-        // Cập nhật trạng thái và lưu lịch sử (như cũ)
+        // 3. Cập nhật
         order.setStatus(newStatus);
         orderRepository.save(order);
 
+        // Lưu lịch sử kèm ghi chú (Ghi chú này lấy từ Modal trên giao diện)
         OrderStatusHistory history = OrderStatusHistory.builder()
-                .order(order)
-                .oldStatus(oldStatus)
-                .newStatus(newStatus)
-                .note(note)
-                .changedAt(java.time.LocalDateTime.now())
+                .order(order).oldStatus(oldStatus).newStatus(newStatus)
+                .note(note).changedAt(java.time.LocalDateTime.now())
                 .build();
-
         historyRepository.save(history);
+    }
+
+    private void validateStatusTransition(OrderStatus current, OrderStatus next) {
+        boolean isValid = switch (current) {
+            // 1. Chờ xác nhận -> Có thể Xác nhận hoặc Hủy
+            case PENDING -> (next == OrderStatus.CONFIRMED || next == OrderStatus.CANCELLED);
+
+            // 2. Đã xác nhận -> Có thể Giao hàng hoặc Hủy
+            case CONFIRMED -> (next == OrderStatus.SHIPPING || next == OrderStatus.CANCELLED);
+
+            // 3. Đang giao -> Có thể Đã giao (thành công), Hủy (giữa chừng) hoặc Trả hàng (khách từ chối)
+            case SHIPPING -> (next == OrderStatus.DELIVERED || next == OrderStatus.CANCELLED || next == OrderStatus.RETURNED);
+
+            // 4. Đã giao -> Có thể bấm Hoàn thành (kết thúc đơn) hoặc Trả hàng (nếu khách khiếu nại)
+            case DELIVERED -> (next == OrderStatus.COMPLETED || next == OrderStatus.RETURNED);
+
+            // 5. Các trạng thái cuối -> Không thể đi đâu tiếp theo
+            case COMPLETED, CANCELLED, RETURNED -> false;
+        };
+
+        if (!isValid) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR,
+                    "Không thể chuyển trạng thái từ " + current.getDisplayName() + " sang " + next.getDisplayName());
+        }
     }
 
     // Hàm phụ trách hoàn kho

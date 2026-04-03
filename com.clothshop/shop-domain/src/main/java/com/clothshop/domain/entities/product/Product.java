@@ -12,6 +12,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.*;
 
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "products", indexes = @Index(name = "idx_product_slug", columnList = "product_slug"))
@@ -44,11 +45,11 @@ public class Product extends BaseEntity {
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @BatchSize(size = 20)
-    private List<ProductVariant> variants;
+    private Set<ProductVariant> variants;
 
     @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @BatchSize(size = 20)
-    private List<ProductImage> images;
+    private Set<ProductImage> images;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<CollectionItem> collectionItems;

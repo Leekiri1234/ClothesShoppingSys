@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -19,6 +20,7 @@ public class ProductSearchService {
     private final ProductRepository productRepository;
     private final ProductClientMapper productMapper;
 
+    @Transactional(readOnly = true)
     public Page<ProductListResponse> search(ProductSearchRequest request) {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
         Page<Product> productPage;
@@ -37,9 +39,8 @@ public class ProductSearchService {
         }
         // 4. Mặc định lấy tất cả SP đang hoạt động
         else {
-            productPage = productRepository.findAllActive(pageable);
+            productPage = productRepository.findAllByIsActiveTrue(pageable);
         }
-
         return productPage.map(productMapper::toListResponse);
     }
 }

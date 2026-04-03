@@ -112,23 +112,78 @@
 
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
-                        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-edit"></i> Cập nhật trạng thái</h6>
+                        <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-edit"></i> Xử lý đơn hàng</h6>
                     </div>
                     <div class="card-body">
-                        <form th:action="@{/admin/orders/{id}/status(id=${order.orderId})}" method="post" id="statusForm">
-                            <div class="form-group">
-                                <label for="statusSelect">Trạng thái mới</label>
-                                <select name="newStatus" id="statusSelect" class="form-control">
-                                    <option th:each="st : ${allStatuses}"
-                                            th:value="${st.name()}"
-                                            th:text="${st.displayName}"
-                                            th:selected="${st == order.status}"></option>
-                                </select>
+                        <div class="btn-group-vertical w-100" role="group">
+                            <button th:if="${order.status.name() == 'PENDING'}"
+                                    type="button"
+                                    class="btn btn-success mb-2"
+                                    onclick="openStatusModal('CONFIRMED', 'Xác nhận đơn hàng')">
+                                <i class="fas fa-check"></i> Xác nhận đơn
+                            </button>
+
+                            <button th:if="${order.status.name() == 'CONFIRMED'}"
+                                    type="button"
+                                    class="btn btn-info mb-2"
+                                    onclick="openStatusModal('SHIPPING', 'Bắt đầu giao hàng')">
+                                <i class="fas fa-truck"></i> Giao hàng
+                            </button>
+
+                            <button th:if="${order.status.name() == 'SHIPPING'}"
+                                    type="button"
+                                    class="btn btn-primary mb-2"
+                                    onclick="openStatusModal('DELIVERED', 'Đã giao hàng thành công')">
+                                <i class="fas fa-shipping-fast"></i> Đã giao hàng
+                            </button>
+
+                            <button th:if="${order.status.name() == 'DELIVERED'}"
+                                    type="button"
+                                    class="btn btn-dark mb-2"
+                                    onclick="openStatusModal('COMPLETED', 'Hoàn thành đơn hàng')">
+                                <i class="fas fa-flag-checkered"></i> Hoàn thành đơn
+                            </button>
+
+                            <button th:if="${order.status.name() == 'SHIPPING' || order.status.name() == 'DELIVERED'}"
+                                    type="button"
+                                    class="btn btn-warning mb-2"
+                                    onclick="openStatusModal('RETURNED', 'Khách hàng trả hàng')">
+                                <i class="fas fa-undo"></i> Trả hàng
+                            </button>
+
+                            <button th:if="${order.status.name() == 'PENDING' || order.status.name() == 'CONFIRMED' || order.status.name() == 'SHIPPING'}"
+                                    type="button"
+                                    class="btn btn-outline-danger"
+                                    onclick="openStatusModal('CANCELLED', 'Hủy đơn hàng')">
+                                <i class="fas fa-times"></i> Hủy đơn
+                            </button>
+
+                            <div th:if="${order.status.name() == 'COMPLETED'}" class="alert alert-success text-center mb-0">Đơn hàng đã hoàn thành</div>
+                            <div th:if="${order.status.name() == 'CANCELLED'}" class="alert alert-secondary text-center mb-0">Đơn hàng đã bị hủy</div>
+                            <div th:if="${order.status.name() == 'RETURNED'}" class="alert alert-warning text-center mb-0">Đơn hàng đã được trả lại</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="statusActionModal" tabindex="-1" role="dialog" aria-labelledby="statusActionModalLabel" aria-hidden="true">
+                    <div class="modal-dialog" role="document">
+                        <form th:action="@{/admin/orders/{id}/status(id=${order.orderId})}" method="post" class="modal-content" id="statusActionForm">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="statusActionModalLabel">Xác nhận thao tác</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
                             </div>
-                            <div class="form-group">
-                                <textarea name="note" class="form-control" rows="2" placeholder="Ghi chú lý do..."></textarea>
+                            <div class="modal-body">
+                                <input type="hidden" name="newStatus" id="modalNewStatus" value="">
+                                <p id="modalActionText" class="mb-3"></p>
+                                <label for="modalNote">Ghi chú:</label>
+                                <textarea id="modalNote" name="note" class="form-control" rows="3" placeholder="Nhập ghi chú (nếu có)..."></textarea>
                             </div>
-                            <button type="submit" class="btn btn-primary btn-block">Cập nhật trạng thái</button>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                                <button type="submit" class="btn btn-primary">Xác nhận</button>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -158,28 +213,27 @@
     </div>
 </div>
 
-<th:block layout:fragment="scripts">
-    <script>
-        (function() {
-            var statusForm = document.getElementById('statusForm');
-            var statusSelect = document.getElementById('statusSelect');
+<script th:inline="javascript">
+    function openStatusModal(newStatus, actionText) {
+        var statusInput = document.getElementById('modalNewStatus');
+        var actionTextEl = document.getElementById('modalActionText');
+        var noteEl = document.getElementById('modalNote');
 
-            if (!statusForm || !statusSelect) {
-                return;
-            }
+        if (!statusInput || !actionTextEl || !noteEl) {
+            return;
+        }
 
-            statusForm.addEventListener('submit', function(e) {
-                var selectedStatus = (statusSelect.value || '').toUpperCase();
+        statusInput.value = newStatus;
+        actionTextEl.textContent = 'Bạn có chắc chắn muốn: ' + actionText + '?';
 
-                if (selectedStatus === 'CANCELLED') {
-                    var confirmCancel = confirm('CẢNH BÁO: Bạn đang thực hiện HỦY đơn hàng. Hệ thống sẽ tự động hoàn lại số lượng sản phẩm vào kho hàng. Bạn có chắc chắn không?');
-                    if (!confirmCancel) {
-                        e.preventDefault();
-                    }
-                }
-            });
-        })();
-    </script>
-</th:block>
+        // Require note for cancel/return actions.
+        noteEl.required = (newStatus === 'CANCELLED' || newStatus === 'RETURNED');
+
+        if (window.jQuery) {
+            window.jQuery('#statusActionModal').modal('show');
+        }
+    }
+</script>
+
 </body>
 </html>
