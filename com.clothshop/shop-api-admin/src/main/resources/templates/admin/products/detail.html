@@ -65,9 +65,7 @@
 
                         <div>
                             <div style="font-size: 11px; color: var(--muted); text-transform: uppercase; margin-bottom: 4px;">Tồn kho</div>
-                            <div style="font-size: 18px; font-weight: 700;"
-                                 th:classappend="${product.stock < 10} ? 'text-warning' : (${product.stock == 0} ? 'text-danger' : '')"
-                                 th:text="${product.stock}">120</div>
+                            <div style="font-size: 18px; font-weight: 700;" th:text="${product.stock}">120</div>
                         </div>
                     </div>
 
@@ -82,7 +80,7 @@
             <div class="form-card">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
                     <h3 style="margin: 0;">Biến thể sản phẩm</h3>
-                    <a th:href="@{/admin/products/{id}/variants/create(id=${product.productId})}" class="btn btn-sm btn-primary">
+                    <a th:href="@{/admin/variants/create(productId=${product.productId})}" class="btn btn-sm btn-primary">
                         <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24">
                             <line x1="12" y1="5" x2="12" y2="19"/>
                             <line x1="5" y1="12" x2="19" y2="12"/>
@@ -95,6 +93,7 @@
                     <table class="admin-table">
                         <thead>
                             <tr>
+                                <th>SKU</th>
                                 <th>Màu sắc</th>
                                 <th>Size</th>
                                 <th style="text-align: right;">Giá</th>
@@ -105,26 +104,26 @@
                         <tbody>
                             <tr th:each="variant : ${variants}">
                                 <td>
+                                    <span style="font-family: monospace; font-size: 12px;" th:text="${variant.sku}">SKU001</span>
+                                </td>
+                                <td>
                                     <span class="badge badge-primary" th:text="${variant.color}">Đỏ</span>
                                 </td>
                                 <td>
-                                    <span class="badge badge-muted" th:text="${variant.size}">M</span>
+                                    <span class="badge badge-muted" th:text="${variant.sizeValue}">M</span>
                                 </td>
                                 <td style="text-align: right; font-weight: 600;"
-                                    th:text="${#numbers.formatDecimal(variant.price, 0, 'COMMA', 0, 'POINT')} + '₫'">299.000₫</td>
+                                    th:text="${#numbers.formatDecimal(variant.retailPrice, 0, 'COMMA', 0, 'POINT')} + '₫'">299.000₫</td>
                                 <td style="text-align: right;">
-                                    <span th:classappend="${variant.stock < 10} ? 'text-warning' : (${variant.stock == 0} ? 'text-danger' : '')"
-                                          th:text="${variant.stock}">100</span>
+                                    <span th:text="${variant.stockQuantity}">100</span>
                                 </td>
                                 <td style="text-align: center;">
-                                    <a th:href="@{/admin/products/{pid}/variants/{vid}/edit-price(pid=${product.productId}, vid=${variant.id})}"
-                                       class="btn btn-xs btn-outline"
-                                       title="Cập nhật giá">
+                                    <a th:href="@{/admin/variants/{id}/update-price(id=${variant.variantId})}"
+                                       class="btn btn-xs btn-outline" title="Cập nhật giá">
                                         Giá
                                     </a>
-                                    <a th:href="@{/admin/products/{pid}/variants/{vid}/edit-stock(pid=${product.productId}, vid=${variant.id})}"
-                                       class="btn btn-xs btn-outline"
-                                       title="Cập nhật tồn kho">
+                                    <a th:href="@{/admin/variants/{id}/update-stock(id=${variant.variantId})}"
+                                       class="btn btn-xs btn-outline" title="Cập nhật tồn kho">
                                         Kho
                                     </a>
                                 </td>
@@ -140,9 +139,8 @@
                         <line x1="12" y1="16" x2="12.01" y2="16"/>
                     </svg>
                     <p>Sản phẩm chưa có biến thể nào</p>
-                    <a th:href="@{/admin/products/{id}/variants/create(id=${product.productId})}"
-                       class="btn btn-primary"
-                       style="margin-top: 12px;">
+                    <a th:href="@{/admin/variants/create(productId=${product.productId})}"
+                       class="btn btn-primary" style="margin-top: 12px;">
                         Thêm variant đầu tiên
                     </a>
                 </div>
@@ -221,4 +219,3 @@
 
 </body>
 </html>
-
