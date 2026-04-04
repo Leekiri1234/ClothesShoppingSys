@@ -9,15 +9,15 @@
 
 <h1 layout:fragment="page-title" th:text="${isEdit} ? 'Chỉnh sửa Voucher' : 'Quản lý Voucher'">Quản lý Voucher</h1>
 
-<div layout:fragment="content" class="vouchers-form-page">
+<div layout:fragment="content">
   <div style="max-width: 800px; margin: 0 auto;">
 
     <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show">
       <span th:text="${errorMessage}"></span>
     </div>
 
-        <form id="voucherForm" th:action="${isEdit} ? @{/admin/vouchers/edit/{id}(id=${voucherId})} : @{/admin/vouchers/create}"
-          th:object="${voucherReq}" method="post" data-validate>
+    <form th:action="${isEdit} ? @{/admin/vouchers/edit/{id}(id=${voucherId})} : @{/admin/vouchers/create}"
+          th:object="${voucherReq}" method="post" data-validate onsubmit="syncAllNumericFields(); syncDateField('validFromDisplay','validFromRaw', true); syncDateField('validToDisplay','validToRaw', true);">
       <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
       <div class="form-card">
@@ -44,7 +44,7 @@
         <div class="form-row">
           <div class="form-group">
             <label>Loại giảm giá <span class="text-danger">*</span></label>
-            <select th:field="*{discountType}" id="discountType" required>
+            <select th:field="*{discountType}" id="discountType" onchange="handleDiscountTypeChange()" required>
               <option th:each="type : ${discountTypes}"
                       th:value="${type.name()}"
                       th:text="${type.displayName}">
@@ -57,7 +57,7 @@
             <input type="hidden" id="discountValueRaw" th:field="*{discountValue}">
             <div class="input-group">
               <input type="text" id="discountValueDisplay" class="form-control" inputmode="decimal"
-                placeholder="Nhập số tiền hoặc %">
+                     placeholder="Nhập số tiền hoặc %" oninput="formatDiscountValue(false)" onblur="formatDiscountValue(true)">
               <span class="input-group-text" id="discountSuffix" th:text="${voucherReq.discountType == T(com.clothshop.domain.enums.DiscountType).PERCENTAGE ? '%' : '₫'}"></span>
             </div>
             <span class="text-danger" th:if="${#fields.hasErrors('discountValue')}" th:errors="*{discountValue}"></span>
@@ -70,7 +70,8 @@
             <input type="hidden" id="minOrderValueRaw" th:field="*{minOrderValue}">
             <div class="input-group">
               <input type="text" id="minOrderValueDisplay" class="form-control" inputmode="decimal"
-                placeholder="0">
+                     placeholder="0" oninput="formatCurrencyField('minOrderValueDisplay','minOrderValueRaw', false)"
+                     onblur="formatCurrencyField('minOrderValueDisplay','minOrderValueRaw', true)">
               <span class="input-group-text">₫</span>
             </div>
           </div>
@@ -80,7 +81,9 @@
             <input type="hidden" id="maxDiscountRaw" th:field="*{maxDiscount}">
             <div class="input-group">
               <input type="text" id="maxDiscountDisplay" class="form-control" inputmode="decimal"
-                placeholder="Chỉ áp dụng cho loại %">
+                     placeholder="Chỉ áp dụng cho loại %"
+                     oninput="formatCurrencyField('maxDiscountDisplay','maxDiscountRaw', false)"
+                     onblur="formatCurrencyField('maxDiscountDisplay','maxDiscountRaw', true)">
               <span class="input-group-text">₫</span>
             </div>
           </div>
@@ -94,14 +97,18 @@
             <label>Từ ngày <span class="text-danger">*</span></label>
             <input type="hidden" id="validFromRaw" th:field="*{validFrom}">
             <input type="datetime-local" id="validFromDisplay" class="form-control" required
-                   th:value="${voucherReq.validFrom != null ? #temporals.format(voucherReq.validFrom, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                   th:value="${voucherReq.validFrom != null ? #temporals.format(voucherReq.validFrom, 'yyyy-MM-dd''T''HH:mm') : ''}"
+                   oninput="syncDateField('validFromDisplay','validFromRaw', false)"
+                   onblur="syncDateField('validFromDisplay','validFromRaw', true)">
           </div>
 
           <div class="form-group">
             <label>Đến ngày <span class="text-danger">*</span></label>
             <input type="hidden" id="validToRaw" th:field="*{validTo}">
             <input type="datetime-local" id="validToDisplay" class="form-control" required
-                   th:value="${voucherReq.validTo != null ? #temporals.format(voucherReq.validTo, 'yyyy-MM-dd''T''HH:mm') : ''}">
+                   th:value="${voucherReq.validTo != null ? #temporals.format(voucherReq.validTo, 'yyyy-MM-dd''T''HH:mm') : ''}"
+                   oninput="syncDateField('validToDisplay','validToRaw', false)"
+                   onblur="syncDateField('validToDisplay','validToRaw', true)">
           </div>
         </div>
       </div>
@@ -115,7 +122,177 @@
 </div>
 
 <div layout:fragment="scripts">
-  <script th:src="@{/js/modules/vouchers.js}"></script>
+  <script>
+    function toNumber(value) {
+      if (!value) return null;
+      const normalized = value.replace(/[^0-9.,-]/g, '').replace(/,/g, '.');
+      const num = parseFloat(normalized);
+      return isNaN(num) ? null : num;
+    }
+
+    function formatVnd(value) {
+      if (value === null || value === undefined || value === '') return '';
+      const num = Number(value);
+      if (isNaN(num)) return '';
+      return new Intl.NumberFormat('vi-VN').format(num);
+    }
+
+    function formatPercent(value) {
+      if (value === null || value === undefined || value === '') return '';
+      const num = Number(value);
+      if (isNaN(num)) return '';
+      return new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 2, minimumFractionDigits: 0 }).format(num);
+    }
+
+    function parseCurrency(value) {
+      if (!value) return null;
+      const digitsOnly = value.replace(/[^0-9]/g, '');
+      if (!digitsOnly) return null;
+      return Number(digitsOnly);
+    }
+
+    function parseDecimal(value) {
+      if (!value) return null;
+      const normalized = value.replace(/,/g, '.');
+      const num = parseFloat(normalized);
+      return isNaN(num) ? null : num;
+    }
+
+    function formatCurrencyField(displayId, hiddenId, finalize) {
+      const display = document.getElementById(displayId);
+      const hidden = document.getElementById(hiddenId);
+      const rawNumber = parseCurrency(display.value);
+      hidden.value = rawNumber ?? '';
+      if (finalize) {
+        display.value = rawNumber !== null ? formatVnd(rawNumber) : '';
+      }
+    }
+
+    function formatDiscountValue(finalize) {
+      const type = document.getElementById('discountType').value;
+      const display = document.getElementById('discountValueDisplay');
+      const hidden = document.getElementById('discountValueRaw');
+      const rawNumber = type === 'PERCENTAGE' ? parseDecimal(display.value) : parseCurrency(display.value);
+      hidden.value = rawNumber ?? '';
+      if (finalize) {
+        display.value = rawNumber !== null
+                ? (type === 'PERCENTAGE' ? formatPercent(rawNumber) : formatVnd(rawNumber))
+                : '';
+      }
+    }
+
+    function handleDiscountTypeChange() {
+      const type = document.getElementById('discountType').value;
+      const suffix = document.getElementById('discountSuffix');
+      suffix.textContent = type === 'PERCENTAGE' ? '%' : '₫';
+      toggleMaxDiscount();
+      formatDiscountValue(true);
+    }
+
+    function syncAllNumericFields() {
+      formatDiscountValue(true);
+      formatCurrencyField('minOrderValueDisplay', 'minOrderValueRaw', true);
+      formatCurrencyField('maxDiscountDisplay', 'maxDiscountRaw', true);
+    }
+
+    function hydrateInitialDisplays() {
+      const discountType = document.getElementById('discountType').value;
+
+      // 1. Discount Value
+      const discountHidden = document.getElementById('discountValueRaw');
+      const discountDisplay = document.getElementById('discountValueDisplay');
+      if (discountHidden && discountHidden.value) {
+        const val = parseFloat(discountHidden.value);
+        if (!isNaN(val)) {
+          // Check type to decide format
+          if (discountType === 'PERCENTAGE') {
+             discountDisplay.value = formatPercent(val);
+          } else {
+             discountDisplay.value = formatVnd(val);
+          }
+        }
+      }
+
+      // 2. Min Order
+      const minOrderHidden = document.getElementById('minOrderValueRaw');
+      const minOrderDisplay = document.getElementById('minOrderValueDisplay');
+      if (minOrderHidden && minOrderHidden.value) {
+        const val = parseFloat(minOrderHidden.value);
+        if (!isNaN(val)) {
+          minOrderDisplay.value = formatVnd(val);
+        }
+      }
+
+      // 3. Max Discount
+      const maxDiscountHidden = document.getElementById('maxDiscountRaw');
+      const maxDiscountDisplay = document.getElementById('maxDiscountDisplay');
+      if (maxDiscountHidden && maxDiscountHidden.value) {
+        const val = parseFloat(maxDiscountHidden.value);
+        if (!isNaN(val)) {
+          maxDiscountDisplay.value = formatVnd(val);
+        }
+      }
+    }
+
+    function formatDateForInput(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      if (isNaN(date.getTime())) return '';
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    function syncDateField(displayId, hiddenId, finalize) {
+      const display = document.getElementById(displayId);
+      const hidden = document.getElementById(hiddenId);
+      if (!display || !hidden) return;
+      hidden.value = display.value || '';
+      if (finalize && display.value) {
+        display.value = display.value; // keep current formatted value
+      }
+    }
+
+    function hydrateDateDisplays() {
+      const fromHidden = document.getElementById('validFromRaw');
+      const fromDisplay = document.getElementById('validFromDisplay');
+      if (fromHidden && fromHidden.value && fromDisplay && !fromDisplay.value) {
+        fromDisplay.value = formatDateForInput(fromHidden.value);
+      }
+      const toHidden = document.getElementById('validToRaw');
+      const toDisplay = document.getElementById('validToDisplay');
+      if (toHidden && toHidden.value && toDisplay && !toDisplay.value) {
+        toDisplay.value = formatDateForInput(toHidden.value);
+      }
+      syncDateField('validFromDisplay', 'validFromRaw', true);
+      syncDateField('validToDisplay', 'validToRaw', true);
+    }
+
+    // JS tối ưu UX: Chỉ hiện trường "Giảm tối đa" khi loại giảm giá là "Phần trăm"
+    function toggleMaxDiscount() {
+      const type = document.getElementById('discountType').value;
+      const wrapper = document.getElementById('maxDiscountWrapper');
+      if (type === 'PERCENTAGE') {
+        wrapper.style.display = 'block';
+      } else {
+        wrapper.style.display = 'none';
+        const input = wrapper.querySelector('input#maxDiscountDisplay');
+        const hidden = document.getElementById('maxDiscountRaw');
+        if (input) {
+          input.value = '';
+        }
+        if (hidden) {
+          hidden.value = '';
+        }
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      hydrateInitialDisplays();
+      hydrateDateDisplays();
+      toggleMaxDiscount();
+      // syncAllNumericFields(); // Removed to prevent double-processing on load
+    });
+  </script>
 </div>
 </body>
 </html>

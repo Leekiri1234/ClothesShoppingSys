@@ -19,7 +19,7 @@
     </a>
 </div>
 
-<div layout:fragment="content" class="products-variant-stock-page">
+<div layout:fragment="content">
 
     <div style="max-width: 500px; margin: 0 auto;">
         <form th:action="@{/admin/products/{pid}/variants/{vid}/edit-stock(pid=${productId}, vid=${variantId})}"
@@ -131,7 +131,60 @@
 </div>
 
 <div layout:fragment="scripts">
-    <script th:src="@{/js/modules/products.js}"></script>
+<script>
+const currentStockValue = parseInt(document.getElementById('currentStock').textContent);
+const updateTypeSelect = document.getElementById('updateType');
+const quantityInput = document.querySelector('input[name="quantity"]');
+const previewResult = document.getElementById('previewResult');
+const operationSpan = document.getElementById('operation');
+const newStockSpan = document.getElementById('newStock');
+
+function updatePreview() {
+    const updateType = updateTypeSelect.value;
+    const quantity = parseInt(quantityInput.value) || 0;
+
+    if (!updateType || quantity === 0) {
+        previewResult.style.display = 'none';
+        return;
+    }
+
+    previewResult.style.display = 'block';
+    let newStock = currentStockValue;
+
+    switch(updateType) {
+        case 'ADD':
+            newStock = currentStockValue + quantity;
+            operationSpan.textContent = '+' + quantity + ' →';
+            break;
+        case 'SUBTRACT':
+            newStock = Math.max(0, currentStockValue - quantity);
+            operationSpan.textContent = '-' + quantity + ' →';
+            if (currentStockValue - quantity < 0) {
+                newStockSpan.style.color = 'var(--danger)';
+            } else {
+                newStockSpan.style.color = 'inherit';
+            }
+            break;
+        case 'SET':
+            newStock = quantity;
+            operationSpan.textContent = '→';
+            break;
+    }
+
+    newStockSpan.textContent = newStock;
+
+    if (newStock < 10) {
+        newStockSpan.style.color = 'var(--warning)';
+    } else if (newStock === 0) {
+        newStockSpan.style.color = 'var(--danger)';
+    } else {
+        newStockSpan.style.color = 'var(--success)';
+    }
+}
+
+updateTypeSelect.addEventListener('change', updatePreview);
+quantityInput.addEventListener('input', updatePreview);
+</script>
 </div>
 
 </body>

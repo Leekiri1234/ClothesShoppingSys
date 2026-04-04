@@ -12,23 +12,6 @@ const APP_STATE = {
   modalStack: []
 };
 
-const LEGACY_DASHBOARD_DATA = {
-  revenueByDay: [12.4, 14.2, 13.1, 15.8, 16.7, 18.1, 17.3],
-  labels: ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'],
-  recentOrders: [
-    { id: 'ORD-1001', customer: 'Nguyễn Thị Bích', total: '1.230.000₫', status: 'pending' },
-    { id: 'ORD-1002', customer: 'Trần Hoàng Long', total: '450.000₫', status: 'confirmed' },
-    { id: 'ORD-1003', customer: 'Lê Thị Kim Oanh', total: '980.000₫', status: 'preparing' },
-    { id: 'ORD-1004', customer: 'Phạm Quốc Anh', total: '1.860.000₫', status: 'shipping' }
-  ],
-  topProducts: [
-    { name: 'Áo Linen Cổ V', sold: 156, revenue: '12.45M' },
-    { name: 'Váy Midi Floral', sold: 124, revenue: '9.10M' },
-    { name: 'Quần Wide-Leg Kaki', sold: 98, revenue: '7.80M' },
-    { name: 'Áo Thun Basic', sold: 89, revenue: '6.30M' }
-  ]
-};
-
 // ============================================================
 // 2. DOM READY INITIALIZATION
 // ============================================================
@@ -41,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
   initTables();
   initForms();
   initConfirmDelete();
-  initLegacyDashboard();
   console.log('✅ Admin Dashboard JS Initialized');
 });
 
@@ -389,8 +371,7 @@ window.AdminUI = {
   closeModal,
   showToast,
   toggleSidebar,
-  closeSidebar,
-  initLegacyDashboard
+  closeSidebar
 };
 
 // ============================================================
@@ -417,128 +398,6 @@ function renderBarChart(containerId, data) {
 
   svg += '</svg>';
   container.innerHTML = svg;
-}
-
-function initLegacyDashboard() {
-  const chartSvg = document.getElementById('revenueChartSvg');
-  const labels = document.getElementById('chartLabels');
-  const ordersBody = document.querySelector('#recentOrdersTable tbody');
-  const topProducts = document.getElementById('topProductsList');
-
-  if (!chartSvg || !labels || !ordersBody || !topProducts) {
-    return;
-  }
-
-  const dashboardData = (window.__dashboardData
-    && Array.isArray(window.__dashboardData.revenueByDay)
-    && Array.isArray(window.__dashboardData.labels)
-    && Array.isArray(window.__dashboardData.recentOrders)
-    && Array.isArray(window.__dashboardData.topProducts))
-    ? window.__dashboardData
-    : LEGACY_DASHBOARD_DATA;
-
-  initDashboardTodayText();
-  renderLegacyRevenueChart(chartSvg, dashboardData.revenueByDay);
-  renderLegacyChartLabels(labels, dashboardData.labels);
-  renderLegacyRecentOrders(ordersBody, dashboardData.recentOrders);
-  renderLegacyTopProducts(topProducts, dashboardData.topProducts);
-}
-
-function initDashboardTodayText() {
-  const target = document.getElementById('dashboardTodayText');
-  if (!target) return;
-
-  const now = new Date();
-  const day = String(now.getDate()).padStart(2, '0');
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const year = now.getFullYear();
-  target.textContent = `Xin chào, hôm nay là ngày ${day}/${month}/${year}`;
-}
-
-function renderLegacyRevenueChart(svg, data) {
-  const width = 700;
-  const height = 200;
-  const paddingX = 40;
-  const paddingY = 24;
-  const max = Math.max(...data);
-  const min = Math.min(...data);
-  const range = Math.max(max - min, 1);
-  const stepX = (width - paddingX * 2) / (data.length - 1);
-
-  const points = data.map((value, idx) => {
-    const x = paddingX + idx * stepX;
-    const y = height - paddingY - ((value - min) / range) * (height - paddingY * 2);
-    return { x, y, value };
-  });
-
-  const polyline = points.map((point) => `${point.x},${point.y}`).join(' ');
-
-  svg.innerHTML = [
-    `<polyline points="${polyline}" fill="none" stroke="var(--primary)" stroke-width="2" />`,
-    ...points.map((point) => `<circle cx="${point.x}" cy="${point.y}" r="3" fill="var(--primary)" />`)
-  ].join('');
-}
-
-function renderLegacyChartLabels(container, labels) {
-  container.innerHTML = labels.map((label) => `<span>${label}</span>`).join('');
-}
-
-function renderLegacyRecentOrders(tbody, rows) {
-  tbody.innerHTML = rows.map((row) => {
-    return `
-      <tr>
-        <td>${row.id}</td>
-        <td>${row.customer}</td>
-        <td>${row.total}</td>
-        <td><span class="badge ${resolveOrderBadgeClass(row.status)}">${resolveOrderStatusText(row.status)}</span></td>
-      </tr>
-    `;
-  }).join('');
-}
-
-function renderLegacyTopProducts(container, products) {
-  container.innerHTML = products.map((product, index) => {
-    return `
-      <div class="top-product-item">
-        <div class="top-product-rank ${index === 0 ? 'gold' : index === 1 ? 'silver' : index === 2 ? 'bronze' : ''}">${index + 1}</div>
-        <div class="top-product-info">
-          <div class="top-product-name">${product.name}</div>
-          <div class="top-product-sold">Đã bán: ${product.sold}</div>
-        </div>
-        <div class="top-product-revenue">${product.revenue}</div>
-      </div>
-    `;
-  }).join('');
-}
-
-function resolveOrderBadgeClass(status) {
-  const normalizedStatus = (status || '').toLowerCase();
-  const map = {
-    pending: 'badge-warning',
-    confirmed: 'badge-info',
-    preparing: 'badge-primary',
-    shipping: 'badge-info',
-    delivered: 'badge-success',
-    completed: 'badge-success',
-    cancelled: 'badge-danger',
-    returned: 'badge-muted'
-  };
-  return map[normalizedStatus] || 'badge-muted';
-}
-
-function resolveOrderStatusText(status) {
-  const normalizedStatus = (status || '').toLowerCase();
-  const map = {
-    pending: 'Chờ xác nhận',
-    confirmed: 'Đã xác nhận',
-    preparing: 'Đang chuẩn bị',
-    shipping: 'Đang giao',
-    delivered: 'Đã giao',
-    completed: 'Hoàn thành',
-    cancelled: 'Đã hủy',
-    returned: 'Đã trả hàng'
-  };
-  return map[normalizedStatus] || 'Không rõ';
 }
 
 // Note: Call renderBarChart() from your page-specific scripts with actual data from backend

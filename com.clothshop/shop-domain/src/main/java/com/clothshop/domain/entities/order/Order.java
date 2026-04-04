@@ -48,10 +48,6 @@ public class Order extends BaseEntity {
     @Column(name = "total_price", nullable = false, precision = 12, scale = 2)
     private BigDecimal totalPrice;
 
-    // Kept for schema compatibility where final_price is non-null.
-    @Column(name = "final_price", nullable = false, precision = 12, scale = 2)
-    private BigDecimal finalPrice;
-
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method", length = 50, nullable = false)
     private PaymentMethod paymentMethod;
@@ -70,15 +66,4 @@ public class Order extends BaseEntity {
 
     @OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Payment payment;
-
-    @PrePersist
-    @PreUpdate
-    private void syncFinalPrice() {
-        if (finalPrice == null) {
-            finalPrice = totalPrice;
-        }
-        if (totalPrice == null) {
-            totalPrice = finalPrice;
-        }
-    }
 }

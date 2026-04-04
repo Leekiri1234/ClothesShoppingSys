@@ -13,7 +13,6 @@ import com.clothshop.domain.entities.auth.Role;
 import com.clothshop.domain.entities.auth.Staff;
 import com.clothshop.domain.enums.AccountStatus;
 import com.clothshop.domain.enums.AccountType;
-import com.clothshop.domain.enums.StaffRole;
 import com.clothshop.domain.repositories.auth.AccountRepository;
 import com.clothshop.domain.repositories.auth.RoleRepository;
 import com.clothshop.domain.repositories.auth.StaffRepository;
@@ -98,11 +97,6 @@ public class StaffManagementService {
         Role role = roleRepository.findById(request.getRoleId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Role không tồn tại"));
 
-        if (role.getStaffRole() == StaffRole.SUPER_ADMIN) {
-            throw new BusinessException(ErrorCode.OPERATION_NOT_ALLOWED,
-                "Không thể tạo thêm tài khoản SUPER_ADMIN.");
-        }
-
         // Tạo Account trước
         Account account = Account.builder()
                 .username(request.getUsername())
@@ -136,7 +130,7 @@ public class StaffManagementService {
 
         // CONSTRAINT: Nếu staff được edit có role SUPER_ADMIN
         // -> Chỉ cho phép chính người đó edit, không cho SUPER_ADMIN khác edit
-        if (currentRole.getStaffRole() == StaffRole.SUPER_ADMIN) {
+        if (currentRole.getStaffRole() == com.clothshop.domain.enums.StaffRole.SUPER_ADMIN) {
             String currentUsername = getCurrentUsername();
             if (!account.getUsername().equals(currentUsername)) {
                 throw new BusinessException(ErrorCode.OPERATION_NOT_ALLOWED,
@@ -158,7 +152,7 @@ public class StaffManagementService {
         // 3. Cập nhật Role (chỉ nếu roleId khác với role hiện tại)
         if (request.getRoleId() != null && !currentRole.getId().equals(request.getRoleId())) {
             // CONSTRAINT: Không cho phép thay đổi role của SUPER_ADMIN
-            if (currentRole.getStaffRole() == StaffRole.SUPER_ADMIN) {
+            if (currentRole.getStaffRole() == com.clothshop.domain.enums.StaffRole.SUPER_ADMIN) {
                 throw new BusinessException(ErrorCode.OPERATION_NOT_ALLOWED,
                     "Không thể thay đổi role của tài khoản SUPER_ADMIN");
             }
@@ -166,13 +160,6 @@ public class StaffManagementService {
             Role newRole = roleRepository.findById(request.getRoleId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Role không tồn tại"));
             staff.setRole(newRole);
-        }
-
-        // Invariant: SUPER_ADMIN luôn ở trạng thái hoạt động.
-        if (currentRole.getStaffRole() == StaffRole.SUPER_ADMIN) {
-            account.setAccountStatus(AccountStatus.ACTIVE);
-            account.setIsActive(true);
-            staff.setIsActive(true);
         }
 
         return staffMapper.toResponse(staffRepository.save(staff));
@@ -187,7 +174,7 @@ public class StaffManagementService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_EXISTED,"Không tìm thấy nhân viên"));
 
         // CONSTRAINT: SUPER_ADMIN không được deactivate SUPER_ADMIN khác
-        if (staff.getRole().getStaffRole() == StaffRole.SUPER_ADMIN) {
+        if (staff.getRole().getStaffRole() == com.clothshop.domain.enums.StaffRole.SUPER_ADMIN) {
             throw new BusinessException(ErrorCode.OPERATION_NOT_ALLOWED,
                 "Không thể khóa/mở khóa tài khoản SUPER_ADMIN");
         }

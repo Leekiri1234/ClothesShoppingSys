@@ -21,14 +21,4 @@ public class LoginController {
         log.info("Accessing admin login page");
         return "admin/login";
     }
-
-    /**
-     * Display minimal login variant.
-     * GET /admin/login/minimal
-     */
-    @GetMapping("/admin/login/minimal")
-    public String showMinimalLoginPage() {
-        log.info("Accessing minimal admin login page");
-        return "admin/login-minimal";
-    }
 }

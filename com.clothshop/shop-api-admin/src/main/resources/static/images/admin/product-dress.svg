@@ -1,7 +1,0 @@
-<svg width="640" height="420" viewBox="0 0 640 420" xmlns="http://www.w3.org/2000/svg">
-  <rect width="640" height="420" fill="#f7efe4"/>
-  <path d="M290 70 H350 L370 120 L420 320 H220 L270 120 Z" fill="#c98a68"/>
-  <rect x="286" y="64" width="68" height="18" rx="8" fill="#f7efe4"/>
-  <circle cx="320" cy="190" r="18" fill="#f3c8ab" opacity="0.7"/>
-  <text x="40" y="380" font-size="34" fill="#613b2c" font-family="Inter, Arial, sans-serif" font-weight="700">Midi Dress</text>
-</svg>

@@ -1,6 +1,0 @@
-<svg width="640" height="420" viewBox="0 0 640 420" xmlns="http://www.w3.org/2000/svg">
-  <rect width="640" height="420" fill="#f5f3ef"/>
-  <path d="M220 90 L270 50 H370 L420 90 L470 130 L430 190 L390 165 V340 H250 V165 L210 190 L170 130 Z" fill="#1c1c1a" opacity="0.92"/>
-  <rect x="290" y="95" width="60" height="14" rx="7" fill="#f5f3ef"/>
-  <text x="40" y="380" font-size="34" fill="#1c1c1a" font-family="Inter, Arial, sans-serif" font-weight="700">Classic Shirt</text>
-</svg>

@@ -20,7 +20,7 @@
     </a>
 </div>
 
-<div layout:fragment="content" class="staff-list-page">
+<div layout:fragment="content">
 
     <!-- FILTER BAR -->
     <div class="filter-bar">
@@ -33,10 +33,11 @@
             <input type="text"
                    id="searchInput"
                    th:value="${filter.keyword}"
-                   placeholder="Tìm theo tên, email, username...">
+                   placeholder="Tìm theo tên, email, username..."
+                   onkeyup="debounceFilter()">
         </div>
 
-        <select class="filter-select" id="roleFilter">
+        <select class="filter-select" id="roleFilter" onchange="filterStaff()">
             <option value="">Tất cả vai trò</option>
             <option th:each="role : ${roles}"
                     th:value="${role.id}"
@@ -44,14 +45,14 @@
                     th:selected="${filter.roleId != null && filter.roleId == role.id}">Role</option>
         </select>
 
-        <select class="filter-select" id="statusFilter">
+        <select class="filter-select" id="statusFilter" onchange="filterStaff()">
             <option value="">Tất cả trạng thái</option>
             <option value="ACTIVE" th:selected="${filter.status?.name() == 'ACTIVE'}">Đang hoạt động</option>
             <option value="INACTIVE" th:selected="${filter.status?.name() == 'INACTIVE'}">Ngưng hoạt động</option>
             <option value="LOCKED" th:selected="${filter.status?.name() == 'LOCKED'}">Đã khóa</option>
         </select>
 
-        <button class="btn btn-outline" type="button" id="staffResetFiltersBtn">
+        <button class="btn btn-outline" onclick="resetFilters()">
             <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
                 <polyline points="1 4 1 10 7 10"/>
                 <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
@@ -169,17 +170,14 @@
                     <td>
                         <label class="toggle-switch">
                             <input type="checkbox"
-                                   class="staff-status-toggle"
                                    th:checked="${staff.accountStatus?.name() == 'ACTIVE'}"
                                    th:data-staff-id="${staff.id}"
-                                   th:data-super-admin="${staff.roleName == 'SUPER_ADMIN'}"
-                                   th:disabled="${staff.roleName == 'SUPER_ADMIN'}"
+                                   th:onchange="'toggleStaffStatus(this, ' + ${staff.id} + ')'"
                                    sec:authorize="hasRole('SUPER_ADMIN')">
                             <span class="toggle-slider"></span>
                         </label>
-                        <span th:if="${staff.roleName == 'SUPER_ADMIN'}" class="badge badge-primary" style="margin-left: 8px;">Cố định</span>
-                        <span th:if="${staff.roleName != 'SUPER_ADMIN' and staff.accountStatus?.name() == 'ACTIVE'}" class="badge badge-success" style="margin-left: 8px;">Active</span>
-                        <span th:if="${staff.roleName != 'SUPER_ADMIN' and staff.accountStatus?.name() != 'ACTIVE'}" class="badge badge-muted" style="margin-left: 8px;">Inactive</span>
+                        <span th:if="${staff.accountStatus?.name() == 'ACTIVE'}" class="badge badge-success" style="margin-left: 8px;">Active</span>
+                        <span th:unless="${staff.accountStatus?.name() == 'ACTIVE'}" class="badge badge-muted" style="margin-left: 8px;">Inactive</span>
                     </td>
                     <td>
                         <div class="actions-cell">
@@ -202,35 +200,178 @@
 
     <!-- PAGINATION -->
     <div class="pagination" th:if="${staffPage.totalPages > 1}">
-        <a class="page-btn"
-           th:classappend="${staffPage.pageNumber == 0} ? 'disabled' : ''"
-           th:href="${staffPage.pageNumber == 0}
-                ? '#'
-                : @{/admin/staff(page=${staffPage.pageNumber - 1}, keyword=${filter.keyword}, roleId=${filter.roleId}, status=${filter.status})}">
+        <button class="page-btn"
+                th:disabled="${staffPage.pageNumber == 0}"
+                onclick="goToPage([[${staffPage.pageNumber - 1}]])">
             ‹
-        </a>
+        </button>
 
-        <a th:each="i : ${#numbers.sequence(0, staffPage.totalPages - 1)}"
-           class="page-btn"
-           th:classappend="${i == staffPage.pageNumber} ? 'active' : ''"
-           th:text="${i + 1}"
-           th:href="@{/admin/staff(page=${i}, keyword=${filter.keyword}, roleId=${filter.roleId}, status=${filter.status})}">
+        <button th:each="i : ${#numbers.sequence(0, staffPage.totalPages - 1)}"
+                class="page-btn"
+                th:classappend="${i == staffPage.pageNumber} ? 'active' : ''"
+                th:text="${i + 1}"
+                onclick="goToPage([[${i}]])">
             1
-        </a>
+        </button>
 
-        <a class="page-btn"
-           th:classappend="${staffPage.pageNumber == staffPage.totalPages - 1} ? 'disabled' : ''"
-           th:href="${staffPage.pageNumber == staffPage.totalPages - 1}
-                ? '#'
-                : @{/admin/staff(page=${staffPage.pageNumber + 1}, keyword=${filter.keyword}, roleId=${filter.roleId}, status=${filter.status})}">
+        <button class="page-btn"
+                th:disabled="${staffPage.pageNumber == staffPage.totalPages - 1}"
+                onclick="goToPage([[${staffPage.pageNumber + 1}]])">
             ›
-        </a>
+        </button>
     </div>
 
 </div>
 
 <div layout:fragment="scripts">
-    <script th:src="@{/js/modules/staff.js}"></script>
+<script>
+// Helper function to read cookie value
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+// Debounce timer for search
+let searchDebounceTimer;
+
+function debounceFilter() {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+        filterStaff();
+    }, 500); // Wait 500ms after user stops typing
+}
+
+// Filter staff
+function filterStaff() {
+    const search = document.getElementById('searchInput').value.trim();
+    const roleSelect = document.getElementById('roleFilter');
+    const role = roleSelect ? roleSelect.value : '';
+    const status = document.getElementById('statusFilter').value;
+
+    // Build URL with params
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', '0'); // Reset to first page
+
+    if (search) {
+        url.searchParams.set('keyword', search);
+    } else {
+        url.searchParams.delete('keyword');
+    }
+
+    if (role) {
+        url.searchParams.set('roleId', role);
+    } else {
+        url.searchParams.delete('roleId');
+    }
+
+    if (status) {
+        url.searchParams.set('status', status);
+    } else {
+        url.searchParams.delete('status');
+    }
+
+    window.location.href = url.toString();
+}
+
+// Reset filters
+function resetFilters() {
+    window.location.href = '/admin/staff';
+}
+
+// Pagination
+function goToPage(page) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', page);
+    window.location.href = url.toString();
+}
+
+// Toggle staff status (from toggle switch in list)
+function toggleStaffStatus(checkbox, staffId) {
+    console.log('🔵 LIST: toggleStaffStatus called');
+    console.log('🔵 checkbox.checked:', checkbox.checked);
+    console.log('🔵 staffId:', staffId);
+
+    const isActive = checkbox.checked;
+
+    // Debug: Check all available cookies
+    console.log('🔵 All cookies:', document.cookie);
+
+    // Try to read CSRF token from multiple sources
+    const csrfTokenFromCookie = getCookie('XSRF-TOKEN');
+    const csrfTokenFromMeta = document.querySelector('meta[name="_csrf"]')?.content;
+    const csrfHeaderFromMeta = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+    console.log('🔵 isActive:', isActive);
+    console.log('🔵 CSRF token from cookie (XSRF-TOKEN):', csrfTokenFromCookie || '❌ NULL');
+    console.log('🔵 CSRF token from meta tag:', csrfTokenFromMeta || '❌ NULL');
+    console.log('🔵 CSRF header from meta tag:', csrfHeaderFromMeta || '❌ NULL');
+
+    // Use cookie token first, fallback to meta tag
+    const csrfToken = csrfTokenFromCookie || csrfTokenFromMeta;
+    const csrfHeader = csrfHeaderFromMeta || 'X-XSRF-TOKEN';
+
+    if (!csrfToken) {
+        console.error('❌ CSRF token not found in both cookie and meta tag!');
+        AdminUI.showToast('Lỗi: Không tìm thấy CSRF token!', 'error');
+        checkbox.checked = !isActive;
+        return;
+    }
+
+    const endpoint = `/admin/staff/toggle/${staffId}`;
+    console.log('🔵 Calling endpoint:', endpoint);
+    console.log('🔵 Using CSRF token:', csrfToken);
+    console.log('🔵 Sending via header:', csrfHeader);
+
+    // Prepare headers
+    const headers = {
+        'Content-Type': 'application/x-www-form-urlencoded'
+    };
+    headers[csrfHeader] = csrfToken;
+
+    console.log('🔵 Request headers:', headers);
+
+    fetch(endpoint, {
+        method: 'POST',
+        headers: headers
+    })
+    .then(response => {
+        console.log('🔵 Response status:', response.status);
+        console.log('🔵 Response ok:', response.ok);
+
+        if (response.ok) {
+            const message = isActive
+                ? 'Đã kích hoạt tài khoản nhân viên'
+                : 'Đã vô hiệu hóa tài khoản nhân viên';
+            AdminUI.showToast(message, 'success');
+
+            // Reload to update badge status
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        } else {
+            console.error('❌ Response not OK, status:', response.status);
+            checkbox.checked = !isActive; // Revert on error
+            response.text().then(text => console.error('Response body:', text));
+            throw new Error('Failed to toggle status');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Fetch error:', error);
+        AdminUI.showToast('Không thể thay đổi trạng thái!', 'error');
+        checkbox.checked = !isActive; // Revert on error
+    });
+}
+
+// deleteStaff function removed - Use toggle switch for deactivation instead
+
+// Select all checkbox
+document.getElementById('selectAll')?.addEventListener('change', function() {
+    const checkboxes = document.querySelectorAll('.row-checkbox');
+    checkboxes.forEach(cb => cb.checked = this.checked);
+});
+</script>
 </div>
 
 </body>

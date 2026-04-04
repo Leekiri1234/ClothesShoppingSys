@@ -19,7 +19,7 @@
     </a>
 </div>
 
-<div layout:fragment="content" class="staff-edit-page">
+<div layout:fragment="content">
 
     <div style="max-width: 800px; margin: 0 auto;">
         <form th:action="@{/admin/staff/edit/{id}(id=${staff.id})}"
@@ -102,14 +102,13 @@
 
                     <div class="form-group">
                         <label>Vai trò <span style="color: var(--danger);">*</span></label>
-                        <select name="roleId" required th:disabled="${staff.roleName == 'SUPER_ADMIN'}">
+                        <select name="roleId" required>
                             <option value="">-- Chọn vai trò --</option>
                             <option th:each="role : ${roles}"
                                     th:value="${role.id}"
                                     th:text="${role.staffRole}"
                                     th:selected="${role.id == staff.roleId}">Role</option>
                         </select>
-                        <input type="hidden" name="roleId" th:if="${staff.roleName == 'SUPER_ADMIN'}" th:value="${staff.roleId}">
                     </div>
                 </div>
 
@@ -132,9 +131,8 @@
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
                     <h3 style="margin: 0;">Đổi mật khẩu</h3>
                     <button type="button"
-                            id="togglePasswordBtn"
                             class="btn btn-sm btn-outline"
-                            >
+                            onclick="togglePasswordSection()">
                         <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24">
                             <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
                             <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
@@ -177,20 +175,13 @@
                 <label class="toggle-switch">
                     <input type="checkbox"
                            name="isActive"
-                           th:checked="${staff.accountStatus?.name() == 'ACTIVE'}"
-                           th:disabled="${staff.roleName == 'SUPER_ADMIN'}">
+                           th:checked="${staff.accountStatus?.name() == 'ACTIVE'}">
                     <span class="toggle-slider"></span>
-                    <span class="toggle-label"
-                          th:text="${staff.roleName == 'SUPER_ADMIN'} ? 'Tài khoản SUPER_ADMIN cố định luôn hoạt động' : 'Tài khoản đang hoạt động'">
-                        Tài khoản đang hoạt động
-                    </span>
+                    <span class="toggle-label">Tài khoản đang hoạt động</span>
                 </label>
 
-                <input th:if="${staff.roleName == 'SUPER_ADMIN'}" type="hidden" name="isActive" value="true">
-
                 <small style="font-size: 11px; color: var(--muted); display: block; margin-top: 8px;">
-                    <span th:if="${staff.roleName == 'SUPER_ADMIN'}">Super Admin không thể bị vô hiệu hóa hoặc thay đổi trạng thái.</span>
-                    <span th:if="${staff.roleName != 'SUPER_ADMIN'}">Tắt để vô hiệu hóa tài khoản. Nhân viên sẽ không thể đăng nhập.</span>
+                    Tắt để vô hiệu hóa tài khoản. Nhân viên sẽ không thể đăng nhập.
                 </small>
             </div>
 
@@ -236,11 +227,10 @@
                 <!-- DEBUG: Show both buttons to test onclick -->
                 <!-- Deactivate Button -->
                 <button type="button"
-                        id="deactivateStaffBtn"
                         class="btn btn-warning"
                         style="margin-left: auto;"
                         th:data-staff-id="${staff.id}"
-                        th:if="${staff.roleName != 'SUPER_ADMIN'}">
+                        onclick="toggleStaffStatus('deactivate', this.dataset.staffId)">
                     <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
                         <circle cx="12" cy="12" r="10"/>
                         <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
@@ -250,19 +240,14 @@
 
                 <!-- Activate Button -->
                 <button type="button"
-                        id="activateStaffBtn"
                         class="btn btn-success"
                         th:data-staff-id="${staff.id}"
-                        th:if="${staff.roleName != 'SUPER_ADMIN'}">
+                        onclick="toggleStaffStatus('activate', this.dataset.staffId)">
                     <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
                         <polyline points="20 6 9 17 4 12"/>
                     </svg>
                     Kích hoạt tài khoản
                 </button>
-
-                <span class="badge badge-primary" th:if="${staff.roleName == 'SUPER_ADMIN'}" style="margin-left: auto; padding: 8px 12px;">
-                    SUPER_ADMIN cố định
-                </span>
             </div>
 
         </form>
@@ -271,7 +256,129 @@
 </div>
 
 <div layout:fragment="scripts">
-    <script th:src="@{/js/modules/staff.js}"></script>
+<script>
+// Helper function to read cookie value
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+// Toggle password section
+function togglePasswordSection() {
+    const section = document.getElementById('passwordSection');
+    const text = document.getElementById('togglePasswordText');
+
+    if (section.style.display === 'none') {
+        section.style.display = 'block';
+        text.textContent = 'Ẩn';
+    } else {
+        section.style.display = 'none';
+        text.textContent = 'Hiển thị';
+    }
+}
+
+// Password confirmation validation
+const newPasswordInput = document.getElementById('newPassword');
+const confirmNewPasswordInput = document.getElementById('confirmNewPassword');
+const passwordMatchMsg = document.getElementById('passwordMatchMsg');
+
+function validatePassword() {
+    if (!newPasswordInput.value || !confirmNewPasswordInput.value) {
+        passwordMatchMsg.style.display = 'none';
+        return;
+    }
+
+    passwordMatchMsg.style.display = 'block';
+    if (newPasswordInput.value === confirmNewPasswordInput.value) {
+        passwordMatchMsg.style.color = 'var(--success)';
+        passwordMatchMsg.textContent = '✓ Mật khẩu khớp';
+    } else {
+        passwordMatchMsg.style.color = 'var(--danger)';
+        passwordMatchMsg.textContent = '✗ Mật khẩu không khớp';
+    }
+}
+
+newPasswordInput?.addEventListener('input', validatePassword);
+confirmNewPasswordInput?.addEventListener('input', validatePassword);
+
+// Form validation before submit
+document.querySelector('form')?.addEventListener('submit', function(e) {
+    const newPass = newPasswordInput.value;
+    const confirmPass = confirmNewPasswordInput.value;
+
+    // If trying to change password
+    if (newPass || confirmPass) {
+        if (newPass !== confirmPass) {
+            e.preventDefault();
+            AdminUI.showToast('Mật khẩu xác nhận không khớp!', 'danger');
+            confirmNewPasswordInput.focus();
+        }
+    }
+});
+
+// Toggle staff status (Deactivate/Activate)
+function toggleStaffStatus(action, staffId) {
+    console.log('🟢 EDIT: toggleStaffStatus called');
+    console.log('🟢 action:', action);
+    console.log('🟢 staffId:', staffId);
+
+    const confirmMessage = action === 'deactivate'
+        ? 'Bạn có chắc chắn muốn VÔ HIỆU HÓA tài khoản này? Nhân viên sẽ không thể đăng nhập!'
+        : 'Bạn có chắc chắn muốn KÍCH HOẠT lại tài khoản này?';
+
+    if (!confirm(confirmMessage)) {
+        console.log('🟡 User cancelled confirmation');
+        return;
+    }
+
+    // Read CSRF token from cookie (CookieCsrfTokenRepository stores it in XSRF-TOKEN cookie)
+    const csrfToken = getCookie('XSRF-TOKEN');
+    console.log('🟢 CSRF Token from cookie:', csrfToken ? '✅ Found' : '❌ NOT FOUND');
+
+    if (!csrfToken) {
+        console.error('❌ CSRF token not found in cookie!');
+        AdminUI.showToast('Lỗi: Không tìm thấy CSRF token!', 'error');
+        return;
+    }
+
+    const endpoint = `/admin/staff/toggle/${staffId}`;
+    console.log('🟢 Calling endpoint:', endpoint);
+
+    // Send CSRF token via header X-XSRF-TOKEN (required by CookieCsrfTokenRepository)
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'X-XSRF-TOKEN': csrfToken,
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    })
+    .then(response => {
+        console.log('🟢 Response status:', response.status);
+        console.log('🟢 Response ok:', response.ok);
+
+        if (response.ok) {
+            const successMsg = action === 'deactivate'
+                ? 'Đã vô hiệu hóa tài khoản thành công!'
+                : 'Đã kích hoạt tài khoản thành công!';
+            console.log('✅ Success! Redirecting...');
+            AdminUI.showToast(successMsg, 'success');
+            setTimeout(() => {
+                window.location.href = '/admin/staff';
+            }, 1000);
+        } else {
+            console.error('❌ Response not OK');
+            response.text().then(text => console.error('Response body:', text));
+            throw new Error('Toggle status failed');
+        }
+    })
+    .catch(error => {
+        console.error('❌ Fetch error:', error);
+        AdminUI.showToast('Có lỗi xảy ra khi thay đổi trạng thái!', 'error');
+    });
+}
+</script>
 </div>
 
 </body>
