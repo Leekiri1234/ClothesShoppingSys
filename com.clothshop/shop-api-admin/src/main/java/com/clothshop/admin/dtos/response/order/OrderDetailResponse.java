@@ -17,6 +17,7 @@ public class OrderDetailResponse {
     private BigDecimal discount;
     private BigDecimal totalPrice;
     private OrderStatus status;
+    private String paymentMethod;
     private LocalDateTime createdAt;
 
     private List<OrderItemResponse> items;
