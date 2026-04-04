@@ -53,4 +53,18 @@ public class ReportController {
         return "admin/orders/sales";
     }
     
+    /**
+     * Provide JSON sales summary to the dashboard chart so it can load data from the order table.
+     */
+    @GetMapping("/api/{period}")
+    @ResponseBody
+    public SalesReportResponse getSalesReportForPeriod(@PathVariable String period) {
+        return switch ((period == null ? "" : period).toLowerCase()) {
+            case "weekly" -> reportService.getWeeklyReport();
+            case "monthly" -> reportService.getMonthlyReport();
+            case "quarterly" -> reportService.getQuarterlyReport();
+            default -> reportService.getWeeklyReport();
+        };
+    }
+    
 }

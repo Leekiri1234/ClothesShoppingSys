@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -34,7 +35,18 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
             "LEFT JOIN FETCH o.orderItems oi " +
             "LEFT JOIN FETCH oi.variant v " +
             "LEFT JOIN FETCH v.product p " +
-            "LEFT JOIN FETCH o.customer c " +
-            "WHERE o.orderInvoice = :orderInvoice")
+        "LEFT JOIN FETCH o.customer c " +
+        "WHERE o.orderInvoice = :orderInvoice")
     Optional<Order> findByOrderInvoiceWithDetails(@Param("orderInvoice") String orderInvoice);
+
+    @Query("SELECT DISTINCT o FROM Order o " +
+            "LEFT JOIN FETCH o.orderItems oi " +
+            "LEFT JOIN FETCH oi.variant v " +
+            "LEFT JOIN FETCH v.product p " +
+            "LEFT JOIN FETCH o.customer c " +
+            "WHERE o.status IN :statuses " +
+            "AND o.createdAt BETWEEN :start AND :end")
+    List<Order> findSalesOrders(@Param("statuses") List<OrderStatus> statuses,
+                               @Param("start") LocalDateTime start,
+                               @Param("end") LocalDateTime end);
 }

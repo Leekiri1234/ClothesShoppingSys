@@ -275,15 +275,29 @@ function renderChart(dailySales) {
     });
 }
 
-function updateChartButtons(activePeriod) {
-    document.querySelectorAll('.range-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
+const rangePeriods = ['weekly', 'monthly', 'quarterly'];
+
+function setActiveRangeButton(button) {
+    document.querySelectorAll('.range-btn').forEach(btn => btn.classList.remove('active'));
+    if (button) {
+        button.classList.add('active');
+    }
 }
 
-// Load initial chart on page load
 document.addEventListener('DOMContentLoaded', function() {
-    loadRevenueChart('weekly');
+    const buttons = Array.from(document.querySelectorAll('.range-btn'));
+    buttons.forEach((btn, index) => {
+        btn.dataset.period = rangePeriods[index] || 'weekly';
+        btn.addEventListener('click', function() {
+            const period = this.dataset.period;
+            if (!period) return;
+            setActiveRangeButton(this);
+            loadRevenueChart(period);
+        });
+    });
+
+    const defaultBtn = buttons.find(btn => btn.dataset.period === 'weekly') || buttons[0];
+    setActiveRangeButton(defaultBtn);
+    loadRevenueChart(defaultBtn?.dataset?.period || 'weekly');
 });
 </script>
