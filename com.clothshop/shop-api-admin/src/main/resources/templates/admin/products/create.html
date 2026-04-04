@@ -19,7 +19,7 @@
     </a>
 </div>
 
-<div layout:fragment="content">
+<div layout:fragment="content" class="products-create-page">
     <form th:action="@{/admin/products/create}"
           th:object="${product}"
           method="post"
@@ -218,120 +218,7 @@
 </div>
 
 <div layout:fragment="scripts">
-<script>
-// Image upload handlers
-['mainImageZone', 'image1Zone', 'image2Zone'].forEach(zoneId => {
-    const zone = document.getElementById(zoneId);
-    const input = zone.querySelector('input[type="file"]');
-
-    zone.addEventListener('click', () => input.click());
-
-    input.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                zone.style.backgroundImage = `url(${event.target.result})`;
-                zone.style.backgroundSize = 'cover';
-                zone.style.backgroundPosition = 'center';
-                zone.innerHTML = '';
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-});
-
-// Color chips
-const colorInput = document.getElementById('colorInput');
-const colorChips = document.getElementById('colorChips');
-
-colorInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        const value = colorInput.value.trim();
-        if (value) {
-            addChip(colorChips, value, 'color');
-            colorInput.value = '';
-            updateVariantMatrix();
-        }
-    }
-});
-
-// Size chips
-const sizeInput = document.getElementById('sizeInput');
-const sizeChips = document.getElementById('sizeChips');
-
-sizeInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        e.preventDefault();
-        const value = sizeInput.value.trim();
-        if (value) {
-            addChip(sizeChips, value, 'size');
-            sizeInput.value = '';
-            updateVariantMatrix();
-        }
-    }
-});
-
-function addChip(container, value, type) {
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.innerHTML = `
-        <span>${value}</span>
-        <input type="hidden" name="${type}s" value="${value}">
-        <button type="button" class="chip-remove" onclick="removeChip(this)">×</button>
-    `;
-    container.appendChild(chip);
-}
-
-function removeChip(button) {
-    button.parentElement.remove();
-    updateVariantMatrix();
-}
-
-function updateVariantMatrix() {
-    const colors = Array.from(colorChips.querySelectorAll('.chip span')).map(s => s.textContent);
-    const sizes = Array.from(sizeChips.querySelectorAll('.chip span')).map(s => s.textContent);
-
-    const matrix = document.getElementById('variantMatrix');
-    const tbody = document.getElementById('variantTableBody');
-
-    if (colors.length === 0 || sizes.length === 0) {
-        matrix.style.display = 'none';
-        return;
-    }
-
-    matrix.style.display = 'block';
-    tbody.innerHTML = '';
-
-    colors.forEach(color => {
-        sizes.forEach(size => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td style="padding: 6px; border: 1px solid var(--border);">${color}</td>
-                <td style="padding: 6px; border: 1px solid var(--border);">${size}</td>
-                <td style="padding: 6px; border: 1px solid var(--border);">
-                    <input type="number"
-                           name="variants[${color}-${size}].price"
-                           placeholder="Giá"
-                           min="0"
-                           step="1000"
-                           style="width: 100px; padding: 4px; border: 1px solid var(--border); border-radius: 2px;">
-                </td>
-                <td style="padding: 6px; border: 1px solid var(--border);">
-                    <input type="number"
-                           name="variants[${color}-${size}].stock"
-                           placeholder="Số lượng"
-                           min="0"
-                           value="0"
-                           style="width: 80px; padding: 4px; border: 1px solid var(--border); border-radius: 2px;">
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-    });
-}
-</script>
+    <script th:src="@{/js/modules/products.js}"></script>
 </div>
 
 </body>

@@ -19,7 +19,7 @@
     </a>
 </div>
 
-<div layout:fragment="content">
+<div layout:fragment="content" class="staff-create-page">
 
     <div style="max-width: 800px; margin: 0 auto;">
         <form th:action="@{/admin/staff/create}"
@@ -183,40 +183,7 @@
 </div>
 
 <div layout:fragment="scripts">
-<script>
-// Password confirmation validation
-const passwordInput = document.querySelector('input[name="password"]');
-const confirmPasswordInput = document.getElementById('confirmPassword');
-const passwordMatchMsg = document.getElementById('passwordMatch');
-
-function validatePassword() {
-    if (confirmPasswordInput.value === '') {
-        passwordMatchMsg.style.display = 'none';
-        return;
-    }
-
-    passwordMatchMsg.style.display = 'block';
-    if (passwordInput.value === confirmPasswordInput.value) {
-        passwordMatchMsg.style.color = 'var(--success)';
-        passwordMatchMsg.textContent = '✓ Mật khẩu khớp';
-    } else {
-        passwordMatchMsg.style.color = 'var(--danger)';
-        passwordMatchMsg.textContent = '✗ Mật khẩu không khớp';
-    }
-}
-
-passwordInput?.addEventListener('input', validatePassword);
-confirmPasswordInput?.addEventListener('input', validatePassword);
-
-// Form validation before submit
-document.querySelector('form')?.addEventListener('submit', function(e) {
-    if (passwordInput.value !== confirmPasswordInput.value) {
-        e.preventDefault();
-        AdminUI.showToast('Mật khẩu xác nhận không khớp!', 'danger');
-        confirmPasswordInput.focus();
-    }
-});
-</script>
+    <script th:src="@{/js/modules/staff.js}"></script>
 </div>
 
 </body>

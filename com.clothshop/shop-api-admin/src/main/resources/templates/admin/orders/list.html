@@ -6,8 +6,10 @@
     <title>Quản lý đơn hàng</title>
 </head>
 <body>
+<h1 layout:fragment="page-title">Đơn hàng</h1>
+
 <div layout:fragment="content">
-    <div class="container-fluid">
+    <div class="container-fluid orders-list-page">
         <h1 class="h3 mb-4 text-gray-800">Danh sách đơn hàng</h1>
 
         <div class="card shadow mb-4 border-0">
@@ -115,6 +117,10 @@
             </div>
         </div>
     </div>
+</div>
+
+<div layout:fragment="scripts">
+    <script th:src="@{/js/modules/orders.js}"></script>
 </div>
 </body>
 </html>

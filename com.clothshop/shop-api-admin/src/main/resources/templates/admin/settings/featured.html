@@ -7,21 +7,21 @@
   <style>
     .product-list-container {
       min-height: 500px;
-      border: 2px dashed #ddd;
-      border-radius: 8px;
+      border: 1px dashed #d8d6d2;
+      border-radius: 10px;
       padding: 15px;
-      background: #f9f9f9;
+      background: #fbfbfa;
       position: relative;
     }
     .sortable-item {
       background: #fff;
-      border: 1px solid #dee2e6;
+      border: 1px solid #e3e1dc;
       margin-bottom: 10px;
-      padding: 10px 15px; /* Tinh chỉnh lại padding cho cân đối */
+      padding: 10px 12px;
       border-radius: 8px;
       display: flex;
       align-items: center;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 
       /* Cho phép kéo toàn bộ thẻ */
       cursor: grab !important;
@@ -37,11 +37,11 @@
     .item-img {
       width: 50px !important;
       height: 50px !important;
-      min-width: 50px; /* Chống bị co lại khi text quá dài */
+      min-width: 50px;
       object-fit: cover;
       border-radius: 6px;
       margin-right: 15px;
-      border: 1px solid #eee;
+      border: 1px solid #eceae6;
       pointer-events: none;
     }
 
@@ -55,31 +55,51 @@
       cursor: pointer !important;
       padding: 5px 10px;
       margin-left: 10px;
-      color: #ccc;
+      color: #a9a59f;
       transition: color 0.2s;
     }
-    .remove-item:hover { color: #dc3545 !important; }
+    .remove-item:hover { color: #7f1d1d !important; }
 
     /* Hiệu ứng khi đang kéo */
     .sortable-drag {
       opacity: 0.95 !important;
       z-index: 9999 !important;
       background: #fff !important;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
-      border: 1px solid #007bff !important;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.12) !important;
+      border: 1px solid #b9b5ae !important;
     }
     .sortable-ghost {
       opacity: 0.2;
-      background: #007bff !important;
+      background: #d7d4cf !important;
     }
     .sortable-chosen {
-      background-color: #f0f7ff !important;
+      background-color: #f3f2ef !important;
     }
 
     .drag-handle {
-      color: #ddd;
+      color: #c1bdb6;
       margin-right: 10px;
       font-size: 0.9rem;
+    }
+
+    .featured-card-header {
+      background: #f4f3f1;
+      border-bottom: 1px solid #dfddd8;
+      color: #1f1f1d;
+    }
+
+    .featured-right-panel {
+      border: 1px solid #e3e1dc;
+    }
+
+    .featured-status-badge {
+      background: #eceae6;
+      color: #3f3b35;
+      border: 1px solid #d7d4cf;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 11px;
+      font-weight: 600;
     }
   </style>
 </head>
@@ -95,8 +115,8 @@
 
   <div class="row">
     <div class="col-md-5 mb-4">
-      <div class="card shadow-sm h-100">
-        <div class="card-header bg-light py-3">
+      <div class="card shadow-sm h-100 featured-right-panel">
+        <div class="card-header featured-card-header py-3">
           <h6 class="mb-0 fw-bold"><i class="fas fa-boxes me-2"></i>Kho sản phẩm</h6>
         </div>
         <div class="card-body p-2">
@@ -105,12 +125,12 @@
           </div>
           <div id="availableGroup" class="product-list-container">
             <div class="sortable-item" th:each="product : ${availableProducts}"
-                 th:attr="data-id=${product.id}, data-name=${product.productName}">
+                 th:attr="data-id=${product.productId}, data-name=${product.name}">
               <i class="fas fa-grip-vertical drag-handle"></i>
-              <img th:src="${product.images != null && !product.images.isEmpty() ? product.images[0].imageUrl : '/images/no-image.png'}" class="item-img">
+              <img th:src="@{${product.image}}" class="item-img" alt="Product image">
               <div class="flex-grow-1">
-                <div class="text-truncate fw-bold" style="font-size: 0.85rem;" th:text="${product.productName}">Name</div>
-                <div class="text-muted small" style="font-size: 0.75rem;" th:text="${'SKU: ' + product.productSlug}">Slug</div>
+                <div class="text-truncate fw-bold" style="font-size: 0.85rem; color:#1f1f1d;" th:text="${product.name}">Name</div>
+                <div class="text-muted small" style="font-size: 0.75rem;" th:text="${'SKU: ' + product.sku}">Sku</div>
               </div>
             </div>
           </div>
@@ -124,20 +144,20 @@
 
     <div class="col-md-6 mb-4">
       <form th:action="@{/admin/settings/featured}" method="post" id="featuredForm">
-        <div class="card shadow-sm border-primary h-100">
-          <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
-            <h6 class="mb-0 fw-bold"><i class="fas fa-star text-warning me-2"></i>Sản phẩm hiển thị ghim</h6>
+        <div class="card shadow-sm featured-right-panel h-100">
+          <div class="card-header featured-card-header py-3 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold"><i class="fas fa-star me-2" style="color:#8a847b;"></i>Sản phẩm hiển thị ghim</h6>
             <button type="submit" class="btn btn-light btn-sm fw-bold">LƯU CẤU HÌNH</button>
           </div>
           <div class="card-body p-2">
-            <div id="featuredGroup" class="product-list-container border-primary">
-              <div class="sortable-item border-primary-subtle" th:each="fp : ${featuredProducts}"
+            <div id="featuredGroup" class="product-list-container">
+              <div class="sortable-item" th:each="fp : ${featuredProducts}"
                    th:attr="data-id=${fp.product.id}">
-                <i class="fas fa-grip-vertical drag-handle text-primary"></i>
-                <img th:src="${fp.product.images != null && !fp.product.images.isEmpty() ? fp.product.images[0].imageUrl : '/images/no-image.png'}" class="item-img">
+                <i class="fas fa-grip-vertical drag-handle"></i>
+                <img th:src="${fp.product.images != null && !fp.product.images.isEmpty() && fp.product.images[0].imageUrl != null ? fp.product.images[0].imageUrl : '/images/admin/product-shirt.svg'}" class="item-img" alt="Featured image">
                 <div class="flex-grow-1">
-                  <div class="text-truncate fw-bold text-primary" style="font-size: 0.85rem;" th:text="${fp.product.productName}">Name</div>
-                  <div class="badge bg-primary-subtle text-primary" style="font-size: 0.65rem;">Đang hiển thị</div>
+                  <div class="text-truncate fw-bold" style="font-size: 0.85rem; color:#1f1f1d;" th:text="${fp.product.productName}">Name</div>
+                  <div class="featured-status-badge">Đang hiển thị</div>
                 </div>
                 <button type="button" class="btn btn-link text-danger remove-item p-0" onclick="removeItem(this)">
                   <i class="fas fa-trash-alt"></i>
@@ -201,8 +221,6 @@
               btn.onclick = function() { item.remove(); };
               item.appendChild(btn);
             }
-            // Fix lại class và text cho item mới kéo sang
-            item.classList.add('border-primary-subtle');
           }
         });
 

@@ -1,5 +1,6 @@
 package com.clothshop.admin.controllers;
 
+import com.clothshop.admin.services.AdminExperienceService;
 import com.clothshop.admin.services.ReportService;
 import com.clothshop.admin.dtos.response.SalesReportResponse;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,6 +23,8 @@ public class DashboardController {
 
     private final ReportService reportService;
 
+    private final AdminExperienceService adminExperienceService;
+
     /**
      * Display admin dashboard with summary statistics.
      * GET /admin/dashboard
@@ -33,9 +36,8 @@ public class DashboardController {
         // Add current path for active menu highlighting
         model.addAttribute("currentPath", request.getRequestURI());
 
-        // Get today's sales report for real data
+        model.addAttribute("dashboard", adminExperienceService.getDashboardData());
         SalesReportResponse todayReport = reportService.getTodayReport();
-        
         model.addAttribute("todayRevenue", todayReport.getTotalRevenue());
         model.addAttribute("todayOrders", todayReport.getTotalOrders());
         model.addAttribute("totalCustomers", todayReport.getTotalCustomers());

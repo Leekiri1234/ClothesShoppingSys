@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Khách hàng</title>
+</head>
+<body>
+
+<h1 layout:fragment="page-title">Khách hàng</h1>
+
+<div layout:fragment="content" class="customers-list-page">
+    <div class="page-header">
+        <h2>Danh sách khách hàng</h2>
+        <span class="page-subtitle">Theo dõi hành vi mua sắm và phân hạng khách hàng</span>
+    </div>
+
+    <div class="dashboard-card">
+        <table class="admin-table">
+            <thead>
+            <tr>
+                <th>Khách hàng</th>
+                <th>Email</th>
+                <th>Điện thoại</th>
+                <th>Số đơn</th>
+                <th>Tổng chi</th>
+                <th>Hạng</th>
+                <th>Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="c : ${customers}">
+                <td style="font-weight: 600;" th:text="${c.name}">Nguyen Thi Bich</td>
+                <td th:text="${c.email}">bich@gmail.com</td>
+                <td th:text="${c.phone}">0901234567</td>
+                <td th:text="${c.orders}">12</td>
+                <td th:text="${c.spent} + ' ₫'">8.640.000 ₫</td>
+                <td>
+                    <span class="badge badge-primary" th:if="${c.tier == 'VIP'}">VIP</span>
+                    <span class="badge badge-info" th:if="${c.tier == 'SILVER'}">SILVER</span>
+                    <span class="badge badge-muted" th:if="${c.tier != 'VIP' and c.tier != 'SILVER'}" th:text="${c.tier}">NORMAL</span>
+                </td>
+                <td>
+                    <div class="actions-cell" style="justify-content: center;">
+                        <a class="btn btn-xs btn-outline" th:href="@{/admin/customers/profile(email=${c.email})}">Xem hồ sơ</a>
+                        <a class="btn btn-xs btn-primary" th:href="@{/admin/customers/feedback}">Đánh giá</a>
+                    </div>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

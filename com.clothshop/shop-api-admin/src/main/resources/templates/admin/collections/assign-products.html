@@ -12,18 +12,19 @@
 <div layout:fragment="styles">
     <style>
         .product-card {
-            border: 1px solid #dee2e6;
+            border: 1px solid #e1dfda;
             border-radius: 8px;
             transition: all 0.3s ease;
             height: 100%;
+            background: #fff;
         }
         .product-card:hover {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.06);
+            transform: translateY(-1px);
         }
         .product-card.selected {
-            border-color: #0d6efd;
-            background-color: #e7f1ff;
+            border-color: #9d978d;
+            background-color: #f3f2ef;
         }
         .product-image {
             width: 100%;
@@ -36,14 +37,15 @@
             cursor: pointer;
         }
         .collection-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
+            background: linear-gradient(135deg, #dfddd8 0%, #cbc6be 100%);
+            color: #1f1f1d;
+            border: 1px solid #d2cec7;
             padding: 20px;
             border-radius: 8px;
             margin-bottom: 24px;
         }
         .section-divider {
-            border-top: 2px solid #e9ecef;
+            border-top: 1px solid #ddd9d2;
             margin: 30px 0;
             position: relative;
         }
@@ -85,12 +87,12 @@
         }
         .sortable-ghost {
             opacity: 0.4;
-            background: #f8f9fa;
+            background: #eceae6;
         }
         .sortable-drag {
             opacity: 0.8;
             background: white;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
         .drag-handle {
             cursor: grab;
@@ -102,6 +104,33 @@
         .order-badge {
             min-width: 30px;
             font-size: 14px;
+        }
+
+        .minimal-section-header {
+            background: #f1efeb;
+            color: #1f1f1d;
+            border-bottom: 1px solid #dbd8d2;
+        }
+
+        .minimal-tag {
+            background: #ece9e3;
+            color: #4a463f;
+            border: 1px solid #d7d3cb;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .minimal-price {
+            color: #2e5a36;
+            font-weight: 700;
+        }
+
+        .minimal-info-alert {
+            background: #f5f4f1;
+            border: 1px solid #ddd9d2;
+            color: #4c4943;
         }
         #updateOrderSection {
             display: none;
@@ -135,10 +164,10 @@
                     <i class="fas fa-box-open"></i>
                     <span th:text="${collection.name}">Tên bộ sưu tập</span>
                 </h3>
-                <p class="mb-0 opacity-75" th:text="${collection.description ?: 'Không có mô tả'}">Mô tả</p>
+                <p class="mb-0" style="opacity: 0.8;" th:text="${collection.description ?: 'Không có mô tả'}">Mô tả</p>
             </div>
             <div class="col-md-4 text-md-end">
-                <div class="badge bg-light text-dark fs-6 px-3 py-2">
+                <div class="badge fs-6 px-3 py-2" style="background: #f5f4f1; color: #1f1f1d; border: 1px solid #d6d3cc;">
                     <i class="fas fa-box"></i>
                     Đang có: <strong th:text="${currentItems.size()}">0</strong> sản phẩm
                 </div>
@@ -201,7 +230,7 @@
 
     <!-- Back Button -->
     <div class="mb-3">
-        <a th:href="@{/admin/collections}" class="btn btn-light border">
+        <a th:href="@{/admin/collections}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left"></i> Quay lại danh sách
         </a>
     </div>
@@ -210,7 +239,7 @@
          PHẦN 1: SẢN PHẨM ĐANG CÓ TRONG BỘ SƯU TẬP
          ======================================== -->
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white">
+        <div class="card-header minimal-section-header">
             <h5 class="mb-0">
                 <i class="fas fa-list"></i> Sản phẩm đang có trong bộ sưu tập
             </h5>
@@ -261,7 +290,7 @@
                         <td>
                             <!--  Smart Image Src cho Bảng 1 -->
                             <img th:if="${not #lists.isEmpty(item.product.images) and item.product.images[0].imageUrl != null and item.product.images[0].imageUrl != 'undefined'}"
-                                 th:src="${#strings.startsWith(item.product.images[0].imageUrl, 'http') ? item.product.images[0].imageUrl : '/images/' + item.product.images[0].imageUrl}"
+                                   th:src="${(#strings.startsWith(item.product.images[0].imageUrl, 'http') or #strings.startsWith(item.product.images[0].imageUrl, '/')) ? item.product.images[0].imageUrl : '/images/' + item.product.images[0].imageUrl}"
                                  alt="Product Image"
                                  class="rounded"
                                  style="width: 60px; height: 60px; object-fit: cover;">
@@ -277,14 +306,14 @@
                                 <strong th:text="${item.product.productName}">Tên sản phẩm</strong>
                                 <br>
                                 <small class="text-muted">
-                                            <span class="badge bg-info" th:text="${item.product.category != null ? item.product.category.categoryName : 'Không có'}">
+                                            <span class="minimal-tag" th:text="${item.product.category != null ? item.product.category.categoryName : 'Không có'}">
                                                 Danh mục
                                             </span>
                                 </small>
                             </div>
                         </td>
                         <td class="text-end">
-                            <strong class="text-success" th:text="${item.product.basePrice != null ? #numbers.formatDecimal(item.product.basePrice, 0, 'COMMA', 0, 'POINT') : '0'} + ' đ'">
+                            <strong class="minimal-price" th:text="${item.product.basePrice != null ? #numbers.formatDecimal(item.product.basePrice, 0, 'COMMA', 0, 'POINT') : '0'} + ' đ'">
                                 100,000đ
                             </strong>
                         </td>
@@ -299,7 +328,7 @@
                         </td>
                         <td class="text-center">
                             <button type="button"
-                                    class="btn btn-outline-danger btn-sm"
+                                    class="btn btn-outline-secondary btn-sm"
                                     data-bs-toggle="modal"
                                     data-bs-target="#removeModal"
                                     th:data-item-id="${item.id}"
@@ -314,7 +343,7 @@
 
                 <!-- Update Order Button -->
                 <div class="d-flex justify-content-end mt-3 pt-3 border-top">
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-dark">
                         <i class="fas fa-save"></i> Cập nhật thứ tự hiển thị
                     </button>
                 </div>
@@ -330,7 +359,7 @@
          PHẦN 2: THÊM SẢN PHẨM VÀO BỘ SƯU TẬP
          ======================================== -->
     <div class="card shadow-sm">
-        <div class="card-header bg-success text-white">
+        <div class="card-header minimal-section-header">
             <h5 class="mb-0">
                 <i class="fas fa-plus-circle"></i> Chọn sản phẩm để thêm vào bộ sưu tập
             </h5>
@@ -340,13 +369,13 @@
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
                 <!-- Selection Info Bar -->
-                <div class="alert alert-info d-flex justify-content-between align-items-center" role="alert">
+                <div class="alert minimal-info-alert d-flex justify-content-between align-items-center" role="alert">
                     <div>
                         <i class="fas fa-info-circle me-2"></i>
                         <strong>Hướng dẫn:</strong> Chọn các sản phẩm muốn thêm vào bộ sưu tập, sau đó nhấn nút "Thêm vào bộ sưu tập"
                     </div>
                     <div>
-                        <span class="badge bg-primary" id="selectedCount">0</span> sản phẩm đã chọn
+                        <span class="badge" id="selectedCount" style="background: #e4e1db; color: #1f1f1d; border: 1px solid #d3cfc7;">0</span> sản phẩm đã chọn
                     </div>
                 </div>
 
@@ -372,7 +401,7 @@
 
                             <!-- Smart Image Src cho Bảng 2 -->
                             <img th:if="${not #lists.isEmpty(product.images) and product.images[0].imageUrl != null and product.images[0].imageUrl != 'undefined'}"
-                                 th:src="${#strings.startsWith(product.images[0].imageUrl, 'http') ? product.images[0].imageUrl : '/images/' + product.images[0].imageUrl}"
+                                   th:src="${(#strings.startsWith(product.images[0].imageUrl, 'http') or #strings.startsWith(product.images[0].imageUrl, '/')) ? product.images[0].imageUrl : '/images/' + product.images[0].imageUrl}"
                                  alt="Product Image"
                                  class="product-image mb-2">
 
@@ -383,12 +412,12 @@
 
                             <h6 class="mb-2 text-truncate" th:text="${product.productName}">Tên sản phẩm</h6>
                             <div class="mb-2">
-                                <small class="badge bg-info" th:text="${product.category != null ? product.category.categoryName : 'Không có'}">
+                                <small class="minimal-tag" th:text="${product.category != null ? product.category.categoryName : 'Không có'}">
                                     Danh mục
                                 </small>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
-                                <strong class="text-primary"
+                                <strong class="minimal-price"
                                         th:text="${product.basePrice != null ? #numbers.formatDecimal(product.basePrice, 0, 'COMMA', 0, 'POINT') : '0'} + 'đ'">
                                     100,000đ
                                 </strong>
@@ -407,7 +436,7 @@
                             <i class="fas fa-times"></i> Bỏ chọn tất cả
                         </button>
                     </div>
-                    <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
+                    <button type="submit" class="btn btn-dark btn-lg" id="submitBtn" disabled>
                         <i class="fas fa-plus-circle"></i> Thêm <span id="submitCount">0</span> sản phẩm vào bộ sưu tập
                     </button>
                 </div>

@@ -11,8 +11,11 @@ import com.clothshop.common.exceptions.ErrorCode;
 import com.clothshop.common.utils.SlugUtils;
 import com.clothshop.domain.entities.product.Category;
 import com.clothshop.domain.entities.product.Product;
+import com.clothshop.domain.entities.product.ProductImage;
+import com.clothshop.domain.entities.product.ProductVariant;
 import com.clothshop.domain.enums.ProductStatus;
 import com.clothshop.domain.repositories.product.CategoryRepository;
+import com.clothshop.domain.repositories.product.ProductImageRepository;
 import com.clothshop.domain.repositories.product.ProductRepository;
 import com.clothshop.domain.repositories.product.ProductVariantRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,11 +24,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -46,6 +59,7 @@ public class ProductAdminService {
     private final CategoryRepository categoryRepository;
     private final ProductAdminMapper productMapper;
     private final ProductVariantRepository productVariantRepository;
+    private final ProductImageRepository productImageRepository;
 
     /**
      * Create new product with automatic slug generation.
@@ -122,6 +136,10 @@ public class ProductAdminService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy sản phẩm"));
 
         ProductAdminResponse response = productMapper.toResponse(product);
+        response.setImageUrl(productImageRepository.findByProductIdAndIsMainTrue(productId)
+            .map(ProductImage::getImageUrl)
+            .map(url -> normalizeProductImageUrl(url, product))
+            .orElseGet(() -> resolveFallbackProductImage(product)));
 
         // Logic tự động tính tổng stock dựa vào các variant đang hoạt động
         response.setStock(calculateTotalStock(product));
@@ -134,7 +152,10 @@ public class ProductAdminService {
      * Memory-optimized with paging to avoid loading all records.
      */
     @Transactional(readOnly = true)
-    public PageResponse<ProductAdminResponse> getAllProducts(PagingRequest pagingRequest) {
+    public PageResponse<ProductAdminResponse> getAllProducts(PagingRequest pagingRequest,
+                                                             String search,
+                                                             Long categoryId,
+                                                             String status) {
         pagingRequest.validate();
 
         // Create pageable with sorting
@@ -142,8 +163,9 @@ public class ProductAdminService {
                 pagingRequest.getSortBy() != null ? pagingRequest.getSortBy() : "createdAt");
         Pageable pageable = PageRequest.of(pagingRequest.getPageNumber(), pagingRequest.getPageSize(), sort);
 
-        // Fetch from database with pagination
-        Page<Product> productPage = productRepository.findAll(pageable);
+        // Fetch from database with pagination + dynamic filters
+        Specification<Product> specification = buildProductFilterSpecification(search, categoryId, status);
+        Page<Product> productPage = productRepository.findAll(specification, pageable);
 
         // Lấy tổng tồn kho cho tất cả sản phẩm trong trang bằng một truy vấn duy nhất (tránh N+1)
         List<Long> productIds = productPage.getContent().stream()
@@ -158,11 +180,21 @@ public class ProductAdminService {
                         row -> row[1] != null ? ((Number) row[1]).intValue() : 0
                 ));
 
+        Map<Long, String> imageUrlByProductId = new HashMap<>();
+        if (!productIds.isEmpty()) {
+            productImageRepository.findMainImageUrlsByProductIds(productIds)
+                .forEach(row -> imageUrlByProductId.put((Long) row[0], (String) row[1]));
+        }
+
         // Convert to DTOs and set total stock from the aggregate map
         List<ProductAdminResponse> content = productPage.getContent().stream()
                 .map(product -> {
                     ProductAdminResponse response = productMapper.toResponse(product);
                     response.setStock(stockByProductId.getOrDefault(product.getId(), 0));
+                        response.setImageUrl(Optional.ofNullable(imageUrlByProductId.get(product.getId()))
+                            .map(url -> normalizeProductImageUrl(url, product))
+                            .filter(url -> !url.isBlank())
+                    .orElseGet(() -> resolveFallbackProductImage(product)));
                     return response;
                 })
                 .collect(Collectors.toList());
@@ -176,6 +208,64 @@ public class ProductAdminService {
                 .first(productPage.isFirst())
                 .last(productPage.isLast())
                 .build();
+    }
+
+    private Specification<Product> buildProductFilterSpecification(String search,
+                                                                   Long categoryId,
+                                                                   String status) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (search != null && !search.isBlank()) {
+                String keyword = "%" + search.trim().toLowerCase(Locale.ROOT) + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("productName")), keyword),
+                        cb.like(cb.lower(root.get("productSlug")), keyword)
+                ));
+            }
+
+            if (categoryId != null) {
+                predicates.add(cb.equal(root.get("category").get("id"), categoryId));
+            }
+
+            String normalizedStatus = status == null ? "" : status.trim().toLowerCase(Locale.ROOT);
+            if (!normalizedStatus.isBlank()) {
+                switch (normalizedStatus) {
+                    case "inactive" -> predicates.add(cb.isFalse(root.get("isActive")));
+                    case "out_of_stock" -> {
+                        predicates.add(cb.isTrue(root.get("isActive")));
+                        predicates.add(cb.lessThanOrEqualTo(buildActiveStockSumSubQuery(query, cb, root), 0));
+                    }
+                    case "low_stock" -> {
+                        predicates.add(cb.isTrue(root.get("isActive")));
+                        predicates.add(cb.greaterThan(buildActiveStockSumSubQuery(query, cb, root), 0));
+                        predicates.add(cb.lessThanOrEqualTo(buildActiveStockSumSubQuery(query, cb, root), 10));
+                    }
+                    case "active" -> {
+                        predicates.add(cb.isTrue(root.get("isActive")));
+                        predicates.add(cb.greaterThan(buildActiveStockSumSubQuery(query, cb, root), 0));
+                    }
+                    default -> {
+                        // No-op for unsupported status value.
+                    }
+                }
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
+    private Subquery<Integer> buildActiveStockSumSubQuery(CriteriaQuery<?> query,
+                                                           CriteriaBuilder cb,
+                                                           Root<Product> productRoot) {
+        Subquery<Integer> stockSumSubQuery = query.subquery(Integer.class);
+        Root<ProductVariant> variantRoot = stockSumSubQuery.from(ProductVariant.class);
+        stockSumSubQuery.select(cb.coalesce(cb.sum(variantRoot.get("stockQuantity")), 0));
+        stockSumSubQuery.where(
+                cb.equal(variantRoot.get("product"), productRoot),
+                cb.isTrue(variantRoot.get("isActive"))
+        );
+        return stockSumSubQuery;
     }
 
     /**
@@ -198,6 +288,48 @@ public class ProductAdminService {
         return activate ? "Đã hiện sản phẩm: " + product.getProductName() : "Đã ẩn sản phẩm: " + product.getProductName();
     }
 
+    @Transactional
+    public int bulkSetProductStatus(List<Long> productIds, boolean activate) {
+        if (productIds == null || productIds.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_KEY, "Danh sach san pham trong");
+        }
+
+        List<Product> products = productRepository.findAllById(productIds);
+        if (products.isEmpty()) {
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Khong tim thay san pham nao");
+        }
+
+        products.forEach(product -> {
+            product.setIsActive(activate);
+            product.setProdStatus(activate ? ProductStatus.ACTIVE : ProductStatus.INACTIVE);
+        });
+
+        productRepository.saveAll(products);
+        log.info("Bulk set product status: count={}, activate={}", products.size(), activate);
+        return products.size();
+    }
+
+    @Transactional
+    public int bulkDeleteProducts(List<Long> productIds) {
+        if (productIds == null || productIds.isEmpty()) {
+            throw new BusinessException(ErrorCode.INVALID_KEY, "Danh sach san pham trong");
+        }
+
+        List<Product> products = productRepository.findAllById(productIds);
+        if (products.isEmpty()) {
+            throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Khong tim thay san pham nao");
+        }
+
+        products.forEach(product -> {
+            product.setIsActive(false);
+            product.setProdStatus(ProductStatus.INACTIVE);
+        });
+
+        productRepository.saveAll(products);
+        log.info("Bulk soft delete products: count={}", products.size());
+        return products.size();
+    }
+
     /**
      * Tính tổng số lượng tồn kho từ các variant đang hoạt động của sản phẩm.
      */
@@ -209,6 +341,30 @@ public class ProductAdminService {
                 .filter(v -> v.getIsActive() != null && v.getIsActive())
                 .mapToInt(v -> v.getStockQuantity() != null ? v.getStockQuantity() : 0)
                 .sum();
+    }
+
+    private String resolveFallbackProductImage(Product product) {
+        String categorySlug = product.getCategory() != null && product.getCategory().getCategorySlug() != null
+                ? product.getCategory().getCategorySlug().toLowerCase(Locale.ROOT)
+                : "";
+
+        if (categorySlug.contains("women")) {
+            return "/images/admin/product-dress.svg";
+        }
+        if (categorySlug.contains("bag") || categorySlug.contains("accessories")) {
+            return "/images/admin/product-bag.svg";
+        }
+        return "/images/admin/product-shirt.svg";
+    }
+
+    private String normalizeProductImageUrl(String imageUrl, Product product) {
+        if (imageUrl == null || imageUrl.isBlank()) {
+            return resolveFallbackProductImage(product);
+        }
+        if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+            return imageUrl;
+        }
+        return imageUrl;
     }
 
     /**

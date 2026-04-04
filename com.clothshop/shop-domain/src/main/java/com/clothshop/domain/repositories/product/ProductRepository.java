@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -13,7 +14,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ProductRepository extends JpaRepository<Product, Long> {
+public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
     // --- NHÓM 1: LẤY CHI TIẾT (FETCH TẤT CẢ) ---
     // Dùng cho detail.html. Lấy 1 bản ghi nên fetch thoải mái, không lo tốn RAM hay MultipleBag.
@@ -65,5 +66,12 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     @EntityGraph(attributePaths = {"variants", "images", "category"})
     @Query("SELECT p FROM Product p WHERE p.isActive = true")
+    Page<Product> findAllActive(Pageable pageable);
+
+    @Query("SELECT DISTINCT p FROM Product p " +
+            "LEFT JOIN FETCH p.variants v " +
+            "WHERE p.isActive = true " +
+            "ORDER BY p.createdAt DESC")
+    List<Product> findAllActiveWithVariants();
     List<Product> findTop100ActiveProductsWithDetails(Pageable pageable);
 }

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Marketing - Push Notifications</title>
+</head>
+<body>
+
+<h1 layout:fragment="page-title">Push Notification</h1>
+
+<div layout:fragment="content" class="marketing-notifications-page">
+    <div class="page-header">
+        <h2>Chiến dịch thông báo</h2>
+        <span class="page-subtitle">Gửi thông báo theo phân khúc khách hàng</span>
+    </div>
+
+    <div class="two-col-layout" style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px;">
+        <div class="form-card">
+            <h3>Tạo thông báo mới</h3>
+            <form data-validate th:action="@{/admin/marketing/notifications/send}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <div class="form-group">
+                    <label>Tiêu đề</label>
+                    <input type="text" name="title" placeholder="VD: Flash Sale cuối tuần" required>
+                </div>
+                <div class="form-group">
+                    <label>Nội dung</label>
+                    <textarea rows="4" name="content" placeholder="Nhập nội dung thông báo..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Đối tượng</label>
+                    <select name="target">
+                        <option value="ALL_CUSTOMERS">Tất cả khách hàng</option>
+                        <option value="VIP_CUSTOMERS">Khách VIP</option>
+                        <option value="INACTIVE_30_DAYS">Khách ngưng mua 30 ngày</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Thời gian gửi</label>
+                    <input type="datetime-local" name="scheduledAt">
+                </div>
+                <div class="form-actions" style="justify-content: flex-start;">
+                    <button class="btn btn-primary" type="submit">Gửi chiến dịch</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h3>Lịch sử gửi</h3>
+            </div>
+            <table class="admin-table">
+                <thead>
+                <tr>
+                    <th>Thời gian</th>
+                    <th>Tiêu đề</th>
+                    <th>Tệp nhận</th>
+                    <th>Đã gửi</th>
+                    <th>Tỉ lệ mở</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="item : ${history}">
+                    <td th:text="${item.date}">2026-04-02 10:30</td>
+                    <td th:text="${item.title}">Flash Sale 30%</td>
+                    <td th:text="${item.target}">Tat ca khach hang</td>
+                    <td th:text="${item.sent}">12,450</td>
+                    <td><span class="badge badge-info" th:text="${item.openRate}">34.2%</span></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
