@@ -10,7 +10,7 @@
 <h1 layout:fragment="page-title">Dashboard</h1>
 
 <div layout:fragment="content">
-    <!-- STAT CARDS -->
+    <!-- STAT CARDS (backed by DashboardController) -->
     <div class="stat-cards">
         <div class="stat-card">
             <div class="stat-icon" style="background: #f0f7ff;">
@@ -22,7 +22,6 @@
             <div class="stat-body">
                 <div class="stat-label">Doanh thu hôm nay</div>
                 <div class="stat-value" th:text="${#numbers.formatDecimal(todayRevenue, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</div>
-                <div class="stat-trend up">↑ Từ báo cáo thực tế</div>
             </div>
         </div>
 
@@ -37,7 +36,6 @@
             <div class="stat-body">
                 <div class="stat-label">Đơn hàng mới</div>
                 <div class="stat-value" th:text="${todayOrders}">0</div>
-                <div class="stat-trend up">↑ Từ báo cáo thực tế</div>
             </div>
         </div>
 
@@ -53,7 +51,6 @@
             <div class="stat-body">
                 <div class="stat-label">Khách hàng</div>
                 <div class="stat-value" th:text="${totalCustomers}">0</div>
-                <div class="stat-trend up">↑ Từ báo cáo thực tế</div>
             </div>
         </div>
 
@@ -66,169 +63,62 @@
             <div class="stat-body">
                 <div class="stat-label">Sản phẩm</div>
                 <div class="stat-value" th:text="${totalProducts}">0</div>
-                <div class="stat-trend down">↓ Từ báo cáo thực tế</div>
             </div>
         </div>
     </div>
 
-    <!-- DASHBOARD GRID -->
+    <!-- REVENUE CHART (backed by ReportController API) -->
     <div class="dashboard-grid">
-        <!-- REVENUE CHART -->
         <div class="dashboard-card chart-card">
             <div class="card-header">
-                <h3>Doanh thu 7 ngày qua</h3>
+                <h3>Biểu đồ doanh thu</h3>
                 <div class="date-range-selector">
                     <button class="range-btn active">7 ngày</button>
                     <button class="range-btn">30 ngày</button>
                     <button class="range-btn">90 ngày</button>
                 </div>
             </div>
-            <div class="chart-container" id="revenueChart" data-chart></div>
-            <div class="chart-labels">
-                <div class="chart-label">T2</div>
-                <div class="chart-label">T3</div>
-                <div class="chart-label">T4</div>
-                <div class="chart-label">T5</div>
-                <div class="chart-label">T6</div>
-                <div class="chart-label">T7</div>
-                <div class="chart-label">CN</div>
-            </div>
-        </div>
-
-        <!-- RECENT ORDERS -->
-        <div class="dashboard-card">
-            <div class="card-header">
-                <h3>Đơn hàng gần đây</h3>
-                <a th:href="@{/admin/orders}" class="card-link">Xem tất cả</a>
-            </div>
-            <table class="admin-table">
-                <thead>
-                    <tr>
-                        <th>Mã ĐH</th>
-                        <th>Khách hàng</th>
-                        <th>Tổng tiền</th>
-                        <th>Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>#ORD001</td>
-                        <td>Nguyễn Văn A</td>
-                        <td>1.250.000₫</td>
-                        <td><span class="badge badge-warning">Chờ xác nhận</span></td>
-                    </tr>
-                    <tr>
-                        <td>#ORD002</td>
-                        <td>Trần Thị B</td>
-                        <td>890.000₫</td>
-                        <td><span class="badge badge-info">Đang giao</span></td>
-                    </tr>
-                    <tr>
-                        <td>#ORD003</td>
-                        <td>Lê Văn C</td>
-                        <td>2.100.000₫</td>
-                        <td><span class="badge badge-success">Hoàn thành</span></td>
-                    </tr>
-                    <tr>
-                        <td>#ORD004</td>
-                        <td>Phạm Thị D</td>
-                        <td>650.000₫</td>
-                        <td><span class="badge badge-warning">Chờ xác nhận</span></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <!-- TOP PRODUCTS -->
-        <div class="dashboard-card">
-            <div class="card-header">
-                <h3>Sản phẩm bán chạy</h3>
-                <a th:href="@{/admin/products}" class="card-link">Xem tất cả</a>
-            </div>
-            <div class="top-products-list">
-                <div class="top-product-item">
-                    <div class="top-product-rank gold">1</div>
-                    <div class="top-product-info">
-                        <div class="top-product-name">Áo sơ mi trắng basic</div>
-                        <div class="top-product-sold">Đã bán: 245</div>
-                    </div>
-                    <div class="top-product-revenue">12.5M</div>
-                </div>
-                <div class="top-product-item">
-                    <div class="top-product-rank silver">2</div>
-                    <div class="top-product-info">
-                        <div class="top-product-name">Quần jean skinny đen</div>
-                        <div class="top-product-sold">Đã bán: 189</div>
-                    </div>
-                    <div class="top-product-revenue">9.8M</div>
-                </div>
-                <div class="top-product-item">
-                    <div class="top-product-rank bronze">3</div>
-                    <div class="top-product-info">
-                        <div class="top-product-name">Áo thun polo xanh navy</div>
-                        <div class="top-product-sold">Đã bán: 156</div>
-                    </div>
-                    <div class="top-product-revenue">7.2M</div>
-                </div>
-                <div class="top-product-item">
-                    <div class="top-product-rank">4</div>
-                    <div class="top-product-info">
-                        <div class="top-product-name">Váy midi hoa nhí</div>
-                        <div class="top-product-sold">Đã bán: 134</div>
-                    </div>
-                    <div class="top-product-revenue">6.1M</div>
-                </div>
-                <div class="top-product-item">
-                    <div class="top-product-rank">5</div>
-                    <div class="top-product-info">
-                        <div class="top-product-name">Áo khoác cardigan</div>
-                        <div class="top-product-sold">Đã bán: 98</div>
-                    </div>
-                    <div class="top-product-revenue">4.5M</div>
-                </div>
+            <div class="chart-container">
+                <canvas id="revenueChart"></canvas>
             </div>
         </div>
     </div>
 </div>
 
+<div layout:fragment="scripts">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
 <script>
 let revenueChart = null;
+const rangePeriods = ['weekly', 'monthly', 'quarterly'];
 
 function formatCurrency(value) {
-    return new Intl.NumberFormat('vi-VN', { 
-        style: 'currency', 
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
         currency: 'VND',
         minimumFractionDigits: 0
     }).format(value);
 }
 
-function loadRevenueChart(period = 'weekly') {
-    const url = new URL(`/admin/reports/api/${period}`, window.location.origin);
-    
-    fetch(url)
+function loadRevenueChart(period) {
+    fetch(`/admin/reports/api/${period}`)
         .then(response => response.json())
-        .then(data => {
-            renderChart(data.dailySales);
-            updateChartButtons(period);
-        })
+        .then(data => renderChart(data.dailySales))
         .catch(error => console.error('Error loading chart data:', error));
 }
 
 function renderChart(dailySales) {
     const ctx = document.getElementById('revenueChart').getContext('2d');
-    
+
     const labels = dailySales.map(sale => {
         const date = new Date(sale.date);
         return date.toLocaleDateString('vi-VN', { month: '2-digit', day: '2-digit' });
     });
-    
     const amounts = dailySales.map(sale => parseFloat(sale.amount));
-    
+
     if (revenueChart) {
         revenueChart.destroy();
     }
-    
+
     revenueChart = new Chart(ctx, {
         type: 'bar',
         data: {
@@ -239,18 +129,14 @@ function renderChart(dailySales) {
                 backgroundColor: '#2196F3',
                 borderColor: '#1976D2',
                 borderWidth: 1,
-                borderRadius: 4,
-                tension: 0.3
+                borderRadius: 4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: true,
             plugins: {
-                legend: {
-                    display: true,
-                    labels: { font: { size: 12 } }
-                },
+                legend: { display: true, labels: { font: { size: 12 } } },
                 tooltip: {
                     backgroundColor: 'rgba(0, 0, 0, 0.8)',
                     padding: 12,
@@ -275,29 +161,21 @@ function renderChart(dailySales) {
     });
 }
 
-const rangePeriods = ['weekly', 'monthly', 'quarterly'];
-
-function setActiveRangeButton(button) {
-    document.querySelectorAll('.range-btn').forEach(btn => btn.classList.remove('active'));
-    if (button) {
-        button.classList.add('active');
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     const buttons = Array.from(document.querySelectorAll('.range-btn'));
     buttons.forEach((btn, index) => {
         btn.dataset.period = rangePeriods[index] || 'weekly';
         btn.addEventListener('click', function() {
-            const period = this.dataset.period;
-            if (!period) return;
-            setActiveRangeButton(this);
-            loadRevenueChart(period);
+            buttons.forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            loadRevenueChart(this.dataset.period);
         });
     });
 
-    const defaultBtn = buttons.find(btn => btn.dataset.period === 'weekly') || buttons[0];
-    setActiveRangeButton(defaultBtn);
-    loadRevenueChart(defaultBtn?.dataset?.period || 'weekly');
+    loadRevenueChart('weekly');
 });
 </script>
+</div>
+
+</body>
+</html>
