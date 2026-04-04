@@ -14,6 +14,9 @@
     </style>
 </head>
 <body>
+
+<h1 layout:fragment="page-title" th:text="'Đơn hàng: ' + ${order.orderInvoice}">Chi tiết đơn hàng</h1>
+
 <div layout:fragment="content">
     <div class="container-fluid">
         <div class="d-sm-flex align-items-center justify-content-between mb-4">
@@ -170,9 +173,7 @@
                         <form th:action="@{/admin/orders/{id}/status(id=${order.orderId})}" method="post" class="modal-content" id="statusActionForm">
                             <div class="modal-header">
                                 <h5 class="modal-title" id="statusActionModalLabel">Xác nhận thao tác</h5>
-                                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                    <span aria-hidden="true">&times;</span>
-                                </button>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body">
                                 <input type="hidden" name="newStatus" id="modalNewStatus" value="">
@@ -181,7 +182,7 @@
                                 <textarea id="modalNote" name="note" class="form-control" rows="3" placeholder="Nhập ghi chú (nếu có)..."></textarea>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Đóng</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
                                 <button type="submit" class="btn btn-primary">Xác nhận</button>
                             </div>
                         </form>
@@ -213,7 +214,8 @@
     </div>
 </div>
 
-<script th:inline="javascript">
+<div layout:fragment="scripts">
+<script>
     function openStatusModal(newStatus, actionText) {
         var statusInput = document.getElementById('modalNewStatus');
         var actionTextEl = document.getElementById('modalActionText');
@@ -225,15 +227,13 @@
 
         statusInput.value = newStatus;
         actionTextEl.textContent = 'Bạn có chắc chắn muốn: ' + actionText + '?';
-
-        // Require note for cancel/return actions.
         noteEl.required = (newStatus === 'CANCELLED' || newStatus === 'RETURNED');
 
-        if (window.jQuery) {
-            window.jQuery('#statusActionModal').modal('show');
-        }
+        var modal = new bootstrap.Modal(document.getElementById('statusActionModal'));
+        modal.show();
     }
 </script>
+</div>
 
 </body>
 </html>
