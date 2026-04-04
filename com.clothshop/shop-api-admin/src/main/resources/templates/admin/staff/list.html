@@ -107,9 +107,6 @@
         <table class="admin-table">
             <thead>
                 <tr>
-                    <th style="width: 60px;">
-                        <input type="checkbox" id="selectAll">
-                    </th>
                     <th style="width: 70px;">Avatar</th>
                     <th>Họ tên</th>
                     <th>Tài khoản</th>
@@ -138,9 +135,7 @@
                 </tr>
 
                 <tr th:each="staff : ${staffPage.content}">
-                    <td>
-                        <input type="checkbox" class="row-checkbox" th:value="${staff.id}">
-                    </td>
+
                     <td>
                         <div class="table-avatar" th:text="${staff.fullName != null ? staff.fullName.substring(0,1).toUpperCase() : 'S'}">A</div>
                     </td>
@@ -289,88 +284,45 @@ function goToPage(page) {
 
 // Toggle staff status (from toggle switch in list)
 function toggleStaffStatus(checkbox, staffId) {
-    console.log('🔵 LIST: toggleStaffStatus called');
-    console.log('🔵 checkbox.checked:', checkbox.checked);
-    console.log('🔵 staffId:', staffId);
-
     const isActive = checkbox.checked;
 
-    // Debug: Check all available cookies
-    console.log('🔵 All cookies:', document.cookie);
-
-    // Try to read CSRF token from multiple sources
     const csrfTokenFromCookie = getCookie('XSRF-TOKEN');
     const csrfTokenFromMeta = document.querySelector('meta[name="_csrf"]')?.content;
     const csrfHeaderFromMeta = document.querySelector('meta[name="_csrf_header"]')?.content;
 
-    console.log('🔵 isActive:', isActive);
-    console.log('🔵 CSRF token from cookie (XSRF-TOKEN):', csrfTokenFromCookie || '❌ NULL');
-    console.log('🔵 CSRF token from meta tag:', csrfTokenFromMeta || '❌ NULL');
-    console.log('🔵 CSRF header from meta tag:', csrfHeaderFromMeta || '❌ NULL');
-
-    // Use cookie token first, fallback to meta tag
     const csrfToken = csrfTokenFromCookie || csrfTokenFromMeta;
     const csrfHeader = csrfHeaderFromMeta || 'X-XSRF-TOKEN';
 
     if (!csrfToken) {
-        console.error('❌ CSRF token not found in both cookie and meta tag!');
         AdminUI.showToast('Lỗi: Không tìm thấy CSRF token!', 'error');
         checkbox.checked = !isActive;
         return;
     }
 
     const endpoint = `/admin/staff/toggle/${staffId}`;
-    console.log('🔵 Calling endpoint:', endpoint);
-    console.log('🔵 Using CSRF token:', csrfToken);
-    console.log('🔵 Sending via header:', csrfHeader);
-
-    // Prepare headers
-    const headers = {
-        'Content-Type': 'application/x-www-form-urlencoded'
-    };
+    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
     headers[csrfHeader] = csrfToken;
 
-    console.log('🔵 Request headers:', headers);
-
-    fetch(endpoint, {
-        method: 'POST',
-        headers: headers
-    })
+    fetch(endpoint, { method: 'POST', headers: headers })
     .then(response => {
-        console.log('🔵 Response status:', response.status);
-        console.log('🔵 Response ok:', response.ok);
-
         if (response.ok) {
             const message = isActive
                 ? 'Đã kích hoạt tài khoản nhân viên'
                 : 'Đã vô hiệu hóa tài khoản nhân viên';
             AdminUI.showToast(message, 'success');
-
-            // Reload to update badge status
-            setTimeout(() => {
-                location.reload();
-            }, 1000);
+            setTimeout(() => location.reload(), 1000);
         } else {
-            console.error('❌ Response not OK, status:', response.status);
-            checkbox.checked = !isActive; // Revert on error
-            response.text().then(text => console.error('Response body:', text));
+            checkbox.checked = !isActive;
             throw new Error('Failed to toggle status');
         }
     })
     .catch(error => {
-        console.error('❌ Fetch error:', error);
         AdminUI.showToast('Không thể thay đổi trạng thái!', 'error');
-        checkbox.checked = !isActive; // Revert on error
+        checkbox.checked = !isActive;
     });
 }
 
-// deleteStaff function removed - Use toggle switch for deactivation instead
 
-// Select all checkbox
-document.getElementById('selectAll')?.addEventListener('change', function() {
-    const checkboxes = document.querySelectorAll('.row-checkbox');
-    checkboxes.forEach(cb => cb.checked = this.checked);
-});
 </script>
 </div>
 
