@@ -110,34 +110,27 @@
                         <th>Trạng thái</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <tr>
-                        <td>#ORD001</td>
-                        <td>Nguyễn Văn A</td>
-                        <td>1.250.000₫</td>
-                        <td><span class="badge badge-warning">Chờ xác nhận</span></td>
-                    </tr>
-                    <tr>
-                        <td>#ORD002</td>
-                        <td>Trần Thị B</td>
-                        <td>890.000₫</td>
-                        <td><span class="badge badge-info">Đang giao</span></td>
-                    </tr>
-                    <tr>
-                        <td>#ORD003</td>
-                        <td>Lê Văn C</td>
-                        <td>2.100.000₫</td>
-                        <td><span class="badge badge-success">Hoàn thành</span></td>
-                    </tr>
-                    <tr>
-                        <td>#ORD004</td>
-                        <td>Phạm Thị D</td>
-                        <td>650.000₫</td>
-                        <td><span class="badge badge-warning">Chờ xác nhận</span></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+            <tbody th:if="${!#lists.isEmpty(recentOrders)}">
+                <tr th:each="order : ${recentOrders}">
+                    <td th:text="${order.orderInvoice}">ORD-123</td>
+                    <td th:text="${order.customerName}">Nguyễn Văn A</td>
+                    <td th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</td>
+                    <td>
+                        <span class="badge"
+                              th:classappend="${order.statusBadgeClass}"
+                              th:text="${order.status != null ? order.status.displayName : 'Chờ xử lý'}">Trạng thái</span>
+                    </td>
+                </tr>
+            </tbody>
+            <tbody th:if="${#lists.isEmpty(recentOrders)}">
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 20px; color: #999;">
+                        Chưa có đơn hàng mới
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
         <!-- TOP PRODUCTS -->
         <div class="dashboard-card">
@@ -145,46 +138,20 @@
                 <h3>Sản phẩm bán chạy</h3>
                 <a th:href="@{/admin/products}" class="card-link">Xem tất cả</a>
             </div>
-            <div class="top-products-list">
-                <div class="top-product-item">
-                    <div class="top-product-rank gold">1</div>
-                    <div class="top-product-info">
-                        <div class="top-product-name">Áo sơ mi trắng basic</div>
-                        <div class="top-product-sold">Đã bán: 245</div>
-                    </div>
-                    <div class="top-product-revenue">12.5M</div>
+            <div class="top-products-list modern">
+                <div th:if="${#lists.isEmpty(dashboardTopProducts)}" class="empty-state">
+                    Chưa có dữ liệu sản phẩm bán chạy
                 </div>
-                <div class="top-product-item">
-                    <div class="top-product-rank silver">2</div>
-                    <div class="top-product-info">
-                        <div class="top-product-name">Quần jean skinny đen</div>
-                        <div class="top-product-sold">Đã bán: 189</div>
+                <div th:each="product, iter : ${dashboardTopProducts}" class="top-product-row">
+                    <div class="rank-badge"
+                         th:classappend="${iter.index == 0} ? ' gold' : (iter.index == 1) ? ' silver' : (iter.index == 2) ? ' bronze' : ' default'"
+                         th:text="${iter.index + 1}">1</div>
+                    <div class="top-product-details">
+                        <div class="top-product-name" th:text="${product.productName}">Sản phẩm</div>
+                        <div class="top-product-sold" th:text="'Số lượng: ' + ${product.quantity}">Số lượng: 0</div>
                     </div>
-                    <div class="top-product-revenue">9.8M</div>
-                </div>
-                <div class="top-product-item">
-                    <div class="top-product-rank bronze">3</div>
-                    <div class="top-product-info">
-                        <div class="top-product-name">Áo thun polo xanh navy</div>
-                        <div class="top-product-sold">Đã bán: 156</div>
-                    </div>
-                    <div class="top-product-revenue">7.2M</div>
-                </div>
-                <div class="top-product-item">
-                    <div class="top-product-rank">4</div>
-                    <div class="top-product-info">
-                        <div class="top-product-name">Váy midi hoa nhí</div>
-                        <div class="top-product-sold">Đã bán: 134</div>
-                    </div>
-                    <div class="top-product-revenue">6.1M</div>
-                </div>
-                <div class="top-product-item">
-                    <div class="top-product-rank">5</div>
-                    <div class="top-product-info">
-                        <div class="top-product-name">Áo khoác cardigan</div>
-                        <div class="top-product-sold">Đã bán: 98</div>
-                    </div>
-                    <div class="top-product-revenue">4.5M</div>
+                    <div class="top-product-revenue modern"
+                         th:text="${#numbers.formatDecimal(product.revenue, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</div>
                 </div>
             </div>
         </div>
