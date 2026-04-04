@@ -11,6 +11,10 @@ public interface NotificationRecipientRepository extends JpaRepository<Notificat
     // Tìm thông báo chưa đọc của 1 user để hiện số badge trên UI
     long countByAccountIdAndIsReadFalse(Long accountId);
 
+    long countByNotificationId(Long notificationId);
+
+    long countByNotificationIdAndIsReadTrue(Long notificationId);
+
     // Lấy danh sách thông báo của user
     List<NotificationRecipient> findByAccountIdOrderByCreatedAtDesc(Long accountId);
 }

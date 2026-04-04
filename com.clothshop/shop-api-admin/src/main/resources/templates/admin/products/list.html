@@ -9,46 +9,39 @@
 
 <h1 layout:fragment="page-title">Sản phẩm</h1>
 
-<div layout:fragment="page-actions">
-    <a th:href="@{/admin/products/create}" class="btn btn-primary">
-        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
-            <line x1="12" y1="5" x2="12" y2="19"/>
-            <line x1="5" y1="12" x2="19" y2="12"/>
-        </svg>
-        Thêm sản phẩm
-    </a>
-</div>
-
-<div layout:fragment="content">
+<div layout:fragment="content" class="products-list-page">
     <!-- FILTER BAR -->
     <div class="filter-bar">
         <input type="text"
                class="filter-input"
                placeholder="Tìm kiếm theo tên, SKU..."
-               id="searchInput">
+               id="searchInput"
+               th:value="${selectedSearch}">
 
         <select class="filter-select" id="categoryFilter">
             <option value="">Tất cả danh mục</option>
             <option th:each="cat : ${categories}"
                     th:value="${cat.id}"
+                    th:selected="${selectedCategory != null and selectedCategory == cat.id}"
                     th:text="${cat.categoryName}">Category</option>
         </select>
 
         <select class="filter-select" id="statusFilter">
-            <option value="">Tất cả trạng thái</option>
-            <option value="active">Đang bán</option>
-            <option value="inactive">Ngưng bán</option>
-            <option value="out_of_stock">Hết hàng</option>
+            <option value="" th:selected="${selectedStatus == null or #strings.isEmpty(selectedStatus)}">Tất cả trạng thái</option>
+            <option value="active" th:selected="${selectedStatus == 'active'}">Đang bán</option>
+            <option value="low_stock" th:selected="${selectedStatus == 'low_stock'}">Sắp hết hàng</option>
+            <option value="inactive" th:selected="${selectedStatus == 'inactive'}">Ngưng bán</option>
+            <option value="out_of_stock" th:selected="${selectedStatus == 'out_of_stock'}">Hết hàng</option>
         </select>
 
-        <button class="btn btn-outline" onclick="applyFilters()">
+        <button class="btn btn-outline" type="button" id="productsApplyFiltersBtn">
             <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
             </svg>
             Lọc
         </button>
 
-        <button class="btn btn-outline" onclick="resetFilters()">
+        <button class="btn btn-outline" type="button" id="productsResetFiltersBtn">
             <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
                 <polyline points="1 4 1 10 7 10"/>
                 <polyline points="23 20 23 14 17 14"/>
@@ -56,6 +49,14 @@
             </svg>
             Reset
         </button>
+
+        <a th:href="@{/admin/products/create}" class="btn btn-primary products-add-btn">
+            <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            Thêm sản phẩm
+        </a>
     </div>
 
     <!-- FILTER TABS -->
@@ -123,8 +124,9 @@
                         <input type="number"
                                class="stock-input"
                                th:value="${product.stock}"
+                               th:data-product-id="${product.productId}"
                                th:classappend="${product.stock < 10} ? 'low' : (${product.stock == 0} ? 'out' : '')"
-                               onchange="updateStock(this, [[${product.productId}]])">
+                               >
                     </td>
                     <td>
                         <span th:unless="${product.isActive}" class="badge status-deleted" style="background-color: #ffebee; color: #c62828;">
@@ -169,9 +171,10 @@
                             <form th:action="@{/admin/products/{id}/toggle-status(id=${product.productId})}"
                                   method="post"
                                   style="display:inline;"
-                                  th:onsubmit="${product.isActive}
-                                      ? 'return confirm(\'⚠️ Ẩn sản phẩm này?\n\nSản phẩm sẽ không hiển thị trên cửa hàng!\')'
-                                      : 'return confirm(\'✅ Khôi phục sản phẩm này?\n\nSản phẩm sẽ hiển thị lại trên cửa hàng!\')'">
+                                  class="product-toggle-form"
+                                  th:data-confirm-message="${product.isActive}
+                                      ? 'Ẩn sản phẩm này? Sản phẩm sẽ không hiển thị trên cửa hàng.'
+                                      : 'Khôi phục sản phẩm này? Sản phẩm sẽ hiển thị lại trên cửa hàng.'">
 
                                 <button type="submit"
                                         th:if="${product.isActive}"
@@ -215,25 +218,29 @@
 
     <!-- PAGINATION -->
     <div class="pagination" th:if="${products.totalPages > 1}">
-        <button class="page-btn"
-                th:disabled="${products.pageNumber == 0}"
-                onclick="goToPage([[${products.pageNumber - 1}]])">
+        <a class="page-btn"
+           th:classappend="${products.pageNumber == 0} ? 'disabled' : ''"
+           th:href="${products.pageNumber == 0}
+               ? '#'
+               : @{/admin/products(page=${products.pageNumber - 1}, search=${param.search}, category=${param.category}, status=${param.status})}">
             ‹
-        </button>
+        </a>
 
-        <button th:each="i : ${#numbers.sequence(0, products.totalPages - 1)}"
-                class="page-btn"
-                th:classappend="${i == products.pageNumber} ? 'active' : ''"
-                th:text="${i + 1}"
-                onclick="goToPage([[${i}]])">
+        <a th:each="i : ${#numbers.sequence(0, products.totalPages - 1)}"
+           class="page-btn"
+           th:classappend="${i == products.pageNumber} ? 'active' : ''"
+           th:text="${i + 1}"
+           th:href="@{/admin/products(page=${i}, search=${param.search}, category=${param.category}, status=${param.status})}">
             1
-        </button>
+        </a>
 
-        <button class="page-btn"
-                th:disabled="${products.pageNumber == products.totalPages - 1}"
-                onclick="goToPage([[${products.pageNumber + 1}]])">
+        <a class="page-btn"
+           th:classappend="${products.pageNumber == products.totalPages - 1} ? 'disabled' : ''"
+           th:href="${products.pageNumber == products.totalPages - 1}
+               ? '#'
+               : @{/admin/products(page=${products.pageNumber + 1}, search=${param.search}, category=${param.category}, status=${param.status})}">
             ›
-        </button>
+        </a>
     </div>
 
     <!-- BULK ACTIONS (nếu có checkbox được chọn) -->
@@ -241,162 +248,20 @@
         <span style="margin-right: 16px; font-size: 13px; font-weight: 600;">
             <span id="selectedCount">0</span> sản phẩm đã chọn
         </span>
-        <button class="btn btn-sm btn-success" onclick="bulkActivate()">
+        <button class="btn btn-sm btn-success" type="button" id="productsBulkActivateBtn">
             Kích hoạt
         </button>
-        <button class="btn btn-sm btn-outline" onclick="bulkDeactivate()">
+        <button class="btn btn-sm btn-outline" type="button" id="productsBulkDeactivateBtn">
             Ngưng bán
         </button>
-        <button class="btn btn-sm btn-danger" onclick="bulkDelete()" data-confirm-delete>
+        <button class="btn btn-sm btn-danger" type="button" id="productsBulkDeleteBtn" data-confirm-delete>
             Xóa
         </button>
     </div>
 </div>
 
 <div layout:fragment="scripts">
-<script>
-// Select All Checkbox
-document.getElementById('selectAll')?.addEventListener('change', function() {
-    const checkboxes = document.querySelectorAll('.row-checkbox');
-    checkboxes.forEach(cb => cb.checked = this.checked);
-    updateBulkActions();
-});
-
-// Row Checkboxes
-document.querySelectorAll('.row-checkbox').forEach(cb => {
-    cb.addEventListener('change', updateBulkActions);
-});
-
-function updateBulkActions() {
-    const selected = document.querySelectorAll('.row-checkbox:checked');
-    const bulkActions = document.getElementById('bulkActions');
-    const selectedCount = document.getElementById('selectedCount');
-
-    if (selected.length > 0) {
-        bulkActions.style.display = 'block';
-        selectedCount.textContent = selected.length;
-    } else {
-        bulkActions.style.display = 'none';
-    }
-}
-
-// Filter Functions
-function applyFilters() {
-    const search = document.getElementById('searchInput').value;
-    const category = document.getElementById('categoryFilter').value;
-    const status = document.getElementById('statusFilter').value;
-
-    const url = new URL(window.location.href);
-    url.searchParams.set('search', search);
-    url.searchParams.set('category', category);
-    url.searchParams.set('status', status);
-    window.location.href = url.toString();
-}
-
-function resetFilters() {
-    window.location.href = window.location.pathname;
-}
-
-// Pagination
-function goToPage(page) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('page', page);
-    window.location.href = url.toString();
-}
-
-// Update Stock
-function updateStock(input, productId) {
-    const stock = input.value;
-
-    fetch(`/admin/products/${productId}/stock`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-        },
-        body: JSON.stringify({ stock: stock })
-    })
-    .then(response => response.json())
-    .then(data => {
-        AdminUI.showToast('Cập nhật tồn kho thành công', 'success');
-    })
-    .catch(error => {
-        AdminUI.showToast('Có lỗi xảy ra', 'danger');
-        input.value = input.defaultValue; // Rollback
-    });
-}
-
-// Toggle Status
-function toggleProductStatus(checkbox, productId) {
-    const isActive = checkbox.checked;
-
-    fetch(`/admin/products/${productId}/status`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-        },
-        body: JSON.stringify({ isActive: isActive })
-    })
-    .then(response => response.json())
-    .then(data => {
-        AdminUI.showToast(isActive ? 'Đã kích hoạt sản phẩm' : 'Đã ngưng bán sản phẩm', 'success');
-    })
-    .catch(error => {
-        AdminUI.showToast('Có lỗi xảy ra', 'danger');
-        checkbox.checked = !checkbox.checked; // Rollback
-    });
-}
-
-// Delete Product
-function deleteProduct(productId) {
-    if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) return;
-
-    fetch(`/admin/products/${productId}`, {
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-        }
-    })
-    .then(response => {
-        if (response.ok) {
-            AdminUI.showToast('Đã xóa sản phẩm', 'success');
-            setTimeout(() => window.location.reload(), 1000);
-        } else {
-            throw new Error('Delete failed');
-        }
-    })
-    .catch(error => {
-        AdminUI.showToast('Không thể xóa sản phẩm', 'danger');
-    });
-}
-
-// Bulk Actions
-function bulkActivate() {
-    const ids = getSelectedIds();
-    // Implement bulk activate API call
-    AdminUI.showToast(`Đã kích hoạt ${ids.length} sản phẩm`, 'success');
-}
-
-function bulkDeactivate() {
-    const ids = getSelectedIds();
-    // Implement bulk deactivate API call
-    AdminUI.showToast(`Đã ngưng bán ${ids.length} sản phẩm`, 'success');
-}
-
-function bulkDelete() {
-    const ids = getSelectedIds();
-    if (!confirm(`Bạn có chắc chắn muốn xóa ${ids.length} sản phẩm đã chọn?`)) return;
-    // Implement bulk delete API call
-    AdminUI.showToast(`Đã xóa ${ids.length} sản phẩm`, 'success');
-    setTimeout(() => window.location.reload(), 1000);
-}
-
-function getSelectedIds() {
-    return Array.from(document.querySelectorAll('.row-checkbox:checked'))
-                .map(cb => cb.value);
-}
-</script>
+    <script th:src="@{/js/modules/products.js}"></script>
 </div>
 
 </body>

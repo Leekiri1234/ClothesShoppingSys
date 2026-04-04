@@ -22,6 +22,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Map;
 
 @Controller
 @RequestMapping("/admin/products")
@@ -42,6 +43,9 @@ public class ProductAdminController {
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, defaultValue = "createdAt") String sortBy,
             @RequestParam(required = false, defaultValue = "DESC") String direction,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long category,
+            @RequestParam(required = false) String status,
             Model model) {
 
         // Sửa lại Builder cho khớp với PagingRequest mới
@@ -52,9 +56,18 @@ public class ProductAdminController {
                 .sortDirection(direction)
                 .build();
 
-        PageResponse<ProductAdminResponse> products = productAdminService.getAllProducts(pagingRequest);
+        PageResponse<ProductAdminResponse> products = productAdminService.getAllProducts(
+            pagingRequest,
+            search,
+            category,
+            status
+        );
 
         model.addAttribute("products", products);
+        model.addAttribute("categories", categoryService.getAllCategories());
+        model.addAttribute("selectedSearch", search);
+        model.addAttribute("selectedCategory", category);
+        model.addAttribute("selectedStatus", status);
         // Lưu ý: Dùng products.pageNumber trong Thymeleaf sẽ tốt hơn
         model.addAttribute("currentPage", page);
 
@@ -119,6 +132,39 @@ public class ProductAdminController {
         String message = productAdminService.toggleProductStatus(id);
         redirectAttributes.addFlashAttribute("successMessage", message);
         return "redirect:/admin/products";
+    }
+
+    @PostMapping("/bulk/activate")
+    @ResponseBody
+    public Map<String, Object> bulkActivateProducts(@RequestParam("productIds") List<Long> productIds) {
+        int updated = productAdminService.bulkSetProductStatus(productIds, true);
+        return Map.of(
+                "success", true,
+                "updated", updated,
+                "message", "Da kich hoat " + updated + " san pham"
+        );
+    }
+
+    @PostMapping("/bulk/deactivate")
+    @ResponseBody
+    public Map<String, Object> bulkDeactivateProducts(@RequestParam("productIds") List<Long> productIds) {
+        int updated = productAdminService.bulkSetProductStatus(productIds, false);
+        return Map.of(
+                "success", true,
+                "updated", updated,
+                "message", "Da ngung ban " + updated + " san pham"
+        );
+    }
+
+    @PostMapping("/bulk/delete")
+    @ResponseBody
+    public Map<String, Object> bulkDeleteProducts(@RequestParam("productIds") List<Long> productIds) {
+        int updated = productAdminService.bulkDeleteProducts(productIds);
+        return Map.of(
+                "success", true,
+                "updated", updated,
+                "message", "Da an " + updated + " san pham"
+        );
     }
 
     @GetMapping("/{id}")

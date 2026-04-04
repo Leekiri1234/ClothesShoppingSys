@@ -1,0 +1,13 @@
+<svg width="1200" height="480" viewBox="0 0 1200 480" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="g3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f4c5c" />
+      <stop offset="100%" stop-color="#2f9eaa" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="480" fill="url(#g3)" />
+  <path d="M0 330 C260 240, 500 520, 1200 280 L1200 480 L0 480 Z" fill="#ffffff" opacity="0.15" />
+  <text x="80" y="150" font-size="52" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-weight="700">NEW ARRIVAL</text>
+  <text x="80" y="220" font-size="32" fill="#ffffff" font-family="Inter, Arial, sans-serif">Banners cho bo suu tap moi da san sang</text>
+  <text x="80" y="285" font-size="28" fill="#ffffff" font-family="Inter, Arial, sans-serif">Cap nhat hinh anh va thu tu hien thi ngay tai day</text>
+</svg>
