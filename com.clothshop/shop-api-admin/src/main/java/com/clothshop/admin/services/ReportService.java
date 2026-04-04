@@ -19,25 +19,27 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class ReportService {
-    
     private final OrderRepository orderRepository;
-    
+    private static final List<OrderStatus> SALES_STATUSES = List.of(
+            OrderStatus.PENDING,
+            OrderStatus.CONFIRMED,
+            OrderStatus.SHIPPING,
+            OrderStatus.DELIVERED,
+            OrderStatus.COMPLETED
+    );
+
     /**
      * Get sales report for the specified date range
-     * Only counts COMPLETED orders for revenue calculation
      */
     public SalesReportResponse getSalesReport(LocalDate startDate, LocalDate endDate) {
         log.info("Generating sales report from {} to {}", startDate, endDate);
-        
+
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
-        
-        List<Order> completedOrders = orderRepository.findByStatus(OrderStatus.COMPLETED)
-                .stream()
-                .filter(order -> isWithinDateRange(order.getCreatedAt(), startDateTime, endDateTime))
-                .collect(Collectors.toList());
-        
-        if (completedOrders.isEmpty()) {
+
+        List<Order> salesOrders = orderRepository.findSalesOrders(SALES_STATUSES, startDateTime, endDateTime);
+
+        if (salesOrders.isEmpty()) {
             return SalesReportResponse.builder()
                     .totalRevenue(BigDecimal.ZERO)
                     .totalOrders(0L)
@@ -47,36 +49,35 @@ public class ReportService {
                     .topProducts(Collections.emptyList())
                     .build();
         }
-        
-        // Calculate total revenue
-        BigDecimal totalRevenue = completedOrders.stream()
-                .map(Order::getTotalPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        // Count unique customers
-        Long totalCustomers = completedOrders.stream()
-                .map(order -> order.getCustomer().getId())
-                .distinct()
-                .count();
-        
-        // Count total unique products sold
-        Long totalProducts = completedOrders.stream()
-                .flatMap(order -> order.getOrderItems().stream())
-                .map(item -> item.getVariant().getProduct().getId())
-                .distinct()
-                .count();
-        
-        // Group sales by date
-        List<SalesReportResponse.DailySalesDTO> dailySales = groupSalesByDate(completedOrders, startDate, endDate);
-        
-        // Get top 5 products
-        List<SalesReportResponse.TopProductDTO> topProducts = getTopProducts(completedOrders, 5);
-        
+
+        BigDecimal totalRevenue = BigDecimal.ZERO;
+        long totalProductsSold = 0;
+        Set<Long> customerIds = new HashSet<>();
+
+        for (Order order : salesOrders) {
+            if (order.getTotalPrice() != null) {
+                totalRevenue = totalRevenue.add(order.getTotalPrice());
+            }
+            if (order.getCustomer() != null && order.getCustomer().getId() != null) {
+                customerIds.add(order.getCustomer().getId());
+            }
+            if (order.getOrderItems() != null) {
+                for (var item : order.getOrderItems()) {
+                    if (item != null && item.getQuantity() != null) {
+                        totalProductsSold += item.getQuantity();
+                    }
+                }
+            }
+        }
+
+        List<SalesReportResponse.DailySalesDTO> dailySales = groupSalesByDate(salesOrders, startDate, endDate);
+        List<SalesReportResponse.TopProductDTO> topProducts = getTopProducts(salesOrders, 5);
+
         return SalesReportResponse.builder()
                 .totalRevenue(totalRevenue)
-                .totalOrders((long) completedOrders.size())
-                .totalCustomers(totalCustomers)
-                .totalProducts(totalProducts)
+                .totalOrders((long) salesOrders.size())
+                .totalCustomers((long) customerIds.size())
+                .totalProducts(totalProductsSold)
                 .dailySales(dailySales)
                 .topProducts(topProducts)
                 .build();
