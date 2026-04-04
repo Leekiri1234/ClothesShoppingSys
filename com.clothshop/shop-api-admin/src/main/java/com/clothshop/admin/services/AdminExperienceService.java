@@ -23,6 +23,7 @@ import com.clothshop.domain.repositories.cms.NotificationRepository;
 import com.clothshop.domain.repositories.order.OrderItemRepository;
 import com.clothshop.domain.repositories.order.OrderRepository;
 import com.clothshop.domain.repositories.product.ProductFeedbackRepository;
+import com.clothshop.domain.repositories.product.ProductImageRepository;
 import com.clothshop.domain.repositories.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -73,6 +74,7 @@ public class AdminExperienceService {
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
     private final ProductRepository productRepository;
+    private final ProductImageRepository productImageRepository;
 
     @Transactional(readOnly = true)
     public Map<String, Object> getDashboardData() {
@@ -155,7 +157,17 @@ public class AdminExperienceService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> getInventoryOverview() {
-        List<Product> products = productRepository.findAllActiveWithVariantsAndImages();
+        List<Product> products = productRepository.findAllActiveWithVariants();
+
+        // Batch-load main images to avoid N+1 lazy loads
+        List<Long> productIds = products.stream().map(Product::getId).toList();
+        // Projection columns from findMainImageUrlsByProductIds: [0]=productId, [1]=imageUrl
+        Map<Long, String> mainImageByProductId = productImageRepository.findMainImageUrlsByProductIds(productIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        row -> (Long) row[0],
+                        row -> (String) row[1],
+                        (first, second) -> first));
 
         int totalSku = 0;
         int lowStock = 0;
@@ -191,9 +203,11 @@ public class AdminExperienceService {
                     : ((firstVariant.getColor() != null ? firstVariant.getColor() : "-") + " / "
                     + (firstVariant.getSizeValue() != null ? firstVariant.getSizeValue() : "-"));
 
+            String imageUrl = mainImageByProductId.getOrDefault(product.getId(), "/images/admin/product-shirt.svg");
+
             Map<String, Object> row = new HashMap<>();
             row.put("productId", product.getId());
-            row.put("image", resolveProductImage(product));
+            row.put("image", imageUrl);
             row.put("name", product.getProductName());
             row.put("sku", firstVariant != null ? firstVariant.getSku() : "N/A");
             row.put("variant", variantDisplay);
@@ -498,7 +512,7 @@ public class AdminExperienceService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
                         "Khong tim thay khach hang de seed feedback"));
 
-        List<Product> products = productRepository.findAllActiveWithVariantsAndImages();
+        List<Product> products = productRepository.findAllActiveWithVariants();
         if (products.isEmpty()) {
             throw new BusinessException(ErrorCode.RESOURCE_NOT_FOUND,
                     "Khong tim thay san pham de seed feedback");

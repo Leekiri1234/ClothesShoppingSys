@@ -38,8 +38,6 @@ public class DashboardController {
 
         model.addAttribute("dashboard", adminExperienceService.getDashboardData());
         SalesReportResponse todayReport = reportService.getTodayReport();
-
-        model.addAttribute("dashboard", adminExperienceService.getDashboardData());
         model.addAttribute("todayRevenue", todayReport.getTotalRevenue());
         model.addAttribute("todayOrders", todayReport.getTotalOrders());
         model.addAttribute("totalCustomers", todayReport.getTotalCustomers());

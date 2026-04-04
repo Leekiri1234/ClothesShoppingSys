@@ -362,7 +362,7 @@ public class ProductAdminService {
             return resolveFallbackProductImage(product);
         }
         if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
-            return resolveFallbackProductImage(product);
+            return imageUrl;
         }
         return imageUrl;
     }

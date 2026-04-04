@@ -82,9 +82,9 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @Query("SELECT p FROM Product p WHERE p.isActive = true")
     Page<Product> findAllActive(Pageable pageable);
 
-        @Query("SELECT DISTINCT p FROM Product p " +
-                        "LEFT JOIN FETCH p.variants v " +
-                        "WHERE p.isActive = true " +
-                        "ORDER BY p.createdAt DESC")
-        List<Product> findAllActiveWithVariantsAndImages();
+    @Query("SELECT DISTINCT p FROM Product p " +
+            "LEFT JOIN FETCH p.variants v " +
+            "WHERE p.isActive = true " +
+            "ORDER BY p.createdAt DESC")
+    List<Product> findAllActiveWithVariants();
 }
