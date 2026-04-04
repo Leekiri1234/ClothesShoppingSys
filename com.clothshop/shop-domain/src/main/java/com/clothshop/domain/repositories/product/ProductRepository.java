@@ -32,6 +32,9 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("SELECT p FROM Product p WHERE p.isActive = true")
     Page<Product> findAllByIsActiveTrue(Pageable pageable);
 
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.prodStatus = com.clothshop.domain.enums.ProductStatus.ACTIVE")
+    Page<Product> findAllActive(Pageable pageable);
+
     @EntityGraph(attributePaths = {"category"})
     @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId AND p.isActive = true")
     Page<Product> findByCategory_IdAndIsActiveTrue(@Param("categoryId") Long categoryId, Pageable pageable);
