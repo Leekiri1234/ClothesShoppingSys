@@ -1,12 +1,19 @@
 package com.clothshop.admin.services;
 
+import com.clothshop.admin.dtos.response.dashboard.RecentOrderDTO;
+import com.clothshop.admin.dtos.response.SalesReportResponse;
+import com.clothshop.admin.services.FeaturedProductService;
 import com.clothshop.domain.entities.order.Order;
+import com.clothshop.domain.entities.product.Product;
 import com.clothshop.domain.enums.OrderStatus;
 import com.clothshop.domain.repositories.order.OrderRepository;
-import com.clothshop.admin.dtos.response.SalesReportResponse;
+import com.clothshop.domain.projections.ProductSalesSummary;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -20,6 +27,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ReportService {
     private final OrderRepository orderRepository;
+    private final FeaturedProductService featuredProductService;
+    private static final LocalDate HISTORIC_TOP_PRODUCT_START = LocalDate.of(2000, 1, 1);
     private static final List<OrderStatus> SALES_STATUSES = List.of(
             OrderStatus.PENDING,
             OrderStatus.CONFIRMED,
@@ -38,6 +47,8 @@ public class ReportService {
         LocalDateTime endDateTime = endDate.atTime(LocalTime.MAX);
 
         List<Order> salesOrders = orderRepository.findSalesOrders(SALES_STATUSES, startDateTime, endDateTime);
+        List<Long> featuredProductIds = getFeaturedProductCandidateIds();
+        List<SalesReportResponse.TopProductDTO> topProducts = getTopProducts(salesOrders, 5, featuredProductIds, true, true);
 
         if (salesOrders.isEmpty()) {
             return SalesReportResponse.builder()
@@ -46,7 +57,7 @@ public class ReportService {
                     .totalCustomers(0L)
                     .totalProducts(0L)
                     .dailySales(Collections.emptyList())
-                    .topProducts(Collections.emptyList())
+                    .topProducts(topProducts)
                     .build();
         }
 
@@ -71,7 +82,6 @@ public class ReportService {
         }
 
         List<SalesReportResponse.DailySalesDTO> dailySales = groupSalesByDate(salesOrders, startDate, endDate);
-        List<SalesReportResponse.TopProductDTO> topProducts = getTopProducts(salesOrders, 5);
 
         return SalesReportResponse.builder()
                 .totalRevenue(totalRevenue)
@@ -87,8 +97,7 @@ public class ReportService {
      * Get today's sales summary
      */
     public SalesReportResponse getTodayReport() {
-        LocalDate today = LocalDate.now();
-        return getSalesReport(today, today);
+        return getSevenDayReportWithGlobalCounts();
     }
     
     /**
@@ -98,6 +107,18 @@ public class ReportService {
         LocalDate today = LocalDate.now();
         LocalDate sevenDaysAgo = today.minusDays(7);
         return getSalesReport(sevenDaysAgo, today);
+    }
+
+    public List<SalesReportResponse.TopProductDTO> getDashboardTopProducts() {
+        List<ProductSalesSummary> summary = orderRepository.findTopSellingProducts(SALES_STATUSES, PageRequest.of(0, 5));
+        return summary.stream()
+                .map(item -> SalesReportResponse.TopProductDTO.builder()
+                        .productId(item.getProductId())
+                        .productName(item.getProductName())
+                        .quantity(item.getQuantity())
+                        .revenue(item.getRevenue())
+                        .build())
+                .collect(Collectors.toList());
     }
     
     /**
@@ -130,16 +151,27 @@ public class ReportService {
                 "quarterly", getQuarterlyReport()
         );
     }
-    
-    // Private helper methods
-    
-    private boolean isWithinDateRange(LocalDateTime dateTime, LocalDateTime startDateTime, LocalDateTime endDateTime) {
-        return !dateTime.isBefore(startDateTime) && !dateTime.isAfter(endDateTime);
+
+    public SalesReportResponse getSevenDayReportWithGlobalCounts() {
+        LocalDate today = LocalDate.now();
+        LocalDate sevenDaysAgo = today.minusDays(6);
+        SalesReportResponse sevenDayReport = getSalesReport(sevenDaysAgo, today);
+
+        return SalesReportResponse.builder()
+                .totalRevenue(sevenDayReport.getTotalRevenue())
+                .totalOrders(sevenDayReport.getTotalOrders())
+                .totalCustomers(fetchLifetimeCustomerCount())
+                .totalProducts(fetchLifetimeProductCount())
+                .dailySales(sevenDayReport.getDailySales())
+                .topProducts(sevenDayReport.getTopProducts())
+                .build();
     }
     
+    // Private helper methods
+
     private List<SalesReportResponse.DailySalesDTO> groupSalesByDate(List<Order> orders, LocalDate startDate, LocalDate endDate) {
         Map<LocalDate, SalesReportResponse.DailySalesDTO> dailyMap = new TreeMap<>();
-        
+
         // Initialize all dates in range with zero values
         LocalDate current = startDate;
         while (!current.isAfter(endDate)) {
@@ -150,9 +182,12 @@ public class ReportService {
                     .build());
             current = current.plusDays(1);
         }
-        
+
         // Aggregate actual order data
         orders.forEach(order -> {
+            if (order.getCreatedAt() == null) {
+                return;
+            }
             LocalDate orderDate = order.getCreatedAt().toLocalDate();
             SalesReportResponse.DailySalesDTO daily = dailyMap.getOrDefault(orderDate,
                     SalesReportResponse.DailySalesDTO.builder()
@@ -160,39 +195,160 @@ public class ReportService {
                             .amount(BigDecimal.ZERO)
                             .orderCount(0L)
                             .build());
-            
-            daily.setAmount(daily.getAmount().add(order.getTotalPrice()));
+
+            BigDecimal dailyTotal = order.getTotalPrice() != null ? order.getTotalPrice() : BigDecimal.ZERO;
+            daily.setAmount(daily.getAmount().add(dailyTotal));
             daily.setOrderCount(daily.getOrderCount() + 1);
             dailyMap.put(orderDate, daily);
         });
-        
+
         return new ArrayList<>(dailyMap.values());
     }
-    
-    private List<SalesReportResponse.TopProductDTO> getTopProducts(List<Order> orders, int limit) {
-        return orders.stream()
-                .flatMap(order -> order.getOrderItems().stream())
-                .collect(Collectors.groupingBy(
-                        item -> item.getVariant().getProduct(),
-                        Collectors.reducing(
-                                new Object[]{0L, BigDecimal.ZERO},
-                                item -> new Object[]{item.getQuantity().longValue(), item.getUnitPrice().multiply(new BigDecimal(item.getQuantity()))},
-                                (acc, item) -> {
-                                    Long qty = (Long) acc[0] + (Long) item[0];
-                                    BigDecimal revenue = ((BigDecimal) acc[1]).add((BigDecimal) item[1]);
-                                    return new Object[]{qty, revenue};
-                                }
-                        )
-                ))
-                .entrySet().stream()
-                .map(entry -> SalesReportResponse.TopProductDTO.builder()
-                        .productId(entry.getKey().getId())
-                        .productName(entry.getKey().getProductName())
-                        .quantity((Long) entry.getValue()[0])
-                        .revenue((BigDecimal) entry.getValue()[1])
-                        .build())
-                .sorted(Comparator.comparing(SalesReportResponse.TopProductDTO::getRevenue).reversed())
-                .limit(limit)
+
+    private List<Long> getFeaturedProductCandidateIds() {
+        return featuredProductService.getActiveFeaturedProducts().stream()
+                .map(fp -> fp.getProduct())
+                .filter(Objects::nonNull)
+                .map(Product::getId)
+                .filter(Objects::nonNull)
+                .limit(9)
                 .collect(Collectors.toList());
     }
+
+    private List<Order> fetchHistoricSalesOrders() {
+        LocalDateTime historicStart = HISTORIC_TOP_PRODUCT_START.atStartOfDay();
+        LocalDateTime historicEnd = LocalDateTime.now();
+        return orderRepository.findSalesOrders(SALES_STATUSES, historicStart, historicEnd);
+    }
+
+    private List<SalesReportResponse.TopProductDTO> getTopProducts(List<Order> orders, int limit,
+                                                                  List<Long> candidateProductIds,
+                                                                  boolean enforceFeaturedFilter,
+                                                                  boolean allowHistoricFallback) {
+        if (enforceFeaturedFilter && (candidateProductIds == null || candidateProductIds.isEmpty())) {
+            return Collections.emptyList();
+        }
+
+        Set<Long> candidateSet = candidateProductIds != null ? new HashSet<>(candidateProductIds) : new HashSet<>();
+        Map<Long, ProductAccumulator> accumulator = new HashMap<>();
+
+        if (orders != null) {
+            for (Order order : orders) {
+                if (order == null || order.getOrderItems() == null) {
+                    continue;
+                }
+                LocalDateTime orderTime = order.getCreatedAt();
+                for (var item : order.getOrderItems()) {
+                    if (item == null || item.getVariant() == null || item.getVariant().getProduct() == null) {
+                        continue;
+                    }
+                    Product product = item.getVariant().getProduct();
+                    Long productId = product.getId();
+                    if (productId == null || (enforceFeaturedFilter && !candidateSet.contains(productId))) {
+                        continue;
+                    }
+
+                    long quantity = item.getQuantity() == null ? 0L : item.getQuantity();
+                    BigDecimal unitPrice = item.getUnitPrice() == null ? BigDecimal.ZERO : item.getUnitPrice();
+                    BigDecimal itemRevenue = unitPrice.multiply(BigDecimal.valueOf(quantity));
+
+                    ProductAccumulator data = accumulator.computeIfAbsent(productId,
+                            id -> new ProductAccumulator(id, product.getProductName()));
+
+                    data.accumulate(quantity, itemRevenue, orderTime);
+                }
+            }
+        }
+
+        List<SalesReportResponse.TopProductDTO> ranked = accumulator.values().stream()
+                .sorted(Comparator.comparingLong(ProductAccumulator::getQuantity).reversed()
+                        .thenComparing(acc -> acc.getFirstSoldAt() == null ? LocalDateTime.MAX : acc.getFirstSoldAt()))
+                .limit(limit)
+                .map(acc -> SalesReportResponse.TopProductDTO.builder()
+                        .productId(acc.getProductId())
+                        .productName(acc.getProductName())
+                        .quantity(acc.getQuantity())
+                        .revenue(acc.getRevenue())
+                        .build())
+                .collect(Collectors.toList());
+
+        if (ranked.isEmpty() && allowHistoricFallback) {
+            return getTopProducts(fetchHistoricSalesOrders(), limit, candidateProductIds, enforceFeaturedFilter, false);
+        }
+
+        return ranked;
+    }
+
+    private long fetchLifetimeCustomerCount() {
+        Long count = orderRepository.countDistinctCustomers();
+        return count != null ? count : 0L;
+    }
+
+    private long fetchLifetimeProductCount() {
+        Long sum = orderRepository.sumOrderItemQuantities(SALES_STATUSES);
+        return sum != null ? sum : 0L;
+    }
+
+    @Transactional(readOnly = true)
+    public List<RecentOrderDTO> getRecentOrders(int limit) {
+        List<Order> recent = orderRepository.findTopNByStatusIn(
+                SALES_STATUSES,
+                org.springframework.data.domain.PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt")) );
+
+        return recent.stream()
+                .map(order -> RecentOrderDTO.builder()
+                        .orderInvoice(order.getOrderInvoice())
+                        .customerName(order.getCustomer() != null ? order.getCustomer().getFullName() : "Khách ẩn danh")
+                        .totalPrice(order.getTotalPrice())
+                        .status(order.getStatus())
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    private static final class ProductAccumulator {
+        private final Long productId;
+        private final String productName;
+        private long quantity;
+        private BigDecimal revenue = BigDecimal.ZERO;
+        private LocalDateTime firstSoldAt;
+
+        private ProductAccumulator(Long productId, String productName) {
+            this.productId = productId;
+            this.productName = productName != null ? productName : "";
+        }
+
+        private void accumulate(long qty, BigDecimal value, LocalDateTime dateTime) {
+            this.quantity += qty;
+            this.revenue = this.revenue.add(value != null ? value : BigDecimal.ZERO);
+            if (dateTime == null) {
+                return;
+            }
+            if (this.firstSoldAt == null || dateTime.isBefore(this.firstSoldAt)) {
+                this.firstSoldAt = dateTime;
+            }
+        }
+
+        private Long getProductId() {
+            return productId;
+        }
+
+        private String getProductName() {
+            return productName;
+        }
+
+        private long getQuantity() {
+            return quantity;
+        }
+
+        private BigDecimal getRevenue() {
+            return revenue;
+        }
+
+        private LocalDateTime getFirstSoldAt() {
+            return firstSoldAt;
+        }
+    }
 }
+
+
+
