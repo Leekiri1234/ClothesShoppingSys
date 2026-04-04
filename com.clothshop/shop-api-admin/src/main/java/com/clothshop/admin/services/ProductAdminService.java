@@ -101,7 +101,7 @@ public class ProductAdminService {
         log.info("Updating product ID: {}", productId);
 
         // Find existing product
-        Product product = productRepository.findProductWithVariantsById(productId)
+        Product product = productRepository.findProductWithDetailsById(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
 
         // If category is being updated, validate it exists

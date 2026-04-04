@@ -3,6 +3,7 @@ package com.clothshop.domain.repositories.product;
 import com.clothshop.domain.entities.product.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -15,58 +16,32 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpecificationExecutor<Product> {
 
+    // --- NHÓM 1: LẤY CHI TIẾT (FETCH TẤT CẢ) ---
+    // Dùng cho detail.html. Lấy 1 bản ghi nên fetch thoải mái, không lo tốn RAM hay MultipleBag.
+    @EntityGraph(attributePaths = {"variants", "images", "category"})
     @Query("SELECT p FROM Product p WHERE p.productSlug = :slug AND p.isActive = true")
     Optional<Product> findByProductSlug(@Param("slug") String slug);
 
-    boolean existsByProductSlug(String productSlug);
+    @EntityGraph(attributePaths = {"variants", "images", "category"})
+    @Query("SELECT p FROM Product p WHERE p.id = :id")
+    Optional<Product> findProductWithDetailsById(@Param("id") Long id);
 
-    // Chỉ lấy sản phẩm thuộc danh mục đang hoạt động
-    @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId AND p.isActive = true")
-    List<Product> findByCategoryId(@Param("categoryId") Long categoryId);
+    // --- NHÓM 2: TRANG DANH SÁCH & PHÂN TRANG (CHỈ FETCH CATEGORY) ---
+    // variants và images sẽ được nạp tự động theo lô nhờ @BatchSize và @Transactional.
 
-    /**
-     * TỐI ƯU: Lấy tất cả sản phẩm active, không quan tâm danh mục active hay không.
-     * Khi Category bị ẩn (is_active=false), p.category sẽ tự động null nhờ @SQLRestriction
-     */
+    @EntityGraph(attributePaths = {"category"})
     @Query("SELECT p FROM Product p WHERE p.isActive = true")
     Page<Product> findAllByIsActiveTrue(Pageable pageable);
 
-    @Query("SELECT p FROM Product p LEFT JOIN FETCH p.variants WHERE p.id = :id")
-    Optional<Product> findProductWithVariantsById(@Param("id") Long id);
-
-//    @Query("SELECT DISTINCT p FROM Product p LEFT JOIN FETCH p.variants")
-//    List<Product> findAllProductsWithVariants();
-
-    /**
-     * TRANG CHỦ: Fetch luôn category bằng LEFT JOIN.
-     * Nếu Category inactive -> p.category = null -> Mapper sẽ hiện "Chưa phân loại"
-     */
-    @Query("SELECT DISTINCT p FROM Product p " +
-            "LEFT JOIN FETCH p.category " +
-            "WHERE p.isActive = true " +
-            "ORDER BY p.createdAt DESC")
-    List<Product> findTop100ActiveProductsWithDetails(Pageable pageable);
-
-    // Lọc theo tên + danh mục active
-    // Lọc theo tên: Bỏ điều kiện check category ID
-    @Query("SELECT p FROM Product p WHERE LOWER(p.productName) LIKE LOWER(CONCAT('%', :name, '%')) " + "AND p.isActive = true")
-    Page<Product> findByProductNameContainingIgnoreCaseAndIsActiveTrue(@Param("name") String name, Pageable pageable);
-
-    /**
-     * Hàm lọc theo danh mục thì VẪN GIỮ NGUYÊN hoặc tùy biến.
-     * Nếu user vào đúng link danh mục đã ẩn, ta có thể trả về trống hoặc báo lỗi 404 ở Service.
-     */
+    @EntityGraph(attributePaths = {"category"})
     @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId AND p.isActive = true")
     Page<Product> findByCategory_IdAndIsActiveTrue(@Param("categoryId") Long categoryId, Pageable pageable);
 
-    @Query("SELECT ci.product FROM CollectionItem ci " +
-            "WHERE ci.collection.slug = :slug " +
-            "AND ci.product.isActive = true")
+    @EntityGraph(attributePaths = {"category"})
+    @Query("SELECT ci.product FROM CollectionItem ci WHERE ci.collection.slug = :slug AND ci.product.isActive = true")
     Page<Product> findByCollectionSlug(@Param("slug") String slug, Pageable pageable);
 
-    // Lấy ID và tên sản phẩm theo danh sách ID (1 câu SQL, tránh N+1)
-    @Query("SELECT p.id, p.productName FROM Product p WHERE p.id IN :ids")
-    List<Object[]> findIdAndProductNameByIdIn(@Param("ids") List<Long> ids);
+    @EntityGraph(attributePaths = {"category"})
     @Query("SELECT DISTINCT p FROM Product p " +
             "LEFT JOIN p.category cat " +
             "LEFT JOIN p.collectionItems ci " +
@@ -79,6 +54,13 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             ")")
     Page<Product> searchFullText(@Param("keyword") String keyword, Pageable pageable);
 
+    // --- NHÓM 3: TIỆN ÍCH KHÁC ---
+    boolean existsByProductSlug(String productSlug);
+
+    @Query("SELECT p.id, p.productName FROM Product p WHERE p.id IN :ids")
+    List<Object[]> findIdAndProductNameByIdIn(@Param("ids") List<Long> ids);
+
+    @EntityGraph(attributePaths = {"variants", "images", "category"})
     @Query("SELECT p FROM Product p WHERE p.isActive = true")
     Page<Product> findAllActive(Pageable pageable);
 
@@ -87,4 +69,5 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
             "WHERE p.isActive = true " +
             "ORDER BY p.createdAt DESC")
     List<Product> findAllActiveWithVariants();
+    List<Product> findTop100ActiveProductsWithDetails(Pageable pageable);
 }
