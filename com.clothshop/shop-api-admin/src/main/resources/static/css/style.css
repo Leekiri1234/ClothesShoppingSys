@@ -598,10 +598,10 @@ svg {
 .admin-table th {
   text-align: left;
   padding: 10px 12px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-transform: none;
   color: var(--muted);
   background: var(--bg);
   border-bottom: 1px solid var(--border);
@@ -616,6 +616,9 @@ svg {
   padding: 10px 12px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--primary);
 }
 
 .admin-table tbody tr:last-child td { border-bottom: none; }
@@ -2004,4 +2007,63 @@ tr.stock-out td { background: #fdecea !important; }
 
 .action-btn:active {
   transform: translateY(0);
+}
+.top-products-list.modern {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+.top-products-list.modern .top-product-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 16px;
+  align-items: center;
+  padding: 12px 16px;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  background: #fff;
+}
+.top-products-list.modern .rank-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #fff;
+  background: #b0b0b0;
+}
+.top-products-list.modern .rank-badge.gold {
+  background: #f7b731;
+}
+.top-products-list.modern .rank-badge.silver {
+  background: #9ea7b8;
+}
+.top-products-list.modern .rank-badge.bronze {
+  background: #c1713d;
+}
+.top-products-list.modern .top-product-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.top-products-list.modern .top-product-name {
+  font-weight: 600;
+  color: #2d2d2d;
+}
+.top-products-list.modern .top-product-sold {
+  font-size: 0.85rem;
+  color: #7a7a7a;
+}
+.top-products-list.modern .top-product-revenue {
+  font-weight: 600;
+  color: #2b2b2b;
+}
+.top-products-list.modern .empty-state {
+  text-align: center;
+  color: #999;
+  padding: 20px 0;
+  font-size: 0.95rem;
 }
