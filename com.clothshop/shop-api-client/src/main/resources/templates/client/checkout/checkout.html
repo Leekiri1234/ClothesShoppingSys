@@ -4,37 +4,38 @@
     <meta charset="UTF-8">
     <title>Thanh toán — MINIMAL</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/checkout/checkout.css}">
 </head>
 <body>
 <header th:replace="~{fragments/header :: header}"></header>
 
-<main class="container" style="padding-top: 120px; padding-bottom: 80px;">
-    <form th:action="@{/checkout/confirm}" th:object="${orderRequest}" method="post" class="checkout-grid" style="display: grid; grid-template-columns: 1fr 400px; gap: 60px;">
+<main class="container">
+    <form th:action="@{/checkout/confirm}" th:object="${orderRequest}" method="post" class="checkout-grid">
 
         <div>
-            <h2 style="font-weight: 300; margin-bottom: 32px;">Thông tin đơn hàng</h2>
+            <h2 class="checkout-title">Thông tin đơn hàng</h2>
 
-            <div th:if="${error}" style="color: red; margin-bottom: 20px;" th:text="${error}"></div>
+            <div th:if="${error}" class="error" th:text="${error}"></div>
 
-            <div style="display: grid; gap: 20px;">
+            <div class="form-group">
                 <div>
-                    <label style="font-size: 12px; text-transform: uppercase; color: #999;">Địa chỉ giao hàng</label>
+                    <label class="label">Địa chỉ giao hàng</label>
                     <input type="text" th:field="*{shippingAddress}" class="form-input" required placeholder="Số nhà, tên đường, quận/huyện...">
-                    <p th:if="${#fields.hasErrors('shippingAddress')}" th:errors="*{shippingAddress}" style="color:red; font-size:12px;"></p>
+                    <p th:if="${#fields.hasErrors('shippingAddress')}" th:errors="*{shippingAddress}" class="error-text"></p>
                 </div>
                 <div>
-                    <label style="font-size: 12px; text-transform: uppercase; color: #999;">Số điện thoại</label>
+                    <label class="label">Số điện thoại</label>
                     <input type="tel" th:field="*{phoneNumber}" class="form-input" required placeholder="0xxx xxx xxx">
                 </div>
                 <div>
-                    <label style="font-size: 12px; text-transform: uppercase; color: #999;">Ghi chú (nếu có)</label>
+                    <label class="label">Ghi chú (nếu có)</label>
                     <textarea th:field="*{note}" class="form-input" rows="3" placeholder="Lời nhắn cho cửa hàng..."></textarea>
                 </div>
             </div>
 
-            <h3 style="font-weight: 300; margin: 48px 0 24px;">Phương thức thanh toán</h3>
-            <div style="display: grid; gap: 12px;">
-                <label th:each="method : ${paymentMethods}" class="payment-card" style="border: 1px solid #eee; padding: 20px; display: flex; align-items: center; gap: 12px; cursor: pointer;">
+            <h3 class="section-title">Phương thức thanh toán</h3>
+            <div class="payment-list">
+                <label th:each="method : ${paymentMethods}" class="payment-card">
                     <input type="radio" th:field="*{paymentMethod}" th:value="${method}" required>
                     <span th:text="${method}">COD</span>
                 </label>
@@ -42,34 +43,36 @@
         </div>
 
         <aside>
-            <div style="background: #f9f9f9; padding: 32px; position: sticky; top: 120px;">
-                <h4 style="margin-bottom: 24px; font-weight: 400;">Giỏ hàng của bạn</h4>
+            <div class="checkout-summary">
+                <h4 class="summary-title">Giỏ hàng của bạn</h4>
 
-                <div th:each="item : ${cart.items}" style="display: flex; gap: 12px; margin-bottom: 16px; align-items: center;">
-                    <div class="img-placeholder" style="width: 50px; height: 65px;">
-                        <img th:src="${item.thumbnail}" style="width:100%; height:100%; object-fit:cover;">
+                <div th:each="item : ${cart.items}" class="cart-item">
+                    <div class="img-placeholder">
+                        <img th:src="${item.thumbnail}">
                     </div>
-                    <div style="flex: 1; font-size: 13px;">
-                        <p th:text="${item.productName}" style="font-weight: 500;"></p>
-                        <p th:text="'x' + ${item.quantity}" style="color: #999;"></p>
+                    <div class="item-info">
+                        <p th:text="${item.productName}"></p>
+                        <p th:text="'x' + ${item.quantity}"></p>
                     </div>
-                    <span style="font-size: 13px;" th:text="${#numbers.formatDecimal(item.totalPrice, 0, 'COMMA', 0, 'POINT') + '₫'}"></span>
+                    <span class="item-price"
+                          th:text="${#numbers.formatDecimal(item.totalPrice, 0, 'COMMA', 0, 'POINT') + '₫'}"></span>
                 </div>
 
-                <div style="margin: 24px 0; border-top: 1px solid #ddd; padding-top: 24px;">
-                    <div class="flex-between" style="margin-bottom: 12px;">
+                <div class="price-section">
+                    <div class="flex-between">
                         <span>Tạm tính</span>
                         <span th:text="${#numbers.formatDecimal(cart.subTotal, 0, 'COMMA', 0, 'POINT') + '₫'}"></span>
                     </div>
 
-                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-                        <input type="text" th:field="*{voucherCode}" id="voucherInput" class="form-input" placeholder="Mã giảm giá" style="padding: 8px;">
+                    <div class="voucher-box">
+                        <input type="text" th:field="*{voucherCode}" id="voucherInput" class="form-input" placeholder="Mã giảm giá">
                         <button type="button" onclick="applyVoucher()" class="btn btn--outline btn--sm">Áp dụng</button>
                     </div>
 
-                    <div class="flex-between" style="font-weight: 600; font-size: 20px; margin-top: 24px;">
+                    <div class="flex-between total">
                         <span>Tổng cộng</span>
-                        <span id="finalTotal" th:text="${#numbers.formatDecimal(cart.totalAmount, 0, 'COMMA', 0, 'POINT') + '₫'}"></span>
+                        <span id="finalTotal"
+                              th:text="${#numbers.formatDecimal(cart.totalAmount, 0, 'COMMA', 0, 'POINT') + '₫'}"></span>
                     </div>
                 </div>
 
@@ -79,20 +82,7 @@
     </form>
 </main>
 
-<script th:inline="javascript">
-    // Logic gọi AJAX /checkout/calculate để cập nhật giá khi áp dụng voucher
-    async function applyVoucher() {
-        const code = document.getElementById('voucherInput').value;
-        const response = await fetch(`/checkout/calculate?voucherCode=${code}`, { method: 'POST' });
-        const data = await response.json();
-        if (response.ok) {
-            document.getElementById('finalTotal').innerText = data.totalAmount.toLocaleString('vi-VN') + '₫';
-            // Bạn có thể update thêm tiền giảm giá ở đây
-        } else {
-            alert(data.error || 'Mã voucher không hợp lệ');
-        }
-    }
-</script>
+<script th:src="@{/js/checkout/checkout.js}"></script>
 
 <footer th:replace="~{fragments/footer :: footer}"></footer>
 </body>
