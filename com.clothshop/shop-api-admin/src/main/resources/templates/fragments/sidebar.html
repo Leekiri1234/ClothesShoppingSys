@@ -6,12 +6,14 @@
      SIDEBAR FRAGMENT
      Usage: th:replace="~{fragments/sidebar :: sidebar}"
      ============================================================ -->
-<aside th:fragment="sidebar" class="admin-sidebar" id="adminSidebar">
+<<aside th:fragment="sidebar" class="admin-sidebar" id="adminSidebar">
     <div class="sidebar-logo">
         <span class="logo-text">CLOTHSHOP ADMIN</span>
     </div>
 
-    <nav class="sidebar-nav">
+    <nav class="sidebar-nav" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+        <!-- Nav links scroll area -->
+        <div style="flex: 1; overflow-y: auto; padding-bottom: 8px;">
         <!-- TỔNG QUAN -->
         <div class="nav-group">
             <span class="nav-group-label">TỔNG QUAN</span>
@@ -22,9 +24,9 @@
             </a>
         </div>
 
-        <!-- QUẢN LÝ ĐƠN -->
+        <!-- QUẢN LÝ ĐỚN -->
         <div class="nav-group" sec:authorize="hasAnyRole('SUPER_ADMIN', 'SALE_PRODUCT_STAFF')">
-            <span class="nav-group-label">QUẢN LÝ ĐƠN</span>
+            <span class="nav-group-label">QUẢN LÝ ĐỚN</span>
             <a class="nav-link" th:href="@{/admin/orders}"
                th:classappend="${currentPath != null and #strings.contains(currentPath, '/orders')} ? 'active' : ''">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -93,11 +95,13 @@
                 <span>Quản lý nhân sự</span>
             </a>
         </div>
+        </div><!-- end scroll area -->
 
-        <!-- USER INFO & LOGOUT -->
-        <div style="padding: 12px 18px; margin-top: auto; border-top: 1px solid var(--border);">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
-                <div class="admin-avatar" style="width: 28px; height: 28px; font-size: 11px;" th:text="${#authentication.name.substring(0,1).toUpperCase()}">U</div>
+        <!-- USER PROFILE & LOGOUT (pinned to bottom) -->
+        <div style="border-top: 1px solid var(--border); padding: 14px 18px; flex-shrink: 0;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <div class="admin-avatar" style="width: 32px; height: 32px; font-size: 13px; flex-shrink: 0;"
+                     th:text="${#authentication.name.substring(0,1).toUpperCase()}">U</div>
                 <div style="flex: 1; min-width: 0;">
                     <div style="font-size: 12px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" sec:authentication="name">Admin</div>
                     <div style="font-size: 10px; color: var(--muted);">
