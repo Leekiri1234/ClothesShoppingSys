@@ -4,6 +4,7 @@
       layout:decorate="~{layouts/layout}">
 <head>
     <title>Cập nhật hồ sơ - MINIMAL</title>
+    <link rel="stylesheet" th:href="@{/css/profile/profile-edit.css}">
 </head>
 <body>
 <div layout:fragment="content">
@@ -77,5 +78,9 @@
         </div>
     </section>
 </div>
+
+<th:block layout:fragment="scripts">
+    <script th:src="@{/js/profile/profile-edit.js}"></script>
+</th:block>
 </body>
 </html>

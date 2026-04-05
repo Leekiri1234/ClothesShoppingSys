@@ -4,6 +4,7 @@
       layout:decorate="~{layouts/layout}">
 <head>
     <title>Đăng nhập - MINIMAL</title>
+    <link rel="stylesheet" th:href="@{/css/auth/login.css}">
 </head>
 <body>
 <div layout:fragment="content">
@@ -70,18 +71,9 @@
       </div>
     </div>
     
-    <script>
-      function togglePasswordVisibility(id, el) {
-        const input = document.getElementById(id);
-        if (input.type === 'password') {
-          input.type = 'text';
-          el.innerText = 'ẩn';
-        } else {
-          input.type = 'password';
-          el.innerText = 'hiện';
-        }
-      }
-    </script>
+    <th:block layout:fragment="scripts">
+        <script th:src="@{/js/auth/login.js}"></script>
+    </th:block>
 </div>
 </body>
 </html>

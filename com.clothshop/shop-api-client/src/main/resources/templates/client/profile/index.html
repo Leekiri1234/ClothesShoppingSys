@@ -4,6 +4,7 @@
       layout:decorate="~{layouts/layout}">
 <head>
     <title>Hồ sơ cá nhân - MINIMAL</title>
+    <link rel="stylesheet" th:href="@{/css/profile/profile-index.css}">
 </head>
 <body>
 <div layout:fragment="content">
@@ -72,5 +73,8 @@
         </div>
     </section>
 </div>
-</body>
+
+<th:block layout:fragment="scripts">
+    <script th:src="@{/js/profile/profile-index.js}"></script>
+</th:block>
 </html>
