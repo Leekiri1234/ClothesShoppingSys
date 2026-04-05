@@ -12,6 +12,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
@@ -121,6 +122,74 @@ public class CustomerAuthController {
     @GetMapping("/forgot-password")
     public String showForgotPasswordPage() {
         return "client/auth/forgot-password";
+    }
+
+    /**
+     * Process forgot password request (email verification).
+     */
+    @PostMapping("/forgot-password")
+    public String processForgotPassword(@RequestParam("email") String email, Model model, RedirectAttributes redirectAttributes) {
+        log.info("Process forgot password for email: {}", email);
+        
+        if (email == null || email.trim().isEmpty()) {
+            model.addAttribute("error", "Vui lòng nhập địa chỉ email");
+            return "client/auth/forgot-password";
+        }
+
+        boolean exists = authService.checkEmailExists(email);
+        if (!exists) {
+            model.addAttribute("error", "Email không tồn tại trong hệ thống");
+            return "client/auth/forgot-password";
+        }
+
+        // Redirect to reset password page with email
+        redirectAttributes.addAttribute("email", email);
+        return "redirect:/reset-password";
+    }
+
+    /**
+     * Display reset password page.
+     */
+    @GetMapping("/reset-password")
+    public String showResetPasswordPage(@RequestParam(value = "email", required = false) String email, Model model) {
+        if (email == null || email.trim().isEmpty()) {
+            return "redirect:/forgot-password";
+        }
+        
+        com.clothshop.client.dtos.request.ResetPasswordRequest request = new com.clothshop.client.dtos.request.ResetPasswordRequest();
+        request.setEmail(email);
+        model.addAttribute("resetPasswordRequest", request);
+        return "client/auth/reset-password";
+    }
+
+    /**
+     * Process reset password.
+     */
+    @PostMapping("/reset-password")
+    public String processResetPassword(
+            @Valid @ModelAttribute("resetPasswordRequest") com.clothshop.client.dtos.request.ResetPasswordRequest request,
+            BindingResult bindingResult,
+            RedirectAttributes redirectAttributes,
+            Model model) {
+
+        log.info("Reset password attempt for email: {}", request.getEmail());
+
+        if (bindingResult.hasErrors()) {
+            return "client/auth/reset-password";
+        }
+
+        try {
+            authService.resetPassword(request.getEmail(), request.getNewPassword(), request.getConfirmPassword());
+            redirectAttributes.addFlashAttribute("success", "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
+            return "redirect:/login";
+        } catch (BusinessException e) {
+            model.addAttribute("error", e.getMessage());
+            return "client/auth/reset-password";
+        } catch (Exception e) {
+            log.error("Unexpected error during reset password: ", e);
+            model.addAttribute("error", "Đã xảy ra lỗi hệ thống, vui lòng thử lại sau.");
+            return "client/auth/reset-password";
+        }
     }
 }
 
