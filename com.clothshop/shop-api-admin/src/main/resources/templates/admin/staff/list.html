@@ -46,9 +46,8 @@
         </select>
 
         <select class="filter-select" id="statusFilter" onchange="filterStaff()">
-            <option value="">Tất cả trạng thái</option>
+            <option value="" th:selected="${filter.status == null}">Tất cả trạng thái</option>
             <option value="ACTIVE" th:selected="${filter.status?.name() == 'ACTIVE'}">Đang hoạt động</option>
-            <option value="INACTIVE" th:selected="${filter.status?.name() == 'INACTIVE'}">Ngưng hoạt động</option>
             <option value="LOCKED" th:selected="${filter.status?.name() == 'LOCKED'}">Đã khóa</option>
         </select>
 
@@ -65,7 +64,7 @@
     <div class="stat-cards" style="margin-bottom: 24px;">
         <div class="stat-card">
             <div class="stat-label">Tổng nhân viên</div>
-            <div class="stat-value" th:text="${staffPage.totalElements}">0</div>
+            <div class="stat-value" th:text="${totalAllStaff}">0</div>
             <svg class="stat-icon" viewBox="0 0 24 24">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                 <circle cx="9" cy="7" r="4"/>
@@ -76,7 +75,7 @@
 
         <div class="stat-card stat-card-success">
             <div class="stat-label">Đang hoạt động</div>
-            <div class="stat-value" th:text="${activeStaff ?: 0}">0</div>
+            <div class="stat-value" th:text="${activeStaff}">0</div>
             <svg class="stat-icon" viewBox="0 0 24 24">
                 <polyline points="20 6 9 17 4 12"/>
             </svg>
@@ -84,7 +83,7 @@
 
         <div class="stat-card stat-card-warning">
             <div class="stat-label">Super Admin</div>
-            <div class="stat-value" th:text="${superAdminCount ?: 0}">0</div>
+            <div class="stat-value" th:text="${superAdminCount}">0</div>
             <svg class="stat-icon" viewBox="0 0 24 24">
                 <path d="M12 2L2 7l10 5 10-5-10-5z"/>
                 <path d="M2 17l10 5 10-5"/>
@@ -94,7 +93,7 @@
 
         <div class="stat-card stat-card-info">
             <div class="stat-label">Nhân viên khác</div>
-            <div class="stat-value" th:text="${(staffPage.totalElements - (superAdminCount ?: 0))}">0</div>
+            <div class="stat-value" th:text="${totalAllStaff - superAdminCount}">0</div>
             <svg class="stat-icon" viewBox="0 0 24 24">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                 <circle cx="12" cy="7" r="4"/>
@@ -163,16 +162,9 @@
                               th:text="${staff.roleName}">Other</span>
                     </td>
                     <td>
-                        <label class="toggle-switch">
-                            <input type="checkbox"
-                                   th:checked="${staff.accountStatus?.name() == 'ACTIVE'}"
-                                   th:data-staff-id="${staff.id}"
-                                   th:onchange="'toggleStaffStatus(this, ' + ${staff.id} + ')'"
-                                   sec:authorize="hasRole('SUPER_ADMIN')">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span th:if="${staff.accountStatus?.name() == 'ACTIVE'}" class="badge badge-success" style="margin-left: 8px;">Active</span>
-                        <span th:unless="${staff.accountStatus?.name() == 'ACTIVE'}" class="badge badge-muted" style="margin-left: 8px;">Inactive</span>
+                        <span th:if="${staff.accountStatus?.name() == 'ACTIVE'}" class="badge badge-success">Hoạt động</span>
+                        <span th:if="${staff.accountStatus?.name() == 'LOCKED'}" class="badge badge-danger">Đã khóa</span>
+                        <span th:if="${staff.accountStatus?.name() != 'ACTIVE' and staff.accountStatus?.name() != 'LOCKED'}" class="badge badge-muted" th:text="${staff.accountStatus?.name()}">Khác</span>
                     </td>
                     <td>
                         <div class="actions-cell">
@@ -185,7 +177,32 @@
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                 </svg>
                             </a>
-                            <!-- Delete button removed - Use toggle switch above to deactivate instead -->
+                            <!-- Deactivate: chỉ hiện khi ACTIVE và không phải SUPER_ADMIN -->
+                            <button th:if="${staff.accountStatus?.name() == 'ACTIVE' and staff.roleName != 'SUPER_ADMIN'}"
+                                    type="button"
+                                    class="btn btn-xs"
+                                    style="color: var(--danger); border-color: var(--danger);"
+                                    title="Khóa tài khoản"
+                                    th:onclick="'deactivateStaff(' + ${staff.id} + ')'"
+                                    sec:authorize="hasRole('SUPER_ADMIN')">
+                                <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                                </svg>
+                            </button>
+                            <!-- Reactivate: chỉ hiện khi LOCKED -->
+                            <button th:if="${staff.accountStatus?.name() == 'LOCKED'}"
+                                    type="button"
+                                    class="btn btn-xs"
+                                    style="color: #2e7d32; border-color: #2e7d32;"
+                                    title="Kích hoạt tài khoản"
+                                    th:onclick="'reactivateStaff(' + ${staff.id} + ')'"
+                                    sec:authorize="hasRole('SUPER_ADMIN')">
+                                <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24">
+                                    <polyline points="9 11 12 14 22 4"/>
+                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                                </svg>
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -282,44 +299,42 @@ function goToPage(page) {
     window.location.href = url.toString();
 }
 
-// Toggle staff status (from toggle switch in list)
-function toggleStaffStatus(checkbox, staffId) {
-    const isActive = checkbox.checked;
-
-    const csrfTokenFromCookie = getCookie('XSRF-TOKEN');
-    const csrfTokenFromMeta = document.querySelector('meta[name="_csrf"]')?.content;
-    const csrfHeaderFromMeta = document.querySelector('meta[name="_csrf_header"]')?.content;
-
-    const csrfToken = csrfTokenFromCookie || csrfTokenFromMeta;
-    const csrfHeader = csrfHeaderFromMeta || 'X-XSRF-TOKEN';
+// Toggle staff status via API (shared by deactivate & reactivate)
+function callToggleStatus(staffId, successMsg, errorMsg) {
+    const csrfToken = getCookie('XSRF-TOKEN')
+        || document.querySelector('meta[name="_csrf"]')?.content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-XSRF-TOKEN';
 
     if (!csrfToken) {
-        AdminUI.showToast('Lỗi: Không tìm thấy CSRF token!', 'error');
-        checkbox.checked = !isActive;
+        if (window.AdminUI) AdminUI.showToast('Lỗi: Không tìm thấy CSRF token!', 'error');
         return;
     }
 
-    const endpoint = `/admin/staff/toggle/${staffId}`;
     const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
     headers[csrfHeader] = csrfToken;
 
-    fetch(endpoint, { method: 'POST', headers: headers })
-    .then(response => {
-        if (response.ok) {
-            const message = isActive
-                ? 'Đã kích hoạt tài khoản nhân viên'
-                : 'Đã vô hiệu hóa tài khoản nhân viên';
-            AdminUI.showToast(message, 'success');
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            checkbox.checked = !isActive;
-            throw new Error('Failed to toggle status');
-        }
-    })
-    .catch(error => {
-        AdminUI.showToast('Không thể thay đổi trạng thái!', 'error');
-        checkbox.checked = !isActive;
-    });
+    fetch(`/admin/staff/toggle/${staffId}`, { method: 'POST', headers })
+        .then(res => {
+            if (res.ok) {
+                if (window.AdminUI) AdminUI.showToast(successMsg, 'success');
+                setTimeout(() => location.reload(), 800);
+            } else {
+                if (window.AdminUI) AdminUI.showToast(errorMsg, 'error');
+            }
+        })
+        .catch(() => {
+            if (window.AdminUI) AdminUI.showToast(errorMsg, 'error');
+        });
+}
+
+function deactivateStaff(staffId) {
+    if (!confirm('Bạn có chắc muốn KHÓA tài khoản này không?')) return;
+    callToggleStatus(staffId, 'Đã khóa tài khoản nhân viên', 'Không thể khóa tài khoản!');
+}
+
+function reactivateStaff(staffId) {
+    if (!confirm('Bạn có chắc muốn KÍCH HOẠT lại tài khoản này không?')) return;
+    callToggleStatus(staffId, 'Đã kích hoạt tài khoản nhân viên', 'Không thể kích hoạt tài khoản!');
 }
 
 
