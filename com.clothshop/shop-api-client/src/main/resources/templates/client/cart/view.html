@@ -3,14 +3,390 @@
       xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layouts/layout}">
+
 <head>
     <title>Giỏ hàng</title>
-    <link rel="stylesheet" th:href="@{/css/cart.css}">
-
 </head>
 
 <body>
 <section layout:fragment="content">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500&display=swap');
+
+        body,
+        .cart-page {
+            background: #f7f6f4;
+        }
+
+        .cart-page {
+            max-width: 1520px;
+            margin: 0 auto;
+            padding: 66px 48px 90px;
+        }
+
+        .cart-page__title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 28px;
+            font-weight: 400;
+            color: #1d1b1f;
+            margin: 0 0 26px;
+            letter-spacing: 0.4px;
+        }
+
+        .cart-page__divider {
+            border: none;
+            border-top: 1px solid #e7e2dc;
+            margin: 0 0 40px;
+        }
+
+        .cart-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 420px;
+            gap: 38px;
+            align-items: start;
+        }
+
+        .cart-table {
+            width: 100%;
+        }
+
+        .cart-table__head {
+            display: grid;
+            grid-template-columns: minmax(420px, 1fr) 120px 145px 150px 40px;
+            align-items: center;
+            padding: 0 0 24px;
+            border-bottom: 1px solid #ebe7e2;
+            color: #a8a1a0;
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+
+        .cart-table__row {
+            display: grid;
+            grid-template-columns: minmax(420px, 1fr) 120px 145px 150px 40px;
+            align-items: center;
+            padding: 28px 0;
+            border-bottom: 1px solid #ece8e3;
+        }
+
+        .cart-product {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            min-width: 0;
+        }
+
+        .cart-product__thumb {
+            width: 90px;
+            height: 114px;
+            background: #ece7e1 center/cover no-repeat;
+            border: 1px solid #e7e1db;
+            flex-shrink: 0;
+        }
+
+        .cart-product__name {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 15px;
+            font-weight: 400;
+            line-height: 1.45;
+            color: #1d1b1f;
+            text-decoration: none;
+        }
+
+        .cart-product__meta {
+            font-size: 13px;
+            line-height: 1.9;
+            color: #9b9597;
+        }
+
+        .cart-price,
+        .cart-line-total {
+            font-size: 15px;
+            color: #252226;
+        }
+
+        .qty-form {
+            margin: 0;
+        }
+
+        .qty-box {
+            width: 108px;
+            height: 42px;
+            border: 1px solid #ddd7d1;
+            display: flex;
+            align-items: center;
+            background: #fff;
+        }
+
+        .qty-box button {
+            width: 34px;
+            height: 40px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-size: 18px;
+            color: #474248;
+            flex-shrink: 0;
+        }
+
+        .qty-box button:hover {
+            background: #f5f2ee;
+        }
+
+        .qty-box input {
+            flex: 1;
+            text-align: center;
+            border: none;
+            outline: none;
+            font-size: 14px;
+            color: #1d1b1f;
+            background: transparent;
+            -moz-appearance: textfield;
+        }
+
+        .qty-box input::-webkit-outer-spin-button,
+        .qty-box input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+        }
+
+        .cart-remove {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            border: none;
+            background: transparent;
+            color: #b4aeac;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 0;
+            transition: color .15s ease;
+        }
+
+        .cart-remove:hover {
+            color: #111;
+        }
+
+        .empty-cart {
+            min-height: 305px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 28px;
+            border-bottom: 1px solid #ece8e3;
+            text-align: center;
+        }
+
+        .empty-cart__text {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 400;
+            color: #9d999d;
+        }
+
+        .empty-cart__btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 270px;
+            height: 56px;
+            background: #141414;
+            color: #fff;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: opacity .15s ease;
+        }
+
+        .empty-cart__btn:hover {
+            opacity: .9;
+            color: #fff;
+        }
+
+        .btn-outline-back {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 240px;
+            height: 44px;
+            border: 1px solid #ddd6cf;
+            background: transparent;
+            color: #7d7678;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 2.6px;
+            font-size: 12px;
+            margin-top: 58px;
+            transition: border-color .15s ease, color .15s ease;
+        }
+
+        .btn-outline-back:hover {
+            border-color: #111;
+            color: #111;
+        }
+
+        .cart-summary {
+            border: 1px solid #e3ddd7;
+            padding: 36px 38px 38px;
+            background: #fbfaf8;
+            position: sticky;
+            top: 90px;
+        }
+
+        .cart-summary__title {
+            margin: 0 0 28px;
+            font-size: 12px;
+            font-weight: 500;
+            color: #1d1b1f;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        .voucher-label {
+            display: block;
+            font-size: 11px;
+            color: #9d9698;
+            letter-spacing: 2.8px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .voucher-box {
+            display: flex;
+            margin-bottom: 24px;
+        }
+
+        .voucher-box input {
+            flex: 1;
+            height: 50px;
+            border: 1px solid #dfd8d2;
+            border-right: none;
+            padding: 0 16px;
+            font-size: 14px;
+            color: #333;
+            outline: none;
+            background: #fff;
+            font-family: inherit;
+        }
+
+        .voucher-box input::placeholder {
+            color: #bbb3b2;
+        }
+
+        .voucher-box input:focus {
+            border-color: #b9b0aa;
+        }
+
+        .voucher-box button {
+            width: 132px;
+            height: 50px;
+            border: none;
+            background: #151515;
+            color: #fff;
+            font-size: 12px;
+            letter-spacing: 2.8px;
+            text-transform: uppercase;
+            cursor: pointer;
+            font-family: inherit;
+            font-weight: 500;
+        }
+
+        .summary-line {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 16px;
+            color: #6f696d;
+            padding: 15px 0;
+            border-bottom: 1px solid #ece6e1;
+        }
+
+        .summary-line .value {
+            color: #2a262b;
+        }
+
+        .summary-line.discount .value {
+            color: #d85a57;
+        }
+
+        .summary-total {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 0 6px;
+            margin-top: 8px;
+            border-top: 1px solid #2f2b30;
+            font-size: 18px;
+            font-weight: 600;
+            color: #1d1b1f;
+        }
+
+        .btn-black {
+            width: 100%;
+            height: 56px;
+            border: none;
+            background: #151515;
+            color: #fff;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 30px;
+            font-family: inherit;
+        }
+
+        .btn-black:hover {
+            opacity: .92;
+        }
+
+        .money {
+            white-space: nowrap;
+        }
+
+        @media (max-width: 1200px) {
+            .cart-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .cart-summary {
+                max-width: 460px;
+                position: static;
+            }
+        }
+
+        @media (max-width: 780px) {
+            .cart-page {
+                padding: 36px 16px 60px;
+            }
+
+            .cart-page__title {
+                font-size: 24px;
+            }
+
+            .cart-table__head {
+                display: none;
+            }
+
+            .cart-table__row {
+                grid-template-columns: 1fr;
+                gap: 14px;
+                padding: 20px 0;
+            }
+
+            .empty-cart__btn,
+            .btn-outline-back {
+                min-width: 100%;
+            }
+        }
+    </style>
+
     <div class="cart-page">
         <h1 class="cart-page__title">Giỏ hàng</h1>
         <hr class="cart-page__divider"/>
@@ -144,8 +520,116 @@
         </div>
     </div>
 </section>
+
 <th:block layout:fragment="scripts">
-    <script th:src="@{/js/cart.js}"></script>
+    <script th:inline="javascript">
+        function changeQty(btn, delta) {
+            const form = btn.closest('form');
+            const input = form.querySelector('input[name="quantity"]');
+            const max = parseInt(input.getAttribute('max') || '999999');
+            let val = parseInt(input.value || '1') + delta;
+
+            if (val < 1) val = 1;
+            if (val > max) val = max;
+
+            input.value = val;
+            form.submit();
+        }
+
+        function applyVoucher() {
+            const code = document.getElementById('voucher-input').value.trim();
+            const msgEl = document.getElementById('voucher-msg');
+
+            if (!code) {
+                msgEl.style.color = '#d94f4f';
+                msgEl.textContent = 'Vui lòng nhập mã giảm giá.';
+                return;
+            }
+
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+            const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+
+            if (csrfToken && csrfHeader) {
+                headers[csrfHeader] = csrfToken;
+            }
+
+            fetch('/checkout/calculate?voucherCode=' + encodeURIComponent(code), {
+                method: 'POST',
+                headers
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.error) {
+                    msgEl.style.color = '#d94f4f';
+                    msgEl.textContent = data.error;
+                    document.getElementById('sum-discount').textContent = '-0đ';
+                    recalcTotal();
+                } else {
+                    msgEl.style.color = '#3b8a5a';
+                    msgEl.textContent = data.voucherMessage || 'Áp dụng thành công!';
+
+                    if (data.discount != null) {
+                        document.getElementById('sum-discount').textContent =
+                            '-' + Number(data.discount).toLocaleString('vi-VN') + 'đ';
+                    }
+
+                    if (data.totalAmount != null) {
+                        document.getElementById('sum-subtotal').textContent =
+                            Number(data.totalAmount).toLocaleString('vi-VN') + 'đ';
+                    }
+
+                    if (data.finalAmount != null) {
+                        document.getElementById('sum-total').textContent =
+                            Number(data.finalAmount).toLocaleString('vi-VN') + 'đ';
+                    } else {
+                        recalcTotal();
+                    }
+                }
+            })
+            .catch(() => {
+                msgEl.style.color = '#d94f4f';
+                msgEl.textContent = 'Có lỗi xảy ra, thử lại sau.';
+            });
+        }
+
+        function parseMoney(text) {
+            return parseInt(String(text).replace(/[^\d]/g, '')) || 0;
+        }
+
+        function recalcTotal() {
+            const subtotal = parseMoney(document.getElementById('sum-subtotal').textContent);
+            const discount = parseMoney(document.getElementById('sum-discount').textContent);
+            const shipping = parseMoney(document.getElementById('sum-shipping').textContent);
+
+            const total = Math.max(0, subtotal + shipping - discount);
+            document.getElementById('sum-total').textContent = total.toLocaleString('vi-VN') + 'đ';
+        }
+
+        document.getElementById('voucher-input')?.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applyVoucher();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const cartCount = /*[[${cartCount}]]*/ 0;
+            const el1 = document.getElementById('cart-count');
+            const el2 = document.getElementById('cart-sidebar-count');
+
+            if (el1) {
+                el1.textContent = cartCount;
+                el1.style.display = 'inline-flex';
+            }
+
+            if (el2) {
+                el2.textContent = cartCount;
+            }
+
+            recalcTotal();
+        });
+    </script>
 </th:block>
 </body>
 </html>

@@ -46,11 +46,14 @@ public class CheckoutController {
 
         // Pre-fill từ thông tin tài khoản
         if (account != null && account.getCustomer() != null) {
+            request.setFullName(account.getCustomer().getFullName());
             request.setShippingAddress(account.getCustomer().getAddress());
             request.setPhoneNumber(account.getCustomer().getPhoneNumber());
-            // Thêm nếu Customer có fullName / email
-            // request.setFullName(account.getCustomer().getFullName());
-            // request.setEmail(account.getEmail());
+            String email = account.getCustomer().getEmail();
+            if (email == null || email.isBlank()) {
+                email = account.getEmail();
+            }
+            request.setEmail(email);
         }
 
         model.addAttribute("cart", cartService.getCartSummary(principal.getName()));

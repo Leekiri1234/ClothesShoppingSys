@@ -1,0 +1,126 @@
+.container {
+    padding-top: 120px;
+    padding-bottom: 80px;
+}
+
+.checkout-grid {
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    gap: 60px;
+}
+
+.checkout-title {
+    font-weight: 300;
+    margin-bottom: 32px;
+}
+
+.section-title {
+    font-weight: 300;
+    margin: 48px 0 24px;
+}
+
+.label {
+    font-size: 12px;
+    text-transform: uppercase;
+    color: #999;
+}
+
+.form-group {
+    display: grid;
+    gap: 20px;
+}
+
+.payment-list {
+    display: grid;
+    gap: 12px;
+}
+
+.payment-card {
+    border: 1px solid #eee;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+}
+
+.checkout-summary {
+    background: #f9f9f9;
+    padding: 32px;
+    position: sticky;
+    top: 120px;
+}
+
+.summary-title {
+    margin-bottom: 24px;
+    font-weight: 400;
+}
+
+.cart-item {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    align-items: center;
+}
+
+.img-placeholder {
+    width: 50px;
+    height: 65px;
+}
+
+.img-placeholder img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.item-info {
+    flex: 1;
+    font-size: 13px;
+}
+
+.item-info p:first-child {
+    font-weight: 500;
+}
+
+.item-info p:last-child {
+    color: #999;
+}
+
+.item-price {
+    font-size: 13px;
+}
+
+.price-section {
+    margin: 24px 0;
+    border-top: 1px solid #ddd;
+    padding-top: 24px;
+}
+
+.flex-between {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+
+.total {
+    font-weight: 600;
+    font-size: 20px;
+    margin-top: 24px;
+}
+
+.voucher-box {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.error {
+    color: red;
+    margin-bottom: 20px;
+}
+
+.error-text {
+    color: red;
+    font-size: 12px;
+}
