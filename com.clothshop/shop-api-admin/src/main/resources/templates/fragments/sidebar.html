@@ -24,9 +24,9 @@
             </a>
         </div>
 
-        <!-- QUẢN LÝ ĐỚN -->
+        <!-- QUẢN LÝ ĐƠN -->
         <div class="nav-group" sec:authorize="hasAnyRole('SUPER_ADMIN', 'SALE_PRODUCT_STAFF')">
-            <span class="nav-group-label">QUẢN LÝ ĐỚN</span>
+            <span class="nav-group-label">QUẢN LÝ ĐƠN</span>
             <a class="nav-link" th:href="@{/admin/orders}"
                th:classappend="${currentPath != null and #strings.contains(currentPath, '/orders')} ? 'active' : ''">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
