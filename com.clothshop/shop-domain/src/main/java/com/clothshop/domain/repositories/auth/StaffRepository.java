@@ -50,4 +50,16 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
                                   @Param("status") AccountStatus status,
                                   Pageable pageable);
 
+    /**
+     * Count staff by account status (for dashboard stats)
+     */
+    @Query("SELECT COUNT(s) FROM Staff s JOIN s.account a WHERE a.accountStatus = :status")
+    long countByAccountStatus(@Param("status") AccountStatus status);
+
+    /**
+     * Count staff by role name (for Super Admin count stat)
+     */
+    @Query("SELECT COUNT(s) FROM Staff s JOIN s.role r WHERE r.staffRole = com.clothshop.domain.enums.StaffRole.SUPER_ADMIN")
+    long countSuperAdmins();
+
 }
