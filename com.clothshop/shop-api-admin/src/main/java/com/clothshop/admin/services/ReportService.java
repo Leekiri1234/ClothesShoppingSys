@@ -1,12 +1,15 @@
 package com.clothshop.admin.services;
 
 import com.clothshop.admin.dtos.response.dashboard.RecentOrderDTO;
+import com.clothshop.admin.dtos.response.dashboard.RevenueDTO;
+import com.clothshop.admin.dtos.response.dashboard.TopProductDTO;
 import com.clothshop.admin.dtos.response.SalesReportResponse;
 import com.clothshop.admin.services.FeaturedProductService;
 import com.clothshop.domain.entities.order.Order;
 import com.clothshop.domain.entities.product.Product;
 import com.clothshop.domain.enums.OrderStatus;
 import com.clothshop.domain.repositories.order.OrderRepository;
+import com.clothshop.domain.projections.DailyRevenueSummary;
 import com.clothshop.domain.projections.ProductSalesSummary;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +39,10 @@ public class ReportService {
             OrderStatus.DELIVERED,
             OrderStatus.COMPLETED
     );
+    private static final List<OrderStatus> REVENUE_STATUSES = List.of(
+            OrderStatus.DELIVERED,
+            OrderStatus.COMPLETED
+    );
 
     /**
      * Get sales report for the specified date range
@@ -49,6 +56,7 @@ public class ReportService {
         List<Order> salesOrders = orderRepository.findSalesOrders(SALES_STATUSES, startDateTime, endDateTime);
         List<Long> featuredProductIds = getFeaturedProductCandidateIds();
         List<SalesReportResponse.TopProductDTO> topProducts = getTopProducts(salesOrders, 5, featuredProductIds, true, true);
+        List<SalesReportResponse.DailySalesDTO> dailySales = groupSalesByDate(salesOrders, startDate, endDate);
 
         if (salesOrders.isEmpty()) {
             return SalesReportResponse.builder()
@@ -56,7 +64,7 @@ public class ReportService {
                     .totalOrders(0L)
                     .totalCustomers(0L)
                     .totalProducts(0L)
-                    .dailySales(Collections.emptyList())
+                    .dailySales(dailySales)
                     .topProducts(topProducts)
                     .build();
         }
@@ -81,7 +89,7 @@ public class ReportService {
             }
         }
 
-        List<SalesReportResponse.DailySalesDTO> dailySales = groupSalesByDate(salesOrders, startDate, endDate);
+        // already computed above when salesOrders non-empty
 
         return SalesReportResponse.builder()
                 .totalRevenue(totalRevenue)
@@ -107,6 +115,54 @@ public class ReportService {
         LocalDate today = LocalDate.now();
         LocalDate sevenDaysAgo = today.minusDays(7);
         return getSalesReport(sevenDaysAgo, today);
+    }
+
+    @Transactional(readOnly = true)
+    public List<RevenueDTO> getRevenueLast7Days() {
+        LocalDate today = LocalDate.now();
+        LocalDate startDate = today.minusDays(6);
+        LocalDateTime windowStart = startDate.atStartOfDay();
+        LocalDateTime windowEnd = today.atTime(LocalTime.MAX);
+
+        List<DailyRevenueSummary> summaries = orderRepository.findRevenueByDateRange(
+                REVENUE_STATUSES, windowStart, windowEnd);
+
+        Map<LocalDate, RevenueDTO> revenueMap = summaries.stream()
+                .collect(Collectors.toMap(
+                        DailyRevenueSummary::getDate,
+                        summary -> RevenueDTO.builder()
+                                .date(summary.getDate())
+                                .revenue(summary.getRevenue())
+                                .orderCount(summary.getOrderCount())
+                                .build()));
+
+        List<RevenueDTO> weeklyRevenue = new ArrayList<>();
+        LocalDate cursor = startDate;
+        while (!cursor.isAfter(today)) {
+            weeklyRevenue.add(revenueMap.getOrDefault(
+                    cursor,
+                    RevenueDTO.builder()
+                            .date(cursor)
+                            .revenue(BigDecimal.ZERO)
+                            .orderCount(0L)
+                            .build()));
+            cursor = cursor.plusDays(1);
+        }
+        return weeklyRevenue;
+    }
+
+    @Transactional(readOnly = true)
+    public List<TopProductDTO> getTopSellingProducts() {
+        List<ProductSalesSummary> summary = orderRepository.findTopSellingProducts(
+                SALES_STATUSES, PageRequest.of(0, 5));
+
+        return summary.stream()
+                .map(item -> TopProductDTO.builder()
+                        .productName(item.getProductName())
+                        .quantity(item.getQuantity())
+                        .revenue(item.getRevenue())
+                        .build())
+                .collect(Collectors.toList());
     }
 
     public List<SalesReportResponse.TopProductDTO> getDashboardTopProducts() {
@@ -260,9 +316,13 @@ public class ReportService {
             }
         }
 
+        Comparator<ProductAccumulator> topProductComparator = Comparator
+                .comparingLong(ProductAccumulator::getQuantity).reversed()
+                .thenComparing(ProductAccumulator::getRevenue, Comparator.nullsLast(Comparator.reverseOrder()))
+                .thenComparing(acc -> acc.getFirstSoldAt() == null ? LocalDateTime.MAX : acc.getFirstSoldAt());
+
         List<SalesReportResponse.TopProductDTO> ranked = accumulator.values().stream()
-                .sorted(Comparator.comparingLong(ProductAccumulator::getQuantity).reversed()
-                        .thenComparing(acc -> acc.getFirstSoldAt() == null ? LocalDateTime.MAX : acc.getFirstSoldAt()))
+                .sorted(topProductComparator)
                 .limit(limit)
                 .map(acc -> SalesReportResponse.TopProductDTO.builder()
                         .productId(acc.getProductId())

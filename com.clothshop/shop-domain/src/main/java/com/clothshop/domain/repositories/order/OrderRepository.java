@@ -2,6 +2,7 @@ package com.clothshop.domain.repositories.order;
 
 import com.clothshop.domain.entities.order.Order;
 import com.clothshop.domain.enums.OrderStatus;
+import com.clothshop.domain.projections.DailyRevenueSummary;
 import com.clothshop.domain.projections.ProductSalesSummary;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -71,6 +72,16 @@ public interface OrderRepository extends JpaRepository<Order, Long>, JpaSpecific
             "JOIN v.product p " +
             "WHERE o.status IN :statuses " +
             "GROUP BY p.id, p.productName " +
-            "ORDER BY SUM(oi.quantity) DESC")
+            "ORDER BY SUM(oi.quantity) DESC, SUM(oi.unitPrice * oi.quantity) DESC")
     List<ProductSalesSummary> findTopSellingProducts(@Param("statuses") List<OrderStatus> statuses, Pageable pageable);
+
+    @Query("SELECT FUNCTION('DATE', o.createdAt) AS date, COALESCE(SUM(o.totalPrice), 0) AS revenue, COUNT(o) AS orderCount " +
+            "FROM Order o " +
+            "WHERE o.status IN :statuses " +
+            "AND o.createdAt BETWEEN :start AND :end " +
+            "GROUP BY FUNCTION('DATE', o.createdAt) " +
+            "ORDER BY FUNCTION('DATE', o.createdAt)")
+    List<DailyRevenueSummary> findRevenueByDateRange(@Param("statuses") List<OrderStatus> statuses,
+                                                   @Param("start") LocalDateTime start,
+                                                   @Param("end") LocalDateTime end);
 }

@@ -579,10 +579,10 @@ svg {
 .admin-table th {
   text-align: left;
   padding: 10px 12px;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-transform: none;
   color: var(--muted);
   background: var(--bg);
   border-bottom: 1px solid var(--border);
@@ -597,6 +597,9 @@ svg {
   padding: 10px 12px;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--primary);
 }
 
 .admin-table tbody tr:last-child td { border-bottom: none; }

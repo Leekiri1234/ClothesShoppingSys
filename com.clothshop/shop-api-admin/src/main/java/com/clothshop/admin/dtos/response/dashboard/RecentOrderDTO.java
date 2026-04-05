@@ -22,9 +22,11 @@ public class RecentOrderDTO implements Serializable {
     private OrderStatus status;
 
     public String getStatusBadgeClass() {
-        if (status == null) return " badge-secondary";
+        if (status == null) {
+            return " badge-secondary";
+        }
         return switch (status) {
-            case PENDING -> " badge-warning";
+            case PENDING, CONFIRMED -> " badge-warning";
             case SHIPPING -> " badge-info";
             case DELIVERED, COMPLETED -> " badge-success";
             default -> " badge-secondary";
