@@ -52,7 +52,8 @@ public class CollectionAdminController {
             @ModelAttribute com.clothshop.admin.dtos.request.marketing.CollectionFilterRequest filter,
             Model model) {
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        // Cần dùng tên cột thực tế trong DB 'created_at' do sử dụng nativeQuery
+        Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").descending());
 
         // Luôn sử dụng filter để gọi query native, lấy được mọi trạng thái theo ý muốn (kể cả khi không có điều kiện nào để lấy TẤT CẢ)
         Page<CollectionResponse> collectionPage = featuredCollectionService.getCollectionsWithFilter(filter, pageable);
