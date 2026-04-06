@@ -10,6 +10,7 @@ import com.clothshop.admin.services.FeaturedCollectionService;
 import com.clothshop.admin.services.ProductVariantService;
 import com.clothshop.common.dtos.request.PagingRequest;
 import com.clothshop.common.dtos.response.PageResponse;
+import com.clothshop.domain.enums.ProductStatus;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,9 @@ public class ProductAdminController {
 
     @GetMapping
     public String listProducts(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) ProductStatus prodStatus,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false, defaultValue = "createdAt") String sortBy,
@@ -52,9 +56,16 @@ public class ProductAdminController {
                 .sortDirection(direction)
                 .build();
 
-        PageResponse<ProductAdminResponse> products = productAdminService.getAllProducts(pagingRequest);
+        PageResponse<ProductAdminResponse> products = productAdminService.getAllProducts(keyword, categoryId, prodStatus, pagingRequest);
 
         model.addAttribute("products", products);
+        model.addAttribute("categories", categoryService.getAllCategories());
+
+        // Pass filter values to the view
+        model.addAttribute("keyword", keyword);
+        model.addAttribute("categoryId", categoryId);
+        model.addAttribute("prodStatus", prodStatus);
+
         // Lưu ý: Dùng products.pageNumber trong Thymeleaf sẽ tốt hơn
         model.addAttribute("currentPage", page);
 
