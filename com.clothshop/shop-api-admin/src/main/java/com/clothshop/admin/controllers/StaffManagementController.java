@@ -28,6 +28,7 @@ import com.clothshop.common.dtos.response.PageResponse;
 // --- Services & Repositories ---
 import com.clothshop.admin.services.StaffManagementService;
 import com.clothshop.domain.repositories.auth.RoleRepository;
+import com.clothshop.domain.repositories.auth.StaffRepository;
 import com.clothshop.domain.enums.AccountStatus;
 
 // --- Exceptions ---
@@ -43,6 +44,7 @@ public class StaffManagementController {
 
     private final StaffManagementService staffService;
     private final RoleRepository roleRepository;
+    private final StaffRepository staffRepository;
 
     // 1. TRANG DANH SÁCH (Hỗ trợ tìm kiếm & Phân trang)
     @GetMapping
@@ -57,9 +59,16 @@ public class StaffManagementController {
 
         PageResponse<StaffResponse> response = staffService.getAllStaff(filter, pageable);
 
+        // Global stats (luôn tính toàn bộ, không bị ảnh hưởng bởi filter)
+        long totalAllStaff = staffRepository.count();
+        long activeStaff = staffRepository.countByAccountStatus(AccountStatus.ACTIVE);
+        long superAdminCount = staffRepository.countSuperAdmins();
+
         model.addAttribute("staffPage", response);
+        model.addAttribute("totalAllStaff", totalAllStaff);
+        model.addAttribute("activeStaff", activeStaff);
+        model.addAttribute("superAdminCount", superAdminCount);
         model.addAttribute("roles", roleRepository.findAll());
-        model.addAttribute("allStatus", AccountStatus.values());
         model.addAttribute("filter", filter);
         model.addAttribute("currentUsername", principal.getName());
 

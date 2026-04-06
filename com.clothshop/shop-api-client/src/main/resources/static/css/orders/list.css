@@ -1,0 +1,80 @@
+.container {
+    padding-top: 120px;
+    padding-bottom: 80px;
+}
+
+/* Empty */
+.empty-orders {
+    text-align: center;
+    padding: 100px 0;
+}
+
+.empty-orders p {
+    color: #999;
+    margin-bottom: 24px;
+}
+
+/* Table */
+.order-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.order-table thead tr {
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    color: #999;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.order-table th {
+    padding: 16px 0;
+}
+
+.order-table tbody tr {
+    border-bottom: 1px solid #f9f9f9;
+    font-size: 14px;
+}
+
+.order-table td {
+    padding: 24px 0;
+}
+
+.order-id {
+    font-weight: 500;
+}
+
+.text-right {
+    text-align: right;
+}
+
+/* Status */
+.status-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    background: #eee;
+}
+
+/* Pagination */
+.pagination {
+    margin-top: 40px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.page-link {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    text-decoration: none;
+    color: #333;
+}
+
+.page-link.active {
+    background: #000;
+    color: #fff;
+    border-color: #000;
+}

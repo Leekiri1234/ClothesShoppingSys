@@ -101,14 +101,46 @@ public class CustomerAuthService {
         log.info("Customer profile created successfully for account ID: {}", savedAccount.getId());
     }
 
-    /**
-     * Check if a username is available for registration.
-     *
-     * @param username Username to check
-     * @return true if available, false if taken
-     */
     public boolean isUsernameAvailable(String username) {
         return !accountRepository.existsByUsername(username);
+    }
+
+    /**
+     * Check if an email is available for registration (email exists in system).
+     *
+     * @param email Email to check
+     * @return true if exists, false if not
+     */
+    public boolean checkEmailExists(String email) {
+        return accountRepository.existsByEmail(email);
+    }
+
+    /**
+     * Reset password for an existing account.
+     *
+     * @param email Email of the account
+     * @param newPassword The new password
+     * @param confirmPassword Confirmation of the new password
+     * @throws BusinessException if validation fails or account not found
+     */
+    @Transactional
+    public void resetPassword(String email, String newPassword, String confirmPassword) {
+        log.info("Processing password reset for email: {}", email);
+
+        if (!newPassword.equals(confirmPassword)) {
+            throw new BusinessException(ErrorCode.PASSWORD_MISMATCH);
+        }
+
+        if (newPassword.length() < 8) {
+            throw new BusinessException(ErrorCode.INVALID_PASSWORD);
+        }
+
+        Account account = accountRepository.findByEmail(email)
+                .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_EXISTED, "No account found with this email"));
+
+        account.setPassword(passwordEncoder.encode(newPassword));
+        accountRepository.save(account);
+        log.info("Password reset successfully for email: {}", email);
     }
 
     /**

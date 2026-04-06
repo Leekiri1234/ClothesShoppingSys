@@ -20,61 +20,38 @@
 </div>
 
 <div layout:fragment="content">
-    <!-- FILTER BAR -->
-    <div class="filter-bar">
-        <input type="text"
-               class="filter-input"
-               placeholder="Tìm kiếm theo tên, SKU..."
-               id="searchInput">
+    <!-- FILTER CARD -->
+    <div class="dashboard-card" style="margin-bottom: 20px;">
+        <form th:action="@{/admin/products}" method="get" class="filter-form">
+            <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: flex-end;">
+                <div style="flex: 1; min-width: 250px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Tên / SKU / Danh mục</label>
+                    <input type="text" name="keyword" th:value="${keyword}" class="form-control" placeholder="Tìm kiếm tên sản phẩm, mã SKU...">
+                </div>
 
-        <select class="filter-select" id="categoryFilter">
-            <option value="">Tất cả danh mục</option>
-            <option th:each="cat : ${categories}"
-                    th:value="${cat.id}"
-                    th:text="${cat.categoryName}">Category</option>
-        </select>
+                <div style="flex: 1; min-width: 200px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Danh mục</label>
+                    <select name="categoryId" class="form-control">
+                        <option value="">Tất cả danh mục</option>
+                        <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.categoryName}" th:selected="${categoryId == cat.id}"></option>
+                    </select>
+                </div>
 
-        <select class="filter-select" id="statusFilter">
-            <option value="">Tất cả trạng thái</option>
-            <option value="active">Đang bán</option>
-            <option value="inactive">Ngưng bán</option>
-            <option value="out_of_stock">Hết hàng</option>
-        </select>
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Trạng thái KD</label>
+                    <select name="prodStatus" class="form-control">
+                        <option value="">Tất cả</option>
+                        <option value="ACTIVE" th:selected="${prodStatus != null and prodStatus.name() == 'ACTIVE'}">Đang kinh doanh</option>
+                        <option value="INACTIVE" th:selected="${prodStatus != null and prodStatus.name() == 'INACTIVE'}">Ngừng kinh doanh</option>
+                    </select>
+                </div>
 
-        <button class="btn btn-outline" onclick="applyFilters()">
-            <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
-                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
-            </svg>
-            Lọc
-        </button>
-
-        <button class="btn btn-outline" onclick="resetFilters()">
-            <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
-                <polyline points="1 4 1 10 7 10"/>
-                <polyline points="23 20 23 14 17 14"/>
-                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
-            </svg>
-            Reset
-        </button>
-    </div>
-
-    <!-- FILTER TABS -->
-    <div class="filter-tabs">
-        <button class="tab-btn active" data-status="all">
-            Tất cả <span th:text="${products.totalElements}">0</span>
-        </button>
-        <button class="tab-btn" data-status="active">
-            Đang bán <span>-</span>
-        </button>
-        <button class="tab-btn" data-status="low_stock">
-            Sắp hết hàng <span>-</span>
-        </button>
-        <button class="tab-btn" data-status="out_of_stock">
-            Hết hàng <span>-</span>
-        </button>
-        <button class="tab-btn" data-status="inactive">
-            Ngưng bán <span>-</span>
-        </button>
+                <div>
+                    <button type="submit" class="btn btn-primary" style="margin-bottom: 8px;">Lọc</button>
+                    <a th:href="@{/admin/products}" class="btn btn-outline" style="margin-bottom: 8px;">Xóa lọc</a>
+                </div>
+            </div>
+        </form>
     </div>
 
     <!-- TABLE CARD -->
@@ -82,112 +59,79 @@
         <table class="admin-table">
             <thead>
                 <tr>
-                    <th style="width: 60px;">
-                        <input type="checkbox" id="selectAll">
-                    </th>
                     <th style="width: 80px;">Hình ảnh</th>
-                    <th data-sort="name">Tên sản phẩm</th>
-                    <th data-sort="sku" style="width: 120px;">SKU</th>
-                    <th data-sort="category" style="width: 150px;">Danh mục</th>
-                    <th data-sort="price" style="width: 120px;">Giá bán</th>
-                    <th data-sort="stock" style="width: 100px;">Tồn kho</th>
+                    <th>Tên sản phẩm</th>
+                    <th style="width: 150px;">Danh mục</th>
+                    <th style="width: 120px;">Giá bán</th>
+                    <th style="width: 100px;">Tồn kho</th>
                     <th style="width: 120px;">Trạng thái</th>
-                    <th style="width: 180px;">Hành động</th>
+                    <th style="width: 160px;">Hành động</th>
                 </tr>
             </thead>
             <tbody>
                 <tr th:each="product : ${products.content}" th:classappend="${!product.isActive} ? 'inactive-row' : ''">
-                    <td>
-                        <input type="checkbox" class="row-checkbox" th:value="${product.productId}">
-                    </td>
                     <td>
                         <div class="table-product-img"
                              th:style="${product.imageUrl != null} ? 'background-image: url(' + ${product.imageUrl} + '); background-size: cover;' : ''"
                              th:text="${product.imageUrl == null} ? 'IMG' : ''">
                         </div>
                     </td>
-                    <td data-col="name">
+                    <td>
                         <div style="font-weight: 500;" th:text="${product.productName}">Áo sơ mi trắng basic</div>
                         <div style="font-size: 11px; color: var(--muted);" th:text="${product.productSlug}">ao-so-mi-trang-basic</div>
                     </td>
-                    <td data-col="sku">
-                        <span style="font-family: monospace; font-size: 12px;">N/A</span>
-                    </td>
-                    <td data-col="category">
+                    <td>
                         <span th:text="${product.categoryName}">Áo sơ mi</span>
                     </td>
-                    <td data-col="price">
+                    <td>
                         <div style="font-weight: 600;" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + '₫'">299.000₫</div>
                     </td>
-                    <td data-col="stock">
-                        <input type="number"
-                               class="stock-input"
-                               th:value="${product.stock}"
-                               th:classappend="${product.stock < 10} ? 'low' : (${product.stock == 0} ? 'out' : '')"
-                               onchange="updateStock(this, [[${product.productId}]])">
+                    <td>
+                        <span th:text="${product.stock}"
+                              th:classappend="${product.stock < 10} ? 'text-warning' : (${product.stock == 0} ? 'text-danger' : '')">0</span>
                     </td>
                     <td>
-                        <span th:unless="${product.isActive}" class="badge status-deleted" style="background-color: #ffebee; color: #c62828;">
-                            <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
-                                <circle cx="12" cy="12" r="10"/>
-                            </svg>
-                            Ngưng bán
-                        </span>
+                        <span th:unless="${product.isActive}" class="badge badge-danger">Ngưng bán</span>
                         <th:block th:if="${product.isActive}">
-                            <span th:if="${product.stock > 0}" class="badge status-active" style="background-color: #e8f5e9; color: #2e7d32;">
-                                <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
-                                    <circle cx="12" cy="12" r="10"/>
-                                </svg>
-                                Đang bán
-                            </span>
-                            <span th:if="${product.stock <= 0}" class="badge status-pending" style="background-color: #fff3e0; color: #ef6c00;">
-                                <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
-                                    <circle cx="12" cy="12" r="10"/>
-                                </svg>
-                                Hết hàng
-                            </span>
+                            <span th:if="${product.stock > 0}" class="badge badge-success">Đang bán</span>
+                            <span th:if="${product.stock <= 0}" class="badge badge-warning">Hết hàng</span>
                         </th:block>
                     </td>
                     <td>
                         <div class="actions-cell">
                             <a th:href="@{/admin/products/{id}(id=${product.productId})}"
-                               class="btn btn-xs btn-outline"
-                               title="Xem chi tiết">
+                               class="btn btn-xs btn-outline" title="Xem chi tiết">
                                 <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24">
                                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                                     <circle cx="12" cy="12" r="3"/>
                                 </svg>
                             </a>
                             <a th:href="@{/admin/products/{id}/edit(id=${product.productId})}"
-                               class="btn btn-xs btn-outline"
-                               title="Chỉnh sửa">
+                               class="btn btn-xs btn-outline" title="Chỉnh sửa">
                                 <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24">
                                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                                 </svg>
                             </a>
                             <form th:action="@{/admin/products/{id}/toggle-status(id=${product.productId})}"
-                                  method="post"
-                                  style="display:inline;"
-                                  th:onsubmit="${product.isActive}
-                                      ? 'return confirm(\'⚠️ Ẩn sản phẩm này?\n\nSản phẩm sẽ không hiển thị trên cửa hàng!\')'
-                                      : 'return confirm(\'✅ Khôi phục sản phẩm này?\n\nSản phẩm sẽ hiển thị lại trên cửa hàng!\')'">
-
+                                  method="post" style="display:inline;">
+                                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                                 <button type="submit"
                                         th:if="${product.isActive}"
                                         class="btn btn-xs btn-outline-danger"
-                                        title="Ẩn sản phẩm">
-                                    <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        title="Ẩn sản phẩm"
+                                        onclick="return confirm('⚠️ Ẩn sản phẩm này?\n\nSản phẩm sẽ không hiển thị trên cửa hàng!')">
+                                    <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
                                         <line x1="1" y1="1" x2="23" y2="23"></line>
                                     </svg>
                                 </button>
-
                                 <button type="submit"
                                         th:unless="${product.isActive}"
                                         class="btn btn-xs btn-outline-success"
-                                        title="Khôi phục sản phẩm">
-                                    <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        title="Khôi phục sản phẩm"
+                                        onclick="return confirm('✅ Khôi phục sản phẩm này?\n\nSản phẩm sẽ hiển thị lại trên cửa hàng!')">
+                                    <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                         <polyline points="1 4 1 10 7 10"></polyline>
                                         <path d="M3.51 15a9 9 0 1 0 .49-3.51"></path>
                                     </svg>
@@ -214,191 +158,8 @@
     </div>
 
     <!-- PAGINATION -->
-    <div class="pagination" th:if="${products.totalPages > 1}">
-        <button class="page-btn"
-                th:disabled="${products.pageNumber == 0}"
-                onclick="goToPage([[${products.pageNumber - 1}]])">
-            ‹
-        </button>
-
-        <button th:each="i : ${#numbers.sequence(0, products.totalPages - 1)}"
-                class="page-btn"
-                th:classappend="${i == products.pageNumber} ? 'active' : ''"
-                th:text="${i + 1}"
-                onclick="goToPage([[${i}]])">
-            1
-        </button>
-
-        <button class="page-btn"
-                th:disabled="${products.pageNumber == products.totalPages - 1}"
-                onclick="goToPage([[${products.pageNumber + 1}]])">
-            ›
-        </button>
-    </div>
-
-    <!-- BULK ACTIONS (nếu có checkbox được chọn) -->
-    <div id="bulkActions" style="display: none; position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--white); padding: 12px 20px; border-radius: var(--radius); box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 100;">
-        <span style="margin-right: 16px; font-size: 13px; font-weight: 600;">
-            <span id="selectedCount">0</span> sản phẩm đã chọn
-        </span>
-        <button class="btn btn-sm btn-success" onclick="bulkActivate()">
-            Kích hoạt
-        </button>
-        <button class="btn btn-sm btn-outline" onclick="bulkDeactivate()">
-            Ngưng bán
-        </button>
-        <button class="btn btn-sm btn-danger" onclick="bulkDelete()" data-confirm-delete>
-            Xóa
-        </button>
-    </div>
-</div>
-
-<div layout:fragment="scripts">
-<script>
-// Select All Checkbox
-document.getElementById('selectAll')?.addEventListener('change', function() {
-    const checkboxes = document.querySelectorAll('.row-checkbox');
-    checkboxes.forEach(cb => cb.checked = this.checked);
-    updateBulkActions();
-});
-
-// Row Checkboxes
-document.querySelectorAll('.row-checkbox').forEach(cb => {
-    cb.addEventListener('change', updateBulkActions);
-});
-
-function updateBulkActions() {
-    const selected = document.querySelectorAll('.row-checkbox:checked');
-    const bulkActions = document.getElementById('bulkActions');
-    const selectedCount = document.getElementById('selectedCount');
-
-    if (selected.length > 0) {
-        bulkActions.style.display = 'block';
-        selectedCount.textContent = selected.length;
-    } else {
-        bulkActions.style.display = 'none';
-    }
-}
-
-// Filter Functions
-function applyFilters() {
-    const search = document.getElementById('searchInput').value;
-    const category = document.getElementById('categoryFilter').value;
-    const status = document.getElementById('statusFilter').value;
-
-    const url = new URL(window.location.href);
-    url.searchParams.set('search', search);
-    url.searchParams.set('category', category);
-    url.searchParams.set('status', status);
-    window.location.href = url.toString();
-}
-
-function resetFilters() {
-    window.location.href = window.location.pathname;
-}
-
-// Pagination
-function goToPage(page) {
-    const url = new URL(window.location.href);
-    url.searchParams.set('page', page);
-    window.location.href = url.toString();
-}
-
-// Update Stock
-function updateStock(input, productId) {
-    const stock = input.value;
-
-    fetch(`/admin/products/${productId}/stock`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-        },
-        body: JSON.stringify({ stock: stock })
-    })
-    .then(response => response.json())
-    .then(data => {
-        AdminUI.showToast('Cập nhật tồn kho thành công', 'success');
-    })
-    .catch(error => {
-        AdminUI.showToast('Có lỗi xảy ra', 'danger');
-        input.value = input.defaultValue; // Rollback
-    });
-}
-
-// Toggle Status
-function toggleProductStatus(checkbox, productId) {
-    const isActive = checkbox.checked;
-
-    fetch(`/admin/products/${productId}/status`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-        },
-        body: JSON.stringify({ isActive: isActive })
-    })
-    .then(response => response.json())
-    .then(data => {
-        AdminUI.showToast(isActive ? 'Đã kích hoạt sản phẩm' : 'Đã ngưng bán sản phẩm', 'success');
-    })
-    .catch(error => {
-        AdminUI.showToast('Có lỗi xảy ra', 'danger');
-        checkbox.checked = !checkbox.checked; // Rollback
-    });
-}
-
-// Delete Product
-function deleteProduct(productId) {
-    if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) return;
-
-    fetch(`/admin/products/${productId}`, {
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]').content
-        }
-    })
-    .then(response => {
-        if (response.ok) {
-            AdminUI.showToast('Đã xóa sản phẩm', 'success');
-            setTimeout(() => window.location.reload(), 1000);
-        } else {
-            throw new Error('Delete failed');
-        }
-    })
-    .catch(error => {
-        AdminUI.showToast('Không thể xóa sản phẩm', 'danger');
-    });
-}
-
-// Bulk Actions
-function bulkActivate() {
-    const ids = getSelectedIds();
-    // Implement bulk activate API call
-    AdminUI.showToast(`Đã kích hoạt ${ids.length} sản phẩm`, 'success');
-}
-
-function bulkDeactivate() {
-    const ids = getSelectedIds();
-    // Implement bulk deactivate API call
-    AdminUI.showToast(`Đã ngưng bán ${ids.length} sản phẩm`, 'success');
-}
-
-function bulkDelete() {
-    const ids = getSelectedIds();
-    if (!confirm(`Bạn có chắc chắn muốn xóa ${ids.length} sản phẩm đã chọn?`)) return;
-    // Implement bulk delete API call
-    AdminUI.showToast(`Đã xóa ${ids.length} sản phẩm`, 'success');
-    setTimeout(() => window.location.reload(), 1000);
-}
-
-function getSelectedIds() {
-    return Array.from(document.querySelectorAll('.row-checkbox:checked'))
-                .map(cb => cb.value);
-}
-</script>
+    <th:block th:replace="~{fragments/pagination :: pagination(page=${products}, baseUrl='/admin/products')}"/>
 </div>
 
 </body>
 </html>
-

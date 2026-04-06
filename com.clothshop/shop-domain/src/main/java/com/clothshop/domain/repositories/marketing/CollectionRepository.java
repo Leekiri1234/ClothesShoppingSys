@@ -15,36 +15,37 @@ import java.util.Optional;
 @Repository
 public interface CollectionRepository extends JpaRepository<Collection, Long> {
 
-    // Tìm kiếm Collection theo tên có phân trang (Dùng cho ô Search ở màn hình List)
-    // Dùng LOWER để tìm kiếm không phân biệt hoa thường, kết hợp CONCAT để hỗ trợ LIKE an toàn
+    // 1. TM KIẾM (TRANG LIST ADMIN): Chỉ lấy thng tin cơ bản
     @Query("SELECT c FROM Collection c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Collection> searchByName(@Param("keyword") String keyword, Pageable pageable);
 
-    // Kiểm tra trùng lặp tên khi Create (Chống lỗi Unique Constraint từ database)
+    @Query(value = "SELECT * FROM collections WHERE " +
+           "(:keyword IS NULL OR LOWER(collection_name) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:status IS NULL OR is_active = :status)",
+           countQuery = "SELECT count(*) FROM collections WHERE " +
+           "(:keyword IS NULL OR LOWER(collection_name) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:status IS NULL OR is_active = :status)",
+           nativeQuery = true)
+    Page<Collection> findWithFilter(@Param("keyword") String keyword, @Param("status") Boolean status, Pageable pageable);
+
+    @Query(value = "SELECT * FROM collections WHERE collection_id = :id", nativeQuery = true)
+    Optional<Collection> findByIdIncludeDeleted(@Param("id") Long id);
+
+    // 2. TM CHI TIẾT (TRANG CLIENT): Dng LOWER để trnh lỗi khng tm thấy do chữ hoa/thường
+    // Dùng EntityGraph để nạp sẵn items và product, tránh LazyInitializationException
+    @EntityGraph(attributePaths = {"items", "items.product", "items.product.category", "items.product.images", "items.product.variants"})
+    @Query("SELECT c FROM Collection c WHERE LOWER(c.slug) = LOWER(:slug) AND c.isActive = true")
+    Optional<Collection> findBySlugAndIsActiveTrue(@Param("slug") String slug);;
+
+    // 3. CÁC HÀM KIỂM TRA (VALIDATION)
     boolean existsByName(String name);
-
-    // Kiểm tra trùng lặp tên khi Update (Bỏ qua chính bản thân Collection đang sửa)
     boolean existsByNameAndIdNot(String name, Long id);
-
-    // Kiểm tra trùng lặp slug khi Create
     boolean existsBySlug(String slug);
-
-    // Kiểm tra trùng lặp slug khi Update (Bỏ qua chính Collection đang sửa)
     boolean existsBySlugAndIdNot(String slug, Long id);
 
-    // Tìm collection theo slug (fallback cho các slug cũ không có ID)
-
+    // 4. TRANG CHỦ & MENU
     List<Collection> findByIsActiveTrue();
 
-    @Query("SELECT DISTINCT c FROM Collection c " +
-            "LEFT JOIN FETCH c.items ci " +
-            "LEFT JOIN FETCH ci.product p " +
-            "LEFT JOIN FETCH p.category cat " +
-            "WHERE c.slug = :slug AND c.isActive = true")
-    Optional<Collection> findBySlugAndIsActiveTrue(@Param("slug") String slug);
-
-    @Query("SELECT DISTINCT c FROM Collection c " +
-            "WHERE c.isActive = true " +
-            "ORDER BY c.createdAt DESC")
-    List<Collection> findTop4ByIsActiveTrueOrderByCreatedAtDesc();
+    @Query("SELECT c FROM Collection c WHERE c.isActive = true ORDER BY c.createdAt DESC")
+    List<Collection> findTop4ByIsActiveTrueOrderByCreatedAtDesc(Pageable pageable);
 }

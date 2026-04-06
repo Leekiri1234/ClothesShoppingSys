@@ -4,34 +4,9 @@
 
 <head>
     <title th:text="'Đánh giá sản phẩm ' + ${product.productName} + ' — MINIMAL'"></title>
-    <style>
-        .review-container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-        .star-rating {
-            display: flex;
-            flex-direction: row-reverse;
-            justify-content: flex-end;
-            gap: 10px;
-            margin-bottom: 24px;
-        }
-        .star-rating input {
-            display: none;
-        }
-        .star-rating label {
-            font-size: 32px;
-            color: #ddd;
-            cursor: pointer;
-            transition: color 0.2s;
-        }
-        .star-rating label:hover,
-        .star-rating label:hover ~ label,
-        .star-rating input:checked ~ label {
-            color: #f1c40f;
-        }
-    </style>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/reviews/form.css}">
+    </th:block>
 </head>
 
 <body>
@@ -53,7 +28,7 @@
 
             <form th:action="@{/products/{id}/reviews(id=${product.productId})}" method="post">
                 <div class="form-group">
-                    <label class="form-label" style="display: block; margin-bottom: 12px; font-weight: 500;">Chọn số sao</label>
+                    <label class="form-label">Chọn số sao</label>
                     <div class="star-rating">
                         <input type="radio" id="star5" name="rating" value="5" required /><label for="star5">★</label>
                         <input type="radio" id="star4" name="rating" value="4" /><label for="star4">★</label>
@@ -64,8 +39,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label" style="display: block; margin-bottom: 12px; font-weight: 500;">Nhận xét</label>
-                    <textarea name="comment" class="form-textarea" rows="6" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..." required style="width: 100%; padding: 12px; border: 1px solid #ddd;"></textarea>
+                    <label class="form-label">Nhận xét</label>
+                    <textarea name="comment" class="form-textarea" rows="6" placeholder="Chia sẻ cảm nhận của bạn về sản phẩm này..." required></textarea>
                 </div>
 
                 <div style="margin-top: 40px;">

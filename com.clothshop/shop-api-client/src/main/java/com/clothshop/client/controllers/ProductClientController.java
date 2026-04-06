@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -85,6 +86,14 @@ public class ProductClientController {
         model.addAttribute("reviews", reviewService.getReviewsForProduct(product.getProductId(), PageRequest.of(0, 5)));
 
         return "client/products/detail";
+    }
+
+    // Quick View Modal Endpoint (AJAX) - Returns JSON for modal popup
+    @GetMapping("/{slug}/quick-view")
+    @ResponseBody
+    public ResponseEntity<?> quickView(@PathVariable String slug) {
+        ProductDetailResponse product = productClientService.getProductBySlug(slug);
+        return ResponseEntity.ok(product);
     }
 
     private String resolvePageTitle(String q, Long categoryId) {

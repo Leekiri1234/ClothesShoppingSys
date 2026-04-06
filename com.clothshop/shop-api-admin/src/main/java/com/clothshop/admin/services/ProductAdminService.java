@@ -87,7 +87,7 @@ public class ProductAdminService {
         log.info("Updating product ID: {}", productId);
 
         // Find existing product
-        Product product = productRepository.findProductWithVariantsById(productId)
+        Product product = productRepository.findProductWithDetailsById(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
 
         // If category is being updated, validate it exists
@@ -134,7 +134,12 @@ public class ProductAdminService {
      * Memory-optimized with paging to avoid loading all records.
      */
     @Transactional(readOnly = true)
-    public PageResponse<ProductAdminResponse> getAllProducts(PagingRequest pagingRequest) {
+    public PageResponse<ProductAdminResponse> getAllProducts(
+            String keyword,
+            Long categoryId,
+            ProductStatus prodStatus,
+            PagingRequest pagingRequest) {
+
         pagingRequest.validate();
 
         // Create pageable with sorting
@@ -142,8 +147,8 @@ public class ProductAdminService {
                 pagingRequest.getSortBy() != null ? pagingRequest.getSortBy() : "createdAt");
         Pageable pageable = PageRequest.of(pagingRequest.getPageNumber(), pagingRequest.getPageSize(), sort);
 
-        // Fetch from database with pagination
-        Page<Product> productPage = productRepository.findAll(pageable);
+        // Fetch from database with pagination and filter
+        Page<Product> productPage = productRepository.filterProductsForAdmin(keyword, categoryId, prodStatus, pageable);
 
         // Lấy tổng tồn kho cho tất cả sản phẩm trong trang bằng một truy vấn duy nhất (tránh N+1)
         List<Long> productIds = productPage.getContent().stream()

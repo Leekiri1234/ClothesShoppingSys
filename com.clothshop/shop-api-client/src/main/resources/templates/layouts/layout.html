@@ -42,13 +42,13 @@
                     </svg>
                 </div>
                 <div class="header-icon-btn" th:onclick="'window.location.href=\'' + @{/wishlist} + '\''"
-                    title="Wishlist">
+                    title="Wishlist" style="position: relative;">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="1.5">
                         <path
                             d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
                     </svg>
-                    <span class="wishlist-count" id="wishlist-count" style="display:none">0</span>
+                    <span class="wishlist-count" id="wishlist-count" style="display:none; position: absolute; top: -6px; right: -6px; background: #e63946; color: white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600;">0</span>
                 </div>
 
                 <!-- User / Auth -->
@@ -326,9 +326,43 @@
             const overlay = document.getElementById('modal-overlay');
             if (overlay) overlay.classList.remove('active');
         }
+
+        // Load wishlist count and cart count on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            loadWishlistCount();
+            loadCartCount();
+        });
+
+        function loadWishlistCount() {
+            fetch('/wishlist/count')
+                .then(r => r.json())
+                .then(data => {
+                    const wishlistBadge = document.getElementById('wishlist-count');
+                    if (wishlistBadge && data.count > 0) {
+                        wishlistBadge.textContent = data.count;
+                        wishlistBadge.style.display = 'flex';
+                    } else if (wishlistBadge) {
+                        wishlistBadge.style.display = 'none';
+                    }
+                })
+                .catch(e => console.log('Failed to load wishlist count:', e));
+        }
+
+        function loadCartCount() {
+            fetch('/cart/count')
+                .then(r => r.json())
+                .then(data => {
+                    const cartBadge = document.getElementById('cart-count');
+                    if (cartBadge) {
+                        cartBadge.textContent = data.count;
+                    }
+                })
+                .catch(e => console.log('Failed to load cart count:', e));
+        }
     </script>
 
     <th:block layout:fragment="scripts">
+        <script th:src="@{/js/product-actions.js}"></script>
         <script th:src="@{/js/script.js}"></script>
     </th:block>
 
