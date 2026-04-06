@@ -1,0 +1,148 @@
+/* =============================================================
+   PROFILE EDIT PAGE STYLES
+   Template: templates/client/profile/edit.html
+   Chức năng: Chỉnh sửa thông tin hồ sơ cá nhân
+   ============================================================= */
+
+/* ── Profile Layout (sidebar + form) ── */
+.profile-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 40px;
+  padding: 48px 0;
+  align-items: start;
+}
+
+/* ── Sidebar ── */
+.profile-sidebar {
+  position: sticky;
+  top: 90px;
+  border: 1px solid #e8e8e8;
+  padding: 24px;
+}
+
+.profile-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 24px;
+}
+
+.profile-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  font-size: 13px;
+  font-weight: 300;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.profile-sidebar-link:hover {
+  background: #f5f5f5;
+  color: #2c2c2c;
+}
+
+.profile-sidebar-link.active {
+  background: #2c2c2c;
+  color: #fff;
+}
+
+/* ── Avatar block ── */
+.profile-avatar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #f5f5f5;
+  overflow: hidden;
+  position: relative;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-name {
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.profile-email {
+  font-size: 12px;
+  color: #999;
+}
+
+/* ── Edit Form Section ── */
+.profile-section {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  padding: 32px;
+  margin-bottom: 20px;
+}
+
+.profile-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.profile-section-header h5 {
+  font-size: 11px;
+}
+
+/* ── Form Grid (2 columns) ── */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* ── Readonly field style ── */
+.form-input[readonly] {
+  background-color: #f9f9f9;
+  color: #999;
+  border-color: #e8e8e8;
+  cursor: not-allowed;
+}
+
+/* ── Form Action buttons ── */
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* ── Field error ── */
+.field-error {
+  color: #c0392b;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .profile-layout { grid-template-columns: 220px 1fr; }
+}
+
+@media (max-width: 768px) {
+  .profile-layout { grid-template-columns: 1fr; }
+  .profile-sidebar { position: static; }
+  .form-grid { grid-template-columns: 1fr; }
+}
