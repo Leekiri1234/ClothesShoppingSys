@@ -84,7 +84,8 @@ public class DatabaseSeeder implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         if (roleRepository.count() > 0) {
-            log.info("Base data already seeded. Checking supplemental order/RMA data...");
+            log.info("Base data already seeded. Checking supplemental banner/order/RMA data...");
+            seedBanners();
             seedVouchersAndOrders();
             seedRmaRequests();
             log.info("Supplemental seeding completed.");
@@ -926,33 +927,42 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     private void seedBanners() {
         log.info("Seeding banners...");
-        
-        Banner mainHero = Banner.builder()
-            .title("Summer Essentials 2024")
-            .imageUrl("https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1200")
-            .linkUrl("/collections/summer-collection-2024-c.1")
-            .displayOrder(1)
-            .status("ACTIVE")
-            .startDate(LocalDate.now().minusDays(30))
-            .endDate(LocalDate.now().plusDays(60))
-            .createdBy("SYSTEM")
-            .build();
 
-        Banner newArrivals = Banner.builder()
-            .title("New Arrivals: Accessories")
-            .imageUrl("https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1200")
-            .linkUrl("/categories/accessories")
-            .displayOrder(2)
-            .status("ACTIVE")
-            .startDate(LocalDate.now().minusDays(10))
-            .endDate(LocalDate.now().plusDays(20))
-            .createdBy("SYSTEM")
-            .build();
+        Map<String, Banner> existingByTitle = bannerRepository.findAll().stream()
+            .collect(Collectors.toMap(Banner::getTitle, b -> b, (left, right) -> left));
 
-        bannerRepository.save(mainHero);
-        bannerRepository.save(newArrivals);
+        upsertBanner(existingByTitle,
+            "Summer Essentials 2024",
+            "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1200",
+            "/collections/summer-collection-2024-c.1",
+            1,
+            LocalDate.now().minusDays(30),
+            LocalDate.now().plusDays(60));
+
+        upsertBanner(existingByTitle,
+            "New Arrivals: Accessories",
+            "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1200",
+            "/categories/accessories",
+            2,
+            LocalDate.now().minusDays(10),
+            LocalDate.now().plusDays(20));
         
         log.info("Banners seeded: 2 banners");
+    }
+
+    private void upsertBanner(Map<String, Banner> existingByTitle, String title, String imageUrl,
+                              String linkUrl, int displayOrder, LocalDate startDate, LocalDate endDate) {
+        Banner banner = existingByTitle.getOrDefault(title, Banner.builder().title(title).build());
+        banner.setImageUrl(imageUrl);
+        banner.setLinkUrl(linkUrl);
+        banner.setDisplayOrder(displayOrder);
+        banner.setStatus("ACTIVE");
+        banner.setStartDate(startDate);
+        banner.setEndDate(endDate);
+        if (banner.getCreatedBy() == null) {
+            banner.setCreatedBy("SYSTEM");
+        }
+        bannerRepository.save(banner);
     }
 
     private void seedFlashSales() {
