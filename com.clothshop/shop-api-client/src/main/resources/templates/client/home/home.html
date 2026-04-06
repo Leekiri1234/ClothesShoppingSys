@@ -6,6 +6,7 @@
     <title>Trang chủ</title>
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/home.css}">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     </th:block>
 </head>
 
@@ -83,11 +84,27 @@
                     <article class="product-card" th:each="item : ${featuredProducts}">
                         <a th:href="@{/products/{slug}(slug=${item.slug != null ? item.slug : item.productSlug})}">
                             <div class="product-card-image">
+
+                                <!-- ACTION BUTTONS -->
+                                <div class="product-actions">
+                                    <button class="action-btn" title="Yêu thích">
+                                        <i class="fa-regular fa-heart"></i>
+                                    </button>
+                                    <button class="action-btn" title="Xem nhanh">
+                                        <i class="fa-regular fa-eye"></i>
+                                    </button>
+                                    <button class="action-btn" title="Thêm vào giỏ">
+                                        <i class="fa-solid fa-bag-shopping"></i>
+                                    </button>
+                                </div>
+
+                                <!-- IMAGE -->
                                 <img th:if="${item.thumbnail != null or item.imageUrl != null}"
-                                    th:src="${item.thumbnail != null ? item.thumbnail : item.imageUrl}"
-                                    th:alt="${item.name != null ? item.name : item.productName}" loading="lazy">
+                                     th:src="${item.thumbnail != null ? item.thumbnail : item.imageUrl}"
+                                     th:alt="${item.name != null ? item.name : item.productName}" loading="lazy">
+
                                 <div class="img-placeholder"
-                                    th:if="${item.thumbnail == null and item.imageUrl == null}">NO IMAGE</div>
+                                     th:if="${item.thumbnail == null and item.imageUrl == null}">NO IMAGE</div>
                             </div>
                             <div class="product-card-info">
                                 <div class="product-card-brand"

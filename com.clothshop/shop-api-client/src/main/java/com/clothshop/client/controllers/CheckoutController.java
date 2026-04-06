@@ -37,9 +37,9 @@ public class CheckoutController {
     public String showCheckoutForm(Principal principal, Model model) {
         if (principal == null) return "redirect:/login";
 
-       if (cartService.getCartItemCount(principal.getName()) == 0) {
-            return "redirect:/cart";
-        }
+      // if (cartService.getCartItemCount(principal.getName()) == 0) {
+       //     return "redirect:/cart";
+       // }
 
         Account account = accountRepository.findByUsernameWithCustomer(principal.getName()).orElse(null);
         OrderCreateRequest request = new OrderCreateRequest();
