@@ -930,7 +930,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         Banner mainHero = Banner.builder()
             .title("Summer Essentials 2024")
             .imageUrl("https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1200")
-            .linkUrl("/collections/summer-collection-2024")
+            .linkUrl("/collections/summer-collection-2024-c.1")
             .displayOrder(1)
             .status("ACTIVE")
             .startDate(LocalDate.now().minusDays(30))
