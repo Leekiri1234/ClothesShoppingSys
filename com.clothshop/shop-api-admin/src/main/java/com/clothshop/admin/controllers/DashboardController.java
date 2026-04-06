@@ -1,5 +1,9 @@
 package com.clothshop.admin.controllers;
 
+import com.clothshop.admin.dtos.response.SalesReportResponse;
+import com.clothshop.admin.dtos.response.dashboard.RevenueDTO;
+import com.clothshop.admin.dtos.response.dashboard.TopProductDTO;
+import com.clothshop.admin.services.ReportService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +11,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Dashboard Controller - Admin Panel Home.
@@ -16,7 +23,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("/admin")
 @RequiredArgsConstructor
 @Slf4j
-public class    DashboardController {
+public class DashboardController {
+
+    private final ReportService reportService;
 
     /**
      * Display admin dashboard with summary statistics.
@@ -29,11 +38,20 @@ public class    DashboardController {
         // Add current path for active menu highlighting
         model.addAttribute("currentPath", request.getRequestURI());
 
-        // TODO: These will be populated by actual services in future tasks
-        model.addAttribute("totalProducts", 0);
-        model.addAttribute("totalOrders", 0);
-        model.addAttribute("totalCustomers", 0);
-        model.addAttribute("revenue", "$0");
+        // Get today's sales report for real data
+        SalesReportResponse todayReport = reportService.getTodayReport();
+        model.addAttribute("todayReport", todayReport);
+        model.addAttribute("todayRevenue", todayReport.getTotalRevenue());
+        model.addAttribute("todayOrders", todayReport.getTotalOrders());
+        model.addAttribute("totalCustomers", todayReport.getTotalCustomers());
+        model.addAttribute("totalProducts", todayReport.getTotalProducts());
+
+        List<RevenueDTO> revenue7Days = reportService.getRevenueLast7Days();
+        log.info("Revenue 7 days: {}", revenue7Days);
+        model.addAttribute("revenue7Days", revenue7Days != null ? revenue7Days : Collections.emptyList());
+        model.addAttribute("topProducts", reportService.getTopSellingProducts());
+
+        model.addAttribute("recentOrders", reportService.getRecentOrders(9));
 
         return "admin/dashboard";
     }

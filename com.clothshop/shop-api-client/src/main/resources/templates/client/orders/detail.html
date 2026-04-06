@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/layout}">
+
+<head>
+    <title th:text="'Đơn hàng ' + ${order.orderInvoice} + ' — MINIMAL'"></title>
+</head>
+
+<body>
+    <main layout:fragment="content" class="container" style="padding-top: 120px; padding-bottom: 80px;">
+        <div th:if="${successMessage}" class="alert alert--success" th:text="${successMessage}"
+            style="margin-bottom: 20px; color: green;"></div>
+        <div th:if="${errorMessage}" class="alert alert--error" th:text="${errorMessage}"
+            style="margin-bottom: 20px; color: red;"></div>
+
+        <div class="detail-header"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; border-bottom: 1px solid #eee; padding-bottom: 24px;">
+            <div>
+                <a th:href="@{/orders}" style="font-size: 12px; color: #999; text-decoration: none;">← QUAY LẠI DANH
+                    SÁCH</a>
+                <h2 style="margin-top: 12px; font-weight: 300;">Đơn hàng <span th:text="${order.orderInvoice}"></span>
+                </h2>
+                <p style="font-size: 13px; color: #666;"
+                    th:text="'Ngày đặt: ' + ${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}"></p>
+            </div>
+            <div style="text-align: right;">
+                <span class="status-label" style="display: block; margin-bottom: 12px; font-weight: 500;"
+                    th:text="${order.status.displayName}">PENDING</span>
+
+                <button th:if="${order.status.name() == 'PENDING'}" class="btn btn--outline btn--sm"
+                    onclick="document.getElementById('cancelModal').classList.add('open')">Hủy đơn hàng</button>
+
+                <a th:if="${order.status.name() == 'COMPLETED'}" 
+                    th:href="@{/orders/{inv}/rma(inv=${order.orderInvoice})}" 
+                    class="btn btn--outline btn--sm" style="text-decoration: none;">Đổi trả / Hoàn tiền</a>
+
+                <form th:if="${order.status.name() == 'CANCELLED'}"
+                    th:action="@{/orders/{inv}/reorder(inv=${order.orderInvoice})}" method="post">
+                    <button type="submit" class="btn btn--primary btn--sm">Đặt hàng lại</button>
+                </form>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 60px;">
+            <div>
+                <div th:each="item : ${order.items}"
+                    style="display: flex; gap: 20px; padding: 20px 0; border-bottom: 1px solid #f5f5f5;">
+                    <div class="img-placeholder" style="width: 100px; height: 130px;">
+                        <img th:src="${item.imageUrl}" style="width:100%; height:100%; object-fit:cover;">
+                    </div>
+                    <div style="flex: 1;">
+                        <h4 th:text="${item.productName}" style="font-weight: 400; margin-bottom: 8px;"></h4>
+                        <p style="font-size: 13px; color: #888;">Phân loại: <span th:text="${item.variantInfo}">M,
+                                Đen</span></p>
+                        <p style="margin-top: 12px; font-size: 14px;">
+                            <span th:text="${#numbers.formatDecimal(item.unitPrice, 0, 'COMMA', 0, 'POINT') + '₫'}"></span>
+                            <span th:text="' x ' + ${item.quantity}" style="color: #999;"></span>
+                        </p>
+                    </div>
+                    <div style="font-weight: 500;"
+                        th:text="${#numbers.formatDecimal(item.subtotal, 0, 'COMMA', 0, 'POINT') + '₫'}">
+                    </div>
+                </div>
+
+                <div style="margin-top: 32px; padding: 24px; background: #fdfdfd; border: 1px solid #eee;">
+                    <h4 style="margin-bottom: 16px; font-weight: 400;">Thông tin giao hàng</h4>
+                    <p style="font-size: 14px; margin-bottom: 8px;"><strong style="font-weight: 500;">Địa chỉ:</strong>
+                        <span th:text="${order.shippingAddress}"></span>
+                    </p>
+                    <p style="font-size: 14px;"><strong style="font-weight: 500;">Số điện thoại:</strong> <span
+                            th:text="${order.customerPhone}"></span></p>
+                </div>
+            </div>
+        </div>
+
+        <aside>
+            <div style="background: #f9f9f9; padding: 32px;">
+                <h4 style="margin-bottom: 24px; font-weight: 400;">Tóm tắt thanh toán</h4>
+                <div style="display: grid; gap: 16px; font-size: 14px;">
+                    <div class="flex-between"><span>Tạm tính</span> <span
+                            th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') + '₫'}"></span>
+                    </div>
+                    <div class="flex-between" th:if="${order.discount > 0}">
+                        <span>Giảm giá</span>
+                        <span style="color: #e74c3c;"
+                            th:text="'- ' + ${#numbers.formatDecimal(order.discount, 0, 'COMMA', 0, 'POINT') + '₫'}"></span>
+                    </div>
+                    <div class="flex-between"
+                        style="font-weight: 600; font-size: 18px; margin-top: 16px; border-top: 1px solid #ddd; padding-top: 16px;">
+                        <span>Tổng cộng</span>
+                        <span
+                            th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + '₫'}"></span>
+                    </div>
+                    <p style="font-size: 12px; color: #999; margin-top: 12px; text-align: right;"
+                        th:text="'Thanh toán: ' + ${order.paymentMethod}"></p>
+                </div>
+            </div>
+        </aside>
+        </div>
+
+        <div id="cancelModal" class="modal-overlay">
+            <div class="modal" style="max-width: 400px; padding: 32px; background: white;">
+                <h3 style="margin-bottom: 16px; font-weight: 300;">Lý do hủy đơn</h3>
+                <form th:action="@{/orders/{inv}/cancel(inv=${order.orderInvoice})}" th:object="${cancelRequest}"
+                    method="post">
+                    <textarea th:field="*{reason}" class="form-input" rows="4" placeholder="Vui lòng nhập lý do..."
+                        required style="width: 100%; margin-bottom: 20px;"></textarea>
+                    <div style="display: flex; gap: 12px;">
+                        <button type="button" class="btn btn--outline btn--full"
+                            onclick="document.getElementById('cancelModal').classList.remove('open')">Đóng</button>
+                        <button type="submit" class="btn btn--primary btn--full">Xác nhận hủy</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>

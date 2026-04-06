@@ -38,6 +38,9 @@ import java.util.List;
 @Slf4j
 public class CheckoutClientService {
 
+    private static final double SHIPPING_FEE_EXPRESS = 30_000.0;
+    private static final double SHIPPING_FEE_STANDARD = 0.0;
+
     private final CartRepository cartRepository;
     private final CartItemRepository cartItemRepository;
     private final OrderRepository orderRepository;
@@ -133,9 +136,22 @@ public class CheckoutClientService {
     public String placeOrder(String username, OrderCreateRequest request) {
         Customer customer = getCustomerByUsername(username);
 
-        // Cập nhật thông tin giao hàng cho Customer nếu có thay đổi
-        if (request.getShippingAddress() != null) customer.setAddress(request.getShippingAddress());
+        // Cập nhật thông tin cá nhân và giao hàng cho Customer
+        if (request.getFullName() != null && !request.getFullName().isBlank())
+            customer.setFullName(request.getFullName());
+        if (request.getEmail() != null && !request.getEmail().isBlank())
+            customer.setEmail(request.getEmail());
         if (request.getPhoneNumber() != null) customer.setPhoneNumber(request.getPhoneNumber());
+
+        // Ghép địa chỉ đầy đủ từ shippingAddress + district + province
+        List<String> addressParts = new ArrayList<>();
+        if (request.getShippingAddress() != null && !request.getShippingAddress().isBlank())
+            addressParts.add(request.getShippingAddress());
+        if (request.getDistrict() != null && !request.getDistrict().isBlank())
+            addressParts.add(request.getDistrict());
+        if (request.getProvince() != null && !request.getProvince().isBlank())
+            addressParts.add(request.getProvince());
+        if (!addressParts.isEmpty()) customer.setAddress(String.join(", ", addressParts));
 
         Cart cart = cartRepository.findByCustomerId(customer.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Giỏ hàng trống"));
@@ -143,13 +159,18 @@ public class CheckoutClientService {
         validateCartStock(customer);
         CheckoutSummaryResponse summary = calculateTotal(username, request.getVoucherCode());
 
+        // Tính phí ship dựa theo shippingMethod
+        double shippingFee = "EXPRESS".equalsIgnoreCase(request.getShippingMethod())
+                ? SHIPPING_FEE_EXPRESS : SHIPPING_FEE_STANDARD;
+        double finalAmountWithShipping = Math.max(0, summary.getFinalAmount() + shippingFee);
+
         // Create Order Entity
         Order order = new Order();
         order.setOrderInvoice("ORD-" + System.currentTimeMillis());
         order.setCustomer(customer);
         order.setTotalAmount(BigDecimal.valueOf(summary.getTotalAmount()));
         order.setDiscount(BigDecimal.valueOf(summary.getDiscount()));
-        order.setTotalPrice(BigDecimal.valueOf(summary.getFinalAmount()));
+        order.setTotalPrice(BigDecimal.valueOf(finalAmountWithShipping));
         order.setPaymentMethod(request.getPaymentMethod());
         order.setStatus(OrderStatus.PENDING); // Khởi tạo với PENDING
 

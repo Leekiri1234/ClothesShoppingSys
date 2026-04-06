@@ -13,17 +13,18 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
 import java.util.List;
+import java.util.Set; // Thêm import Set
 import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface ProductClientMapper {
 
+    @Mapping(source = "id", target = "productId")
     @Mapping(source = "productDesc", target = "description")
-    // Sử dụng map an toàn cho Category Name
     @Mapping(source = "category", target = "categoryName", qualifiedByName = "mapSafeCategoryName")
-    @Mapping(source = "product", target = "price", qualifiedByName = "mapPrice")
-    @Mapping(source = "product", target = "imageUrl", qualifiedByName = "getFirstImage")
-    @Mapping(target = "available", source = "product", qualifiedByName = "calculateAvailability")
+    @Mapping(source = ".", target = "price", qualifiedByName = "mapPrice")
+    @Mapping(source = ".", target = "imageUrl", qualifiedByName = "getFirstImage")
+    @Mapping(target = "available", source = ".", qualifiedByName = "calculateAvailability")
     @Mapping(target = "images", source = "images", qualifiedByName = "mapImages")
     @Mapping(source = "variants", target = "variants")
     ProductDetailResponse toDetailResponse(Product product);
@@ -36,24 +37,19 @@ public interface ProductClientMapper {
     @Mapping(source = "imageUrl", target = "imageUrl")
     VariantDetailResponse toVariantResponse(ProductVariant variant);
 
-    List<VariantDetailResponse> toVariantResponseList(List<ProductVariant> variants);
+    // FIX: Đổi List thành Set ở tham số đầu vào cho khớp với Entity
+    List<VariantDetailResponse> toVariantResponseList(Set<ProductVariant> variants);
 
-    // Sử dụng map an toàn cho Category Name
     @Mapping(source = "category", target = "categoryName", qualifiedByName = "mapSafeCategoryName")
-    @Mapping(source = "product", target = "price", qualifiedByName = "mapPrice")
-    @Mapping(source = "product", target = "imageUrl", qualifiedByName = "getFirstImage")
-    @Mapping(target = "available", source = "product", qualifiedByName = "calculateAvailability")
+    @Mapping(source = ".", target = "price", qualifiedByName = "mapPrice")
+    @Mapping(source = ".", target = "imageUrl", qualifiedByName = "getFirstImage")
+    @Mapping(target = "available", source = ".", qualifiedByName = "calculateAvailability")
     ProductListResponse toListResponse(Product product);
 
-    /**
-     * Phương thức giải quyết lỗi EntityNotFoundException
-     * Khi Category bị Soft Delete hoặc Inactive, Hibernate sẽ ném lỗi khi truy cập property
-     */
     @Named("mapSafeCategoryName")
     default String mapSafeCategoryName(Category category) {
         if (category == null) return "Chưa phân loại";
         try {
-            // Ép Hibernate initialize proxy để bắt lỗi tại đây
             return category.getCategoryName();
         } catch (EntityNotFoundException e) {
             return "Danh mục không khả dụng";
@@ -63,6 +59,7 @@ public interface ProductClientMapper {
     @Named("mapPrice")
     default Double mapPrice(Product product) {
         if (product == null) return 0.0;
+        // variants giờ là Set nên dùng .isEmpty() vẫn OK
         if (product.getVariants() != null && !product.getVariants().isEmpty()) {
             return product.getVariants().stream()
                     .map(v -> v.getRetailPrice() != null ? v.getRetailPrice().doubleValue() : Double.MAX_VALUE)
@@ -74,10 +71,14 @@ public interface ProductClientMapper {
 
     @Named("getFirstImage")
     default String getFirstImage(Product product) {
+        // FIX: Set không có .get(0), dùng stream().findFirst() để lấy ảnh đầu tiên
         if (product == null || product.getImages() == null || product.getImages().isEmpty()) {
             return "https://via.placeholder.com/300x300?text=No+Image";
         }
-        return product.getImages().get(0).getImageUrl();
+        return product.getImages().stream()
+                .findFirst()
+                .map(ProductImage::getImageUrl)
+                .orElse("https://via.placeholder.com/300x300?text=No+Image");
     }
 
     @Named("calculateAvailability")
@@ -90,7 +91,8 @@ public interface ProductClientMapper {
     }
 
     @Named("mapImages")
-    default List<String> mapImages(List<ProductImage> images) {
+    // FIX: Đổi List thành Set ở đây
+    default List<String> mapImages(Set<ProductImage> images) {
         if (images == null) return null;
         return images.stream()
                 .map(ProductImage::getImageUrl)

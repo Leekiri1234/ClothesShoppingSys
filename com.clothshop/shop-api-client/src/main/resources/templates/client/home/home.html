@@ -4,6 +4,9 @@
 
 <head>
     <title>Trang chủ</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/home.css}">
+    </th:block>
 </head>
 
 <body>
@@ -110,7 +113,8 @@
                 </div>
                 <div class="collections-grid">
                     <a class="collection-card" th:each="collection : ${homeCollections}"
-                        th:href="@{/collections/{slug}(slug=${collection.slug})}">
+                       th:href="@{/collections/{slug}(slug=${collection.slug})}"
+                       th:attr="data-slug=${collection.slug}">
                         <img th:if="${collection.bannerUrl != null}" th:src="${collection.bannerUrl}"
                             th:alt="${collection.name}" loading="lazy">
                         <div class="img-placeholder" th:if="${collection.bannerUrl == null}">COLLECTION</div>
