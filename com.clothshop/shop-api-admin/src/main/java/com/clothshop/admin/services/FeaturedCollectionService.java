@@ -212,6 +212,18 @@ public class FeaturedCollectionService {
     }
 
     /**
+     * Tìm kiếm Collection bằng filter
+     */
+    @Transactional(readOnly = true)
+    public Page<CollectionResponse> getCollectionsWithFilter(com.clothshop.admin.dtos.request.marketing.CollectionFilterRequest filter, Pageable pageable) {
+        return collectionRepository.findWithFilter(
+                filter.getKeyword() != null && !filter.getKeyword().trim().isEmpty() ? filter.getKeyword().trim() : null,
+                filter.getStatus(),
+                pageable
+        ).map(this::mapToResponse);
+    }
+
+    /**
      * Helper method: Map Collection entity sang CollectionResponse với itemCount
      */
     private CollectionResponse mapToResponse(Collection collection) {
