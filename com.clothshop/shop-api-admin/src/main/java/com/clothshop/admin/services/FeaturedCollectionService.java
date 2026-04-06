@@ -97,7 +97,7 @@ public class FeaturedCollectionService {
     @Transactional
     public void deleteCollection(Long id, String username) {
         log.info("Soft deleting collection ID: {}", id);
-        Collection collection = collectionRepository.findById(id)
+        Collection collection = collectionRepository.findByIdIncludeDeleted(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy bộ sưu tập"));
 
         collection.setIsActive(false);
@@ -105,6 +105,21 @@ public class FeaturedCollectionService {
 
         // Tắt toàn bộ sản phẩm bên trong để tránh hiển thị rác
         collectionItemRepository.deactivateAllItemsByCollectionId(id);
+    }
+
+    /**
+     * Chuyển đổi trạng thái bộ sưu tập
+     */
+    @Transactional
+    public void toggleStatus(Long id, String username) {
+        Collection collection = collectionRepository.findByIdIncludeDeleted(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy bộ sưu tập"));
+
+        boolean newStatus = !collection.getIsActive();
+        log.info("Toggling collection ID: {} to status: {}", id, newStatus);
+
+        collection.setIsActive(newStatus);
+        collectionRepository.save(collection);
     }
 
     /**

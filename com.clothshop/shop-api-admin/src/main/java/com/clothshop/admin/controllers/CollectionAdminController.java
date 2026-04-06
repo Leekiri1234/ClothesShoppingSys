@@ -136,6 +136,16 @@ public class CollectionAdminController {
     }
 
     /**
+     * Bật/Tắt bộ sưu tập
+     */
+    @PostMapping("/{id}/toggle-status")
+    public String toggleCollectionStatus(@PathVariable Long id, Principal principal, RedirectAttributes redirectAttributes) {
+        featuredCollectionService.toggleStatus(id, principal.getName());
+        redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật trạng thái bộ sưu tập!");
+        return "redirect:/admin/collections";
+    }
+
+    /**
      * ==========================================
      * QUẢN LÝ SẢN PHẨM TRONG BỘ SƯU TẬP
      * ==========================================
