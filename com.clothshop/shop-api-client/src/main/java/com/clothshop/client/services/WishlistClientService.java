@@ -60,37 +60,28 @@ public class WishlistClientService {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Sản phẩm không tồn tại"));
 
-        boolean exists = wishlistItemRepository.existsByWishlistIdAndProductId(wishlist.getId(), productId);
-        System.out.println("Is exists: " + exists);
-        // If the item exists, check it's is_active
-        if (exists) {
-            WishlistItem item = wishlistItemRepository.findByWishlistIdAndProductId(wishlist.getId(), productId);
-            if (!item.getIsActive()) {
-                item.setIsActive(true);
-                log.info("Activate product {} from wishlist of user {}", productId, username);
-                return true;
-            } else {
-                wishlistItemRepository.deleteByWishlistIdAndProductId(wishlist.getId(), productId);
-                log.info("Deactivate product {} from wishlist of user {}", productId, username);
-                return false; // Removed from wishlist
-            }
+        WishlistItem item = wishlistItemRepository.findByWishlistIdAndProductId(wishlist.getId(), productId);
 
-        } else {
-            WishlistItem item = wishlistItemRepository.findByWishlistIdAndProductId(wishlist.getId(), productId);
-            if (!item.getIsActive()) {
-                item.setIsActive(true);
-                log.info("Activate product {} from wishlist of user {}", productId, username);
-                return true;
-            }
-
+        // Nếu chưa tồn tại → tạo mới
+        if (item == null) {
             WishlistItem newItem = WishlistItem.builder()
                     .wishlist(wishlist)
                     .product(product)
+                    .isActive(true)
                     .build();
+
             wishlistItemRepository.save(newItem);
             log.info("Added product {} to wishlist of user {}", productId, username);
-            return true; // Added to wishlist
+            return true;
         }
+
+        // Nếu tồn tại → toggle
+        boolean newStatus = !Boolean.TRUE.equals(item.getIsActive());
+        item.setIsActive(newStatus);
+        wishlistItemRepository.save(item);
+
+        log.info("Toggle product {} in wishlist of user {} → {}", productId, username, newStatus);
+        return newStatus;
     }
 
     @Transactional(readOnly = true)

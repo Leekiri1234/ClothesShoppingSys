@@ -403,6 +403,7 @@ p {
   align-items: center;
   justify-content: center;
   line-height: 1;
+  pointer-events: none;
 }
 
 /* ─────────────────────────────────────────
@@ -3680,36 +3681,41 @@ p {
 /* ─────────────────────────────────────────
    20. CART SIDEBAR
 ───────────────────────────────────────── */
+/* ===== CART SIDEBAR FIX ===== */
+
 .cart-sidebar {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 420px;
-  background: #fff;
-  border-left: 1px solid #e8e8e8;
-  z-index: 1100;
-  display: flex;
-  flex-direction: column;
-  transform: translateX(100%);
-  transition: transform 0.4s ease;
+    position: fixed;
+    top: 0;
+    right: -400px; /* ẩn */
+    width: 400px;
+    height: 100%;
+    background: #fff;
+    z-index: 9999;
+    transition: right 0.3s ease;
 }
 
-.cart-sidebar.open { transform: translateX(0); }
+/* 👉 MỞ SIDEBAR */
+.cart-sidebar.open {
+    right: 0;
+}
 
+/* Overlay */
 .cart-sidebar-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.3);
-  z-index: 1099;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.4s ease, visibility 0.4s ease;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.4);
+    opacity: 0;
+    visibility: hidden;
+    z-index: 9998;
+    transition: 0.3s;
 }
 
 .cart-sidebar-overlay.open {
-  opacity: 1;
-  visibility: visible;
+    opacity: 1;
+    visibility: visible;
 }
 
 .cart-sidebar-header {
@@ -4610,4 +4616,17 @@ a, button, input, select, textarea {
 
 img {
   transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.product-card-action-btn {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px;
+    min-height: 36px;
+    padding: 0 !important;
+    flex: 0 0 36px;
+}
+
+.product-card-action-btn svg {
+    width: 14px;
+    height: 14px;
 }
