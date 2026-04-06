@@ -23,7 +23,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.Map;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Database Seeder - Seeds initial data for development/testing.
@@ -70,6 +73,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final OrderItemRepository orderItemRepository;
     private final OrderStatusHistoryRepository orderStatusHistoryRepository;
     private final PaymentRepository paymentRepository;
+    private final RmaRequestRepository rmaRequestRepository;
     private final PasswordEncoder passwordEncoder;
     private final FeaturedProductRepository featuredProductRepository;
     private final BannerRepository bannerRepository;
@@ -79,9 +83,11 @@ public class DatabaseSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        // Only seed if database is empty
         if (roleRepository.count() > 0) {
-            log.info("Database already seeded. Skipping...");
+            log.info("Base data already seeded. Checking supplemental order/RMA data...");
+            seedVouchersAndOrders();
+            seedRmaRequests();
+            log.info("Supplemental seeding completed.");
             return;
         }
 
@@ -96,6 +102,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         seedVouchersAndOrders();
         seedBanners();
         seedFlashSales();
+        seedRmaRequests();
 
         log.info("Database seeding completed successfully!");
     }
@@ -606,7 +613,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             return;
         }
 
-        Voucher percentVoucher = createVoucher(
+        Voucher percentVoucher = voucherRepository.findByCode("WELCOME10").orElseGet(() -> createVoucher(
             "WELCOME10",
             DiscountType.PERCENTAGE,
             new BigDecimal("10"),
@@ -616,9 +623,9 @@ public class DatabaseSeeder implements CommandLineRunner {
             LocalDateTime.now().minusDays(5),
             LocalDateTime.now().plusDays(30),
             VoucherStatus.ACTIVE.name()
-        );
+        ));
 
-        Voucher fixedVoucher = createVoucher(
+        Voucher fixedVoucher = voucherRepository.findByCode("SAVE50K").orElseGet(() -> createVoucher(
             "SAVE50K",
             DiscountType.FIXED_AMOUNT,
             new BigDecimal("50000"),
@@ -628,9 +635,9 @@ public class DatabaseSeeder implements CommandLineRunner {
             LocalDateTime.now().minusDays(2),
             LocalDateTime.now().plusDays(45),
             VoucherStatus.ACTIVE.name()
-        );
+        ));
 
-        Voucher expiredVoucher = createVoucher(
+        Voucher expiredVoucher = voucherRepository.findByCode("FLASH15").orElseGet(() -> createVoucher(
             "FLASH15",
             DiscountType.PERCENTAGE,
             new BigDecimal("15"),
@@ -640,12 +647,12 @@ public class DatabaseSeeder implements CommandLineRunner {
             LocalDateTime.now().minusDays(40),
             LocalDateTime.now().minusDays(5),
             VoucherStatus.EXPIRED.name()
-        );
+        ));
 
         // Orders for single customer with different statuses
         Customer customer = customers.get(0);
 
-        createOrderWithVoucher(
+        createOrderWithVoucherIfMissing(
             "INV-1001",
             customer,
             PaymentMethod.COD,
@@ -655,7 +662,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             "Pending confirmation"
         );
 
-        createOrderWithVoucher(
+        createOrderWithVoucherIfMissing(
             "INV-1002",
             customer,
             PaymentMethod.MOMO,
@@ -665,7 +672,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             "Confirmed by system"
         );
 
-        createOrderWithVoucher(
+        createOrderWithVoucherIfMissing(
             "INV-1003",
             customer,
             PaymentMethod.VNPAY,
@@ -675,7 +682,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             "Shipping to customer"
         );
 
-        createOrderWithVoucher(
+        createOrderWithVoucherIfMissing(
             "INV-1004",
             customer,
             PaymentMethod.BANK_TRANSFER,
@@ -685,7 +692,7 @@ public class DatabaseSeeder implements CommandLineRunner {
             "Delivered successfully"
         );
 
-        createOrderWithVoucher(
+        createOrderWithVoucherIfMissing(
             "INV-1005",
             customer,
             PaymentMethod.COD,
@@ -696,6 +703,15 @@ public class DatabaseSeeder implements CommandLineRunner {
         );
 
         log.info("Vouchers and orders seeded: 3 vouchers, 5 client orders for single customer");
+    }
+
+    private void createOrderWithVoucherIfMissing(String invoice, Customer customer, PaymentMethod paymentMethod,
+                                                 OrderStatus status, List<ItemSpec> items, Voucher voucher, String note) {
+        if (orderRepository.findByOrderInvoice(invoice).isPresent()) {
+            log.info("Order {} already exists. Skipping seed for this invoice.", invoice);
+            return;
+        }
+        createOrderWithVoucher(invoice, customer, paymentMethod, status, items, voucher, note);
     }
 
     /**
@@ -973,6 +989,113 @@ public class DatabaseSeeder implements CommandLineRunner {
         }
 
         log.info("Flash sales seeded: 1 flash sale with {} items", Math.min(3, products.size()));
+    }
+
+    /**
+     * 10. Seed RMA Requests (Yeu cau doi tra mau)
+     */
+    private void seedRmaRequests() {
+        log.info("Seeding RMA requests...");
+
+        cleanupDuplicateRmaRequests();
+
+        // Lay cac don hang da giao thanh cong va loai bo trung lap theo orderId
+        List<Order> deliveredOrders = orderRepository.findAll().stream()
+                .filter(o -> o.getStatus() == OrderStatus.DELIVERED)
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toMap(Order::getId, o -> o, (left, right) -> left, java.util.LinkedHashMap::new),
+                        m -> List.copyOf(m.values())));
+
+        if (deliveredOrders.isEmpty()) {
+            log.warn("Khong tim thay don hang DELIVERED de tao RMA. Skipping...");
+            return;
+        }
+
+        // Chi tao RMA cho cac don khac nhau, khong reuse cung mot order
+        int seeded = 0;
+
+        if (!deliveredOrders.isEmpty() && seedRmaIfMissing(deliveredOrders.get(0), RmaType.RETURN, RmaStatus.PENDING,
+                "Tay ao bi bung chi, toi muon tra hang.",
+                null,
+                null,
+                "https://images.unsplash.com/photo-1582552938357-32b906df40cb?w=400,https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400")) {
+            seeded++;
+        }
+
+        if (deliveredOrders.size() >= 2 && seedRmaIfMissing(deliveredOrders.get(1), RmaType.EXCHANGE, RmaStatus.APPROVED,
+                "Size L hoi rong, shop cho toi doi sang size M nhe.",
+                "Da dong y cho khach doi size. Vui long gui hang ve kho.",
+                null,
+                "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400")) {
+            seeded++;
+        }
+
+        if (deliveredOrders.size() >= 3 && seedRmaIfMissing(deliveredOrders.get(2), RmaType.RETURN, RmaStatus.COMPLETED,
+                "Giao sai mau san pham, toi dat den nhung lai giao trang.",
+                "Da xac nhan loi. Da hoan lai 100% cho khach qua vi Momo.",
+                deliveredOrders.get(2).getTotalPrice(),
+                "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400")) {
+            seeded++;
+        }
+
+        if (seeded < 3) {
+            log.warn("Chi co {} don DELIVERED khac nhau de seed RMA. De co 3 mau RMA, can it nhat 3 don DELIVERED distinct.", seeded);
+        }
+
+        log.info("RMA requests seeded: {} sample requests", seeded);
+    }
+
+    private void cleanupDuplicateRmaRequests() {
+        List<RmaRequest> activeRmas = rmaRequestRepository.findAll();
+        Map<Long, List<RmaRequest>> byOrderId = activeRmas.stream()
+                .filter(r -> r.getOrder() != null && r.getOrder().getId() != null)
+                .collect(Collectors.groupingBy(r -> r.getOrder().getId()));
+
+        byOrderId.values().stream()
+                .filter(list -> list.size() > 1)
+                .forEach(list -> {
+                    list.sort(Comparator.comparing(RmaRequest::getCreatedAt,
+                            Comparator.nullsLast(Comparator.naturalOrder()))
+                            .thenComparing(RmaRequest::getId, Comparator.nullsLast(Comparator.naturalOrder())));
+
+                    List<RmaRequest> duplicates = list.subList(1, list.size());
+                    rmaRequestRepository.deleteAll(duplicates);
+
+                    log.warn("Removed {} duplicate RMA rows for orderId={}", duplicates.size(), list.get(0).getOrder().getId());
+                });
+    }
+
+    private boolean seedRmaIfMissing(Order order, RmaType type, RmaStatus status, String reason,
+                                     String adminNote, BigDecimal refundAmount, String evidenceImages) {
+        boolean exists = rmaRequestRepository.findAll().stream()
+                .anyMatch(r -> r.getOrder() != null && r.getOrder().getId() != null && r.getOrder().getId().equals(order.getId()));
+
+        if (exists) {
+            log.info("RMA for order {} already exists. Skipping seed.", order.getOrderInvoice());
+            return false;
+        }
+
+        RmaRequest.RmaRequestBuilder<?, ?> builder = RmaRequest.builder()
+                .order(order)
+                .customer(order.getCustomer())
+                .rmaType(type)
+                .status(status)
+                .reason(reason)
+                .evidenceImages(evidenceImages)
+                .createdBy(order.getCustomer().getFullName());
+
+        if (adminNote != null) {
+            builder.adminNote(adminNote);
+        }
+        if (refundAmount != null) {
+            builder.refundAmount(refundAmount);
+        }
+        if (status == RmaStatus.COMPLETED) {
+            builder.processedAt(LocalDateTime.now());
+        }
+
+        rmaRequestRepository.save(builder.build());
+        return true;
     }
 
     private record ItemSpec(ProductVariant variant, int quantity) { }

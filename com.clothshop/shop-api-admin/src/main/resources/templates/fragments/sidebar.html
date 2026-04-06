@@ -6,7 +6,7 @@
      SIDEBAR FRAGMENT
      Usage: th:replace="~{fragments/sidebar :: sidebar}"
      ============================================================ -->
-<<aside th:fragment="sidebar" class="admin-sidebar" id="adminSidebar">
+<aside th:fragment="sidebar" class="admin-sidebar" id="adminSidebar">
     <div class="sidebar-logo">
         <span class="logo-text">CLOTHSHOP ADMIN</span>
     </div>
@@ -37,6 +37,17 @@
                     <polyline points="10 9 9 9 8 9"></polyline>
                 </svg>
                 <span>Đơn hàng</span>
+            </a>
+            <a class="nav-link" th:href="@{/admin/rma}"
+               sec:authorize="hasAnyRole('SUPER_ADMIN', 'CUSTOMER_SERVICE')"
+               th:classappend="${currentPath != null and #strings.contains(currentPath, '/rma')} ? 'active' : ''">
+                <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21 8v13H3V8"></path>
+                    <path d="M1 3h22v5H1z"></path>
+                    <path d="M10 12h4"></path>
+                    <path d="M12 10v4"></path>
+                </svg>
+                <span>Yêu cầu đổi trả (RMA)</span>
             </a>
         </div>
 
