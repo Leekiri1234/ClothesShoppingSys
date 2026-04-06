@@ -71,53 +71,42 @@ function showToast(msg, type) {
     setTimeout(() => toast.remove(), 3000);
 }
 
-function wishlistToggle(btn, event) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        event.stopImmediatePropagation();
-    }
+async function wishlistToggle(button, event) {
+    event.preventDefault();
+    event.stopPropagation();
 
-    const productId = btn.getAttribute("data-product-id");
+    const productId = button.getAttribute("data-product-id");
+    if (!productId) return;
 
-    if (!productId) {
-        showToast("Không tìm thấy sản phẩm", "error");
-        return;
-    }
+    try {
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '';
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
 
-    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+        const response = await fetch(`/wishlist/toggle/${productId}`, {
+            method: "POST",
+            headers: { [csrfHeader]: csrfToken }
+        });
 
-    const headers = {};
+        const result = await response.json();
 
-    if (csrfToken && csrfHeader) {
-        headers[csrfHeader] = csrfToken;
-    }
+        if (response.ok && result.success) {
+            if (result.isAdded) {
+                button.classList.add("active");
+                showToast("Đã thêm vào wishlist!", "success");
+            } else {
+                button.classList.remove("active");
+                showToast("Đã xóa khỏi wishlist.", "info");
+            }
 
-    fetch(`/wishlist/toggle/${productId}`, {
-        method: "POST",
-        headers: headers
-    })
-    .then(async res => {
-        const data = await res.json().catch(() => ({}));
-
-        if (!res.ok) {
-            throw new Error(data.message || "Không thể cập nhật wishlist");
+            updateWishlistCount();
+        } else {
+            showToast(result.message || "Có lỗi xảy ra.", "error");
         }
-
-        return data;
-    })
-    .then(data => {
-        btn.classList.toggle("active", !!data.isAdded);
-        updateWishlistCount();
-        showToast(data.message || "Đã cập nhật wishlist", "success");
-    })
-    .catch(err => {
-        console.error("Wishlist error:", err);
-        showToast(err.message || "Có lỗi xảy ra", "error");
-    });
+    } catch (err) {
+        console.error("Wishlist toggle error:", err);
+        showToast("Không thể cập nhật wishlist.", "error");
+    }
 }
-
 function updateWishlistCount() {
     fetch("/wishlist/count")
         .then(res => res.json())

@@ -401,13 +401,15 @@ async function wishlistToggle(button, event) {
         });
 
         const result = await response.json();
-        if (result.added) {
-            button.style.color = '#e63946';
-            showToast("Đã thêm vào wishlist!", "success");
-        } else {
-            button.style.color = '';
-            showToast("Đã xóa khỏi wishlist.", "info");
-        }
+       if (result.isAdded) {
+           button.classList.add("active");
+           showToast("Đã thêm vào wishlist!", "success");
+       } else {
+           button.classList.remove("active");
+           showToast("Đã xóa khỏi wishlist.", "info");
+       }
+
+       updateWishlistCount();
     } catch (err) {
         console.error("Wishlist toggle error:", err);
     }

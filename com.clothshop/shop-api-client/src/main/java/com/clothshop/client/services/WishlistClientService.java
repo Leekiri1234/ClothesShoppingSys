@@ -104,15 +104,14 @@ public class WishlistClientService {
     public int getWishlistCount(String username) {
         Customer customer = getCustomerByUsername(username);
         Wishlist wishlist = wishlistRepository.findByCustomerId(customer.getId()).orElse(null);
-        if (wishlist == null || wishlist.getItems() == null){
+
+        if (wishlist == null || wishlist.getItems() == null) {
             return 0;
-        } else {
-            List<WishlistItemResponse> items = wishlist.getItems().stream()
-                    .filter(WishlistItem::getIsActive) // Filter only active items
-                    .map(wishlistMapper::toItemResponse)
-                    .collect(Collectors.toList());
-            return items.size();
         }
+
+        return (int) wishlist.getItems().stream()
+                .filter(item -> Boolean.TRUE.equals(item.getIsActive()))
+                .count();
     }
 
     @Transactional
