@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
 @Table(name = "wishlist_items", uniqueConstraints = {
         @UniqueConstraint(columnNames = {"wishlist_id", "product_id"})
 })
-@SQLDelete(sql = "UPDATE wishlist_items SET is_active = false WHERE id = ?")
-@SQLRestriction("is_active = true")
+@SQLDelete(sql = "UPDATE wishlist_items SET is_active = false WHERE item_id = ?")
+//@SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "item_id"))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class WishlistItem extends BaseEntity {
