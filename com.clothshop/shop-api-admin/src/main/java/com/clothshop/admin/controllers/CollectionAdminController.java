@@ -49,20 +49,16 @@ public class CollectionAdminController {
     public String listCollections(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String keyword,
+            @ModelAttribute com.clothshop.admin.dtos.request.marketing.CollectionFilterRequest filter,
             Model model) {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<CollectionResponse> collectionPage;
 
-        if (keyword != null && !keyword.trim().isEmpty()) {
-            collectionPage = featuredCollectionService.searchCollectionsByName(keyword.trim(), pageable);
-        } else {
-            collectionPage = featuredCollectionService.getAllCollectionsWithCount(pageable);
-        }
+        // Luôn sử dụng filter để gọi query native, lấy được mọi trạng thái theo ý muốn (kể cả khi không có điều kiện nào để lấy TẤT CẢ)
+        Page<CollectionResponse> collectionPage = featuredCollectionService.getCollectionsWithFilter(filter, pageable);
 
         model.addAttribute("collections", collectionPage);
-        model.addAttribute("keyword", keyword);
+        model.addAttribute("filter", filter);
         return "admin/collections/list";
     }
 
@@ -75,7 +71,7 @@ public class CollectionAdminController {
 
         // Nếu có ID truyền vào -> Chế độ Edit
         if (id != null) {
-            Collection collection = collectionRepository.findById(id)
+            Collection collection = collectionRepository.findByIdIncludeDeleted(id)
                     .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy bộ sưu tập"));
 
             request.setId(collection.getId());
@@ -150,8 +146,8 @@ public class CollectionAdminController {
     @GetMapping("/{id}/assign")
     @Transactional
     public String showAssignPage(@PathVariable Long id, Model model) {
-        // Lấy thông tin Collection
-        Collection collection = collectionRepository.findById(id)
+        // Lấy thông tin Collection kể cả tắt
+        Collection collection = collectionRepository.findByIdIncludeDeleted(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy bộ sưu tập"));
 
         // Lấy danh sách sản phẩm ĐÃ nằm trong bộ sưu tập (JOIN FETCH Product để tránh LazyInitializationException)

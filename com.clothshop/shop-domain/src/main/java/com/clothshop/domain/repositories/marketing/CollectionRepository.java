@@ -15,11 +15,23 @@ import java.util.Optional;
 @Repository
 public interface CollectionRepository extends JpaRepository<Collection, Long> {
 
-    // 1. TÌM KIẾM (TRANG LIST ADMIN): Chỉ lấy thông tin cơ bản
+    // 1. TM KIẾM (TRANG LIST ADMIN): Chỉ lấy thng tin cơ bản
     @Query("SELECT c FROM Collection c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     Page<Collection> searchByName(@Param("keyword") String keyword, Pageable pageable);
 
-    // 2. TÌM CHI TIẾT (TRANG CLIENT): Dùng LOWER để tránh lỗi không tìm thấy do chữ hoa/thường
+    @Query(value = "SELECT * FROM collections WHERE " +
+           "(:keyword IS NULL OR LOWER(collection_name) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:status IS NULL OR is_active = :status)",
+           countQuery = "SELECT count(*) FROM collections WHERE " +
+           "(:keyword IS NULL OR LOWER(collection_name) LIKE LOWER(CONCAT('%', :keyword, '%'))) AND " +
+           "(:status IS NULL OR is_active = :status)",
+           nativeQuery = true)
+    Page<Collection> findWithFilter(@Param("keyword") String keyword, @Param("status") Boolean status, Pageable pageable);
+
+    @Query(value = "SELECT * FROM collections WHERE collection_id = :id", nativeQuery = true)
+    Optional<Collection> findByIdIncludeDeleted(@Param("id") Long id);
+
+    // 2. TM CHI TIẾT (TRANG CLIENT): Dng LOWER để trnh lỗi khng tm thấy do chữ hoa/thường
     // Dùng EntityGraph để nạp sẵn items và product, tránh LazyInitializationException
     @EntityGraph(attributePaths = {"items", "items.product", "items.product.category", "items.product.images", "items.product.variants"})
     @Query("SELECT c FROM Collection c WHERE LOWER(c.slug) = LOWER(:slug) AND c.isActive = true")
