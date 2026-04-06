@@ -1,0 +1,170 @@
+/* =============================================================
+   PROFILE INDEX PAGE STYLES
+   Template: templates/client/profile/index.html
+   Chức năng: Xem thông tin hồ sơ cá nhân
+   ============================================================= */
+
+/* ── Profile Layout (sidebar + content) ── */
+.profile-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 40px;
+  padding: 48px 0;
+  align-items: start;
+}
+
+/* ── Sidebar ── */
+.profile-sidebar {
+  position: sticky;
+  top: 90px;
+  border: 1px solid #e8e8e8;
+  padding: 24px;
+}
+
+.profile-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 24px;
+}
+
+.profile-sidebar-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  font-size: 13px;
+  font-weight: 300;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.profile-sidebar-link:hover {
+  background: #f5f5f5;
+  color: #2c2c2c;
+}
+
+.profile-sidebar-link.active {
+  background: #2c2c2c;
+  color: #fff;
+}
+
+/* ── Avatar block ── */
+.profile-avatar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: #f5f5f5;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.profile-name {
+  font-size: 14px;
+  font-weight: 400;
+  letter-spacing: 0.5px;
+}
+
+.profile-email {
+  font-size: 12px;
+  color: #999;
+}
+
+/* ── Info Sections ── */
+.profile-section {
+  background: #fff;
+  border: 1px solid #e8e8e8;
+  padding: 32px;
+  margin-bottom: 20px;
+}
+
+.profile-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.profile-section-header h5 {
+  font-size: 11px;
+}
+
+/* ── Address Card ── */
+.address-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.address-card {
+  border: 1px solid #e8e8e8;
+  padding: 20px;
+  position: relative;
+  transition: border-color 0.3s ease;
+}
+
+.address-card.default { border-color: #2c2c2c; }
+
+.address-card-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  background: #2c2c2c;
+  color: #fff;
+  padding: 3px 6px;
+}
+
+.address-card-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #f5f5f5;
+}
+
+.address-action-link {
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #999;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  transition: color 0.3s ease;
+}
+
+.address-action-link:hover { color: #2c2c2c; }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .profile-layout { grid-template-columns: 220px 1fr; }
+}
+
+@media (max-width: 768px) {
+  .profile-layout { grid-template-columns: 1fr; }
+  .profile-sidebar { position: static; }
+  .address-grid { grid-template-columns: 1fr; }
+}

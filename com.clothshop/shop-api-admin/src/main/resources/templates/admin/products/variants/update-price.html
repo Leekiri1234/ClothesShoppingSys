@@ -10,7 +10,7 @@
 <h1 layout:fragment="page-title">Cập nhật giá variant</h1>
 
 <div layout:fragment="page-actions">
-    <a th:href="@{/admin/products/{id}/edit(id=${productId})}" class="btn btn-outline">
+    <a th:href="@{/admin/products/{id}(id=${variant.productId})}" class="btn btn-outline">
         <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
             <line x1="19" y1="12" x2="5" y2="12"/>
             <polyline points="12 19 5 12 12 5"/>
@@ -22,7 +22,8 @@
 <div layout:fragment="content">
 
     <div style="max-width: 500px; margin: 0 auto;">
-        <form th:action="@{/admin/products/{pid}/variants/{vid}/edit-price(pid=${productId}, vid=${variantId})}"
+        <form th:action="@{/admin/variants/{id}/update-price(id=${variant.variantId})}"
+              th:object="${priceRequest}"
               method="post"
               data-validate>
 
@@ -32,14 +33,18 @@
                 <h3>Thông tin variant</h3>
 
                 <div style="background: var(--bg); padding: 16px; border-radius: var(--radius); margin-bottom: 20px;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 13px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; font-size: 13px;">
+                        <div>
+                            <div style="color: var(--muted); margin-bottom: 4px;">SKU</div>
+                            <div style="font-weight: 600; font-family: monospace;" th:text="${variant.sku}">SKU001</div>
+                        </div>
                         <div>
                             <div style="color: var(--muted); margin-bottom: 4px;">Màu sắc</div>
                             <div style="font-weight: 600;" th:text="${variant.color}">Đỏ</div>
                         </div>
                         <div>
                             <div style="color: var(--muted); margin-bottom: 4px;">Kích thước</div>
-                            <div style="font-weight: 600;" th:text="${variant.size}">M</div>
+                            <div style="font-weight: 600;" th:text="${variant.sizeValue}">M</div>
                         </div>
                     </div>
                 </div>
@@ -47,7 +52,7 @@
                 <div class="form-group">
                     <label>Giá hiện tại</label>
                     <div style="font-size: 20px; font-weight: 700; color: var(--muted); margin-bottom: 16px;"
-                         th:text="${#numbers.formatDecimal(variant.price, 0, 'COMMA', 0, 'POINT')} + '₫'">
+                         th:text="${#numbers.formatDecimal(variant.retailPrice, 0, 'COMMA', 0, 'POINT')} + '₫'">
                         299.000₫
                     </div>
                 </div>
@@ -55,23 +60,16 @@
                 <div class="form-group">
                     <label>Giá mới <span style="color: var(--danger);">*</span></label>
                     <input type="number"
-                           name="newPrice"
-                           th:value="${variant.price}"
+                           th:field="*{price}"
                            placeholder="0"
                            min="0"
                            step="1000"
                            required
                            autofocus>
+                    <span class="text-danger" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></span>
                     <small style="font-size: 11px; color: var(--muted);">
                         Nhập giá bán mới cho variant này
                     </small>
-                </div>
-
-                <div class="form-group">
-                    <label>Lý do thay đổi (Optional)</label>
-                    <textarea name="reason"
-                              rows="3"
-                              placeholder="VD: Điều chỉnh giá theo thị trường, khuyến mãi..."></textarea>
                 </div>
 
                 <div style="padding: 12px; background: #fff3e0; border: 1px solid #ffe0b2; border-radius: var(--radius); margin-top: 16px;">
@@ -95,7 +93,7 @@
                     </svg>
                     Cập nhật giá
                 </button>
-                <a th:href="@{/admin/products/{id}/edit(id=${productId})}" class="btn btn-outline">Hủy</a>
+                <a th:href="@{/admin/products/{id}(id=${variant.productId})}" class="btn btn-outline">Hủy</a>
             </div>
 
         </form>
@@ -105,4 +103,3 @@
 
 </body>
 </html>
-

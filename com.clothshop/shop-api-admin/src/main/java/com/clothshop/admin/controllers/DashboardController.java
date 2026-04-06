@@ -1,8 +1,9 @@
 package com.clothshop.admin.controllers;
 
-import com.clothshop.admin.services.ReportService;
 import com.clothshop.admin.dtos.response.SalesReportResponse;
-import com.clothshop.admin.dtos.response.SalesReportResponse.TopProductDTO;
+import com.clothshop.admin.dtos.response.dashboard.RevenueDTO;
+import com.clothshop.admin.dtos.response.dashboard.TopProductDTO;
+import com.clothshop.admin.services.ReportService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,17 +40,18 @@ public class DashboardController {
 
         // Get today's sales report for real data
         SalesReportResponse todayReport = reportService.getTodayReport();
-        SalesReportResponse weeklyReport = reportService.getWeeklyReport();
-        
+        model.addAttribute("todayReport", todayReport);
         model.addAttribute("todayRevenue", todayReport.getTotalRevenue());
         model.addAttribute("todayOrders", todayReport.getTotalOrders());
         model.addAttribute("totalCustomers", todayReport.getTotalCustomers());
         model.addAttribute("totalProducts", todayReport.getTotalProducts());
-        model.addAttribute("weeklyTopProducts", weeklyReport.getTopProducts());
-        List<TopProductDTO> dashboardTopProducts = reportService.getDashboardTopProducts();
-        model.addAttribute("dashboardTopProducts",
-                dashboardTopProducts != null ? dashboardTopProducts : Collections.emptyList());
-        model.addAttribute("recentOrders", reportService.getRecentOrders(4));
+
+        List<RevenueDTO> revenue7Days = reportService.getRevenueLast7Days();
+        log.info("Revenue 7 days: {}", revenue7Days);
+        model.addAttribute("revenue7Days", revenue7Days != null ? revenue7Days : Collections.emptyList());
+        model.addAttribute("topProducts", reportService.getTopSellingProducts());
+
+        model.addAttribute("recentOrders", reportService.getRecentOrders(9));
 
         return "admin/dashboard";
     }

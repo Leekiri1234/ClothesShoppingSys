@@ -5,116 +5,124 @@
 <head>
     <title>Quản lý đơn hàng</title>
 </head>
-<body>
+
+<h1 layout:fragment="page-title">Đơn hàng</h1>
+
 <div layout:fragment="content">
-    <div class="container-fluid">
-        <h1 class="h3 mb-4 text-gray-800">Danh sách đơn hàng</h1>
 
-        <div class="card shadow mb-4 border-0">
-            <div class="card-header py-3 bg-white d-flex flex-row align-items-center justify-content-between">
-                <h6 class="m-0 font-weight-bold text-primary">Bộ lọc tìm kiếm</h6>
-            </div>
-            <div class="card-body">
-                <form th:action="@{/admin/orders}" th:object="${filter}" method="get">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold small text-uppercase text-muted">Từ khóa</label>
-                            <div class="input-group">
-                                <span class="input-group-text bg-light border-end-0"><i class="fas fa-search text-muted"></i></span>
-                                <input type="text" th:field="*{keyword}" class="form-control border-start-0" placeholder="Mã đơn, SĐT, Tên khách...">
-                            </div>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold small text-uppercase text-muted">Trạng thái đơn hàng</label>
-                            <select class="form-select" th:field="*{status}">
-                                <option value="" selected>Tất cả trạng thái</option>
-                                <option th:each="st : ${allStatuses}"
-                                        th:value="${st}"
-                                        th:text="${st.displayName}"></option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-bold small text-uppercase text-muted">Ngày đặt hàng</label>
-                            <div class="input-group">
-                                <input type="datetime-local" th:field="*{startDate}" class="form-control" aria-label="Từ ngày">
-                                <span class="input-group-text bg-light border-start-0 border-end-0"><i class="fas fa-arrow-right text-muted small"></i></span>
-                                <input type="datetime-local" th:field="*{endDate}" class="form-control" aria-label="Đến ngày">
-                            </div>
-                        </div>
-
-                        <div class="col-12 text-end mt-3">
-                            <a th:href="@{/admin/orders}" class="btn btn-light me-2">
-                                <i class="fas fa-undo me-1"></i> Xóa bộ lọc
-                            </a>
-                            <button type="submit" class="btn btn-primary px-4">
-                                <i class="fas fa-filter me-1"></i> Áp dụng
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+    <!-- FILTER BAR -->
+    <div class="dashboard-card" style="margin-bottom: 20px;">
+        <div class="card-header">
+            <h3 style="font-size: 14px; font-weight: 600; margin: 0;">Bộ lọc tìm kiếm</h3>
         </div>
-
-        <div class="card shadow mb-4">
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-bordered" width="100%" cellspacing="0">
-                        <thead>
-                        <tr>
-                            <th>Mã đơn</th>
-                            <th>Ngày đặt</th>
-                            <th>Khách hàng</th>
-                            <th>Tổng tiền</th>
-                            <th>Trạng thái</th>
-                            <th>Thao tác</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr th:each="order : ${orders.content}">
-                            <td th:text="${order.orderInvoice}" class="font-weight-bold">INV-123</td>
-                            <td th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
-                            <td th:text="${order.customerName}">Nguyen Van A</td>
-                            <td th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + ' đ'" class="text-danger"></td>
-                            <td>
-                                    <span th:class="|badge ${order.status.name() == 'CANCELLED' ? 'badge-danger' :
-                                                           (order.status.name() == 'DELIVERED' ? 'badge-success' : 'badge-warning')}|"
-                                          th:text="${order.status.displayName}">
-                                    </span>
-                            </td>
-                            <td>
-                                <a th:href="@{/admin/orders/{id}(id=${order.orderId})}" class="btn btn-info btn-sm">
-                                    <i class="fas fa-eye"></i> Chi tiết
-                                </a>
-                            </td>
-                        </tr>
-                        <tr th:if="${orders.totalElements == 0}">
-                            <td colspan="6" class="text-center">Không tìm thấy đơn hàng nào.</td>
-                        </tr>
-                        </tbody>
-                    </table>
+        <form th:action="@{/admin/orders}" th:object="${filter}" method="get">
+            <div class="filter-bar" style="flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 200px;">
+                    <input type="text" th:field="*{keyword}" class="filter-input" style="width: 100%;"
+                           placeholder="Mã đơn, SĐT, Tên khách...">
                 </div>
-
-                <div th:if="${orders.totalPages > 1}" class="mt-3">
-                    <nav>
-                        <ul class="pagination justify-content-center">
-                            <li class="page-item" th:classappend="${orders.first} ? 'disabled'">
-                                <a class="page-link" th:href="@{/admin/orders(page=${orders.number - 1}, keyword=${filter.keyword}, statuses=${filter.statuses}, startDate=${filter.startDate}, endDate=${filter.endDate})}">Trước</a>
-                            </li>
-                            <li class="page-item" th:each="i : ${#numbers.sequence(0, orders.totalPages - 1)}"
-                                th:classappend="${i == orders.number} ? 'active'">
-                                <a class="page-link" th:href="@{/admin/orders(page=${i}, keyword=${filter.keyword}, statuses=${filter.statuses}, startDate=${filter.startDate}, endDate=${filter.endDate})}" th:text="${i + 1}"></a>
-                            </li>
-                            <li class="page-item" th:classappend="${orders.last} ? 'disabled'">
-                                <a class="page-link" th:href="@{/admin/orders(page=${orders.number + 1}, keyword=${filter.keyword}, statuses=${filter.statuses}, startDate=${filter.startDate}, endDate=${filter.endDate})}">Sau</a>
-                            </li>
-                        </ul>
-                    </nav>
+                <div style="min-width: 180px;">
+                    <select class="filter-select" th:field="*{status}" style="width: 100%;">
+                        <option value="" selected>Tất cả trạng thái</option>
+                        <option th:each="st : ${allStatuses}"
+                                th:value="${st}"
+                                th:text="${st.displayName}"></option>
+                    </select>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px; min-width: 300px;">
+                    <input type="datetime-local" th:field="*{startDate}" class="filter-input" style="flex: 1;">
+                    <svg style="width: 14px; height: 14px; color: var(--muted); flex-shrink: 0;" viewBox="0 0 24 24">
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                        <polyline points="12 5 19 12 12 19"/>
+                    </svg>
+                    <input type="datetime-local" th:field="*{endDate}" class="filter-input" style="flex: 1;">
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <a th:href="@{/admin/orders}" class="btn btn-outline">
+                        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+                            <polyline points="1 4 1 10 7 10"/>
+                            <polyline points="23 20 23 14 17 14"/>
+                            <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4l-4.64 4.36A9 9 0 0 1 3.51 15"/>
+                        </svg>
+                        Reset
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+                            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                        </svg>
+                        Áp dụng
+                    </button>
                 </div>
             </div>
+        </form>
+    </div>
+
+    <!-- TABLE -->
+    <div class="dashboard-card">
+        <table class="admin-table">
+            <thead>
+            <tr>
+                <th>Mã đơn</th>
+                <th>Ngày đặt</th>
+                <th>Khách hàng</th>
+                <th style="text-align: right;">Tổng tiền</th>
+                <th style="width: 120px;">Trạng thái</th>
+                <th style="width: 120px;">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="order : ${orders.content}">
+                <td>
+                    <span style="font-weight: 600; font-size: 13px;" th:text="${order.orderInvoice}">INV-123</span>
+                </td>
+                <td th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                <td th:text="${order.customerName}">Nguyen Van A</td>
+                <td style="text-align: right; font-weight: 600; color: var(--danger);"
+                    th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + '₫'"></td>
+                <td>
+                    <span th:classappend="${order.status.name() == 'CANCELLED' ? 'badge-danger' :
+                                           (order.status.name() == 'DELIVERED' ? 'badge-success' : 'badge-warning')}"
+                          class="badge"
+                          th:text="${order.status.displayName}">
+                    </span>
+                </td>
+                <td>
+                    <a th:href="@{/admin/orders/{id}(id=${order.orderId})}" class="btn btn-sm btn-outline">
+                        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                        Chi tiết
+                    </a>
+                </td>
+            </tr>
+            <tr th:if="${orders.totalElements == 0}">
+                <td colspan="6" class="empty-state">Không tìm thấy đơn hàng nào.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <!-- PAGINATION -->
+        <div th:if="${orders.totalPages > 1}" class="pagination">
+            <button class="page-btn"
+                    th:disabled="${orders.first}"
+                    th:onclick="'window.location.href=\'' + @{/admin/orders(page=${orders.number - 1}, keyword=${filter.keyword}, status=${filter.status}, startDate=${filter.startDate}, endDate=${filter.endDate})} + '\''">
+                ‹
+            </button>
+            <th:block th:each="i : ${#numbers.sequence(0, orders.totalPages - 1)}">
+                <button class="page-btn"
+                        th:classappend="${i == orders.number} ? 'active'"
+                        th:text="${i + 1}"
+                        th:onclick="'window.location.href=\'' + @{/admin/orders(page=${i}, keyword=${filter.keyword}, status=${filter.status}, startDate=${filter.startDate}, endDate=${filter.endDate})} + '\''">
+                    1
+                </button>
+            </th:block>
+            <button class="page-btn"
+                    th:disabled="${orders.last}"
+                    th:onclick="'window.location.href=\'' + @{/admin/orders(page=${orders.number + 1}, keyword=${filter.keyword}, status=${filter.status}, startDate=${filter.startDate}, endDate=${filter.endDate})} + '\''">
+                ›
+            </button>
         </div>
     </div>
 </div>
-</body>
 </html>
