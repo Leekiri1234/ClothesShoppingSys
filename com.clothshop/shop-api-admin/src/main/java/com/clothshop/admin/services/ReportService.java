@@ -357,6 +357,7 @@ public class ReportService {
 
         return recent.stream()
                 .map(order -> RecentOrderDTO.builder()
+                        .orderId(order.getId())
                         .orderInvoice(order.getOrderInvoice())
                         .customerName(order.getCustomer() != null ? order.getCustomer().getFullName() : "Khách ẩn danh")
                         .totalPrice(order.getTotalPrice())

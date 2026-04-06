@@ -1,7 +1,9 @@
 /* ============================================================
-   MINIMAL ADMIN — Admin Dashboard CSS
-   Design: Light sidebar, flat/minimal, Vietnamese fashion store
+   CLOTHSHOP ADMIN — Admin Dashboard CSS
+   Design: Minimal fashion store, Cormorant Garamond + Inter
    ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@300;400;500;600;700&display=swap');
 
 /* ===== RESET & BASE ===== */
 *, *::before, *::after {
@@ -11,31 +13,37 @@
 }
 
 :root {
-  --primary: #2c2c2c;
-  --white: #ffffff;
-  --bg: #f5f5f5;
-  --sidebar-bg: #f5f5f5;
-  --border: #e8e8e8;
-  --muted: #666666;
+  /* Core palette — unified design */
+  --primary: #1C1C1A;
+  --accent: #C5A882;
+  --secondary: #6B6B67;
+  --white: #FFFFFF;
+  --bg: #FAFAF8;
+  --sidebar-bg: #FFFFFF;
+  --border: #E8E6E1;
+  --muted: #6B6B67;
   --danger: #e63946;
   --success: #4CAF50;
   --warning: #f0a500;
   --info: #2196F3;
   --sidebar-width: 240px;
-  --header-height: 58px;
-  --font: 'Helvetica Neue', Arial, sans-serif;
-  --radius: 4px;
-  --transition: 0.18s ease;
+  --header-height: 64px;
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  --radius: 0px;
+  --transition: 0.25s ease;
 }
 
 html, body {
   height: 100%;
   font-family: var(--font);
   font-size: 14px;
-  background: #f0f0f0;
+  background: var(--bg);
   color: var(--primary);
-  line-height: 1.5;
+  line-height: 1.6;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -74,6 +82,7 @@ svg {
   z-index: 100;
   overflow-y: auto;
   transition: transform var(--transition);
+  box-shadow: 2px 0 8px rgba(28,28,26,0.04);
 }
 
 .admin-main {
@@ -89,16 +98,17 @@ svg {
    ============================================================ */
 
 .sidebar-logo {
-  padding: 20px 18px 16px;
+  padding: 24px 20px;
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
 
 .logo-text {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   color: var(--primary);
+  text-transform: uppercase;
 }
 
 .sidebar-nav {
@@ -124,28 +134,29 @@ svg {
 .nav-link {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 7px 18px;
+  gap: 10px;
+  padding: 10px 20px;
   font-size: 13px;
-  color: var(--muted);
+  color: var(--secondary);
   cursor: pointer;
   border-left: 2px solid transparent;
   transition: all var(--transition);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  text-decoration: none;
 }
 
 .nav-link:hover {
   color: var(--primary);
-  background: #ebebeb;
+  background: var(--bg);
 }
 
 .nav-link.active {
   color: var(--primary);
   font-weight: 600;
-  border-left-color: var(--primary);
-  background: #ebebeb;
+  border-left-color: var(--accent);
+  background: var(--bg);
 }
 
 .nav-icon {
@@ -342,7 +353,7 @@ svg {
   color: #fff;
   border-color: var(--primary);
 }
-.btn-primary:hover { background: #444; border-color: #444; }
+.btn-primary:hover { background: var(--accent); border-color: var(--accent); color: var(--primary); }
 
 .btn-outline {
   background: transparent;
@@ -401,10 +412,17 @@ svg {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 18px 20px;
+  padding: 24px;
   display: flex;
   align-items: flex-start;
-  gap: 14px;
+  gap: 16px;
+  transition: all var(--transition);
+}
+
+.stat-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(28, 28, 26, 0.08);
 }
 
 .stat-icon {
@@ -435,8 +453,9 @@ svg {
 }
 
 .stat-value {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 600;
+  font-family: var(--font-display);
   color: var(--primary);
   line-height: 1.2;
   word-break: break-all;
@@ -464,7 +483,7 @@ svg {
   background: var(--white);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 18px 20px;
+  padding: 24px;
 }
 
 .chart-card {
@@ -671,12 +690,12 @@ svg {
 .badge-danger  { background: #fdecea; color: #c62828; }
 .badge-warning { background: #fff3e0; color: #e65100; }
 .badge-info    { background: #e3f2fd; color: #1565c0; }
-.badge-muted   { background: #f0f0f0; color: #666; }
+.badge-muted   { background: var(--bg); color: var(--muted); }
 .badge-purple  { background: #f3e5f5; color: #6a1b9a; }
-.badge-primary { background: #2c2c2c; color: #fff; }
+.badge-primary { background: var(--primary); color: #fff; }
 
 /* Role badges */
-.role-badge-Admin   { background: #2c2c2c; color: #fff; }
+.role-badge-Admin   { background: var(--primary); color: #fff; }
 .role-badge-Staff   { background: #e3f2fd; color: #1565c0; }
 .role-badge-Warehouse { background: #fff3e0; color: #e65100; }
 

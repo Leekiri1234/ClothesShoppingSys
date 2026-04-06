@@ -10,7 +10,6 @@
 <h1 layout:fragment="page-title">Dashboard</h1>
 
 <div layout:fragment="content">
-    <!-- STAT CARDS -->
     <div class="stat-cards">
         <div class="stat-card">
             <div class="stat-icon" style="background: #f0f7ff;">
@@ -22,7 +21,6 @@
             <div class="stat-body">
                 <div class="stat-label">Doanh thu hôm nay</div>
                 <div class="stat-value" th:text="${#numbers.formatDecimal(todayRevenue, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</div>
-                <div class="stat-trend up">↑ Từ báo cáo thực tế</div>
             </div>
         </div>
 
@@ -37,7 +35,6 @@
             <div class="stat-body">
                 <div class="stat-label">Đơn hàng mới</div>
                 <div class="stat-value" th:text="${todayOrders}">0</div>
-                <div class="stat-trend up">↑ Từ báo cáo thực tế</div>
             </div>
         </div>
 
@@ -53,7 +50,6 @@
             <div class="stat-body">
                 <div class="stat-label">Khách hàng</div>
                 <div class="stat-value" th:text="${totalCustomers}">0</div>
-                <div class="stat-trend up">↑ Từ báo cáo thực tế</div>
             </div>
         </div>
 
@@ -66,27 +62,28 @@
             <div class="stat-body">
                 <div class="stat-label">Sản phẩm</div>
                 <div class="stat-value" th:text="${totalProducts}">0</div>
-                <div class="stat-trend down">↓ Từ báo cáo thực tế</div>
             </div>
         </div>
     </div>
 
-    <!-- DASHBOARD GRID -->
     <div class="dashboard-grid">
-        <!-- REVENUE CHART -->
         <div class="dashboard-card chart-card">
             <div class="card-header">
                 <h3>Doanh thu 7 ngày qua</h3>
+                <div class="date-range-selector">
+                    <button class="range-btn active" data-period="weekly">7 ngày</button>
+                    <button class="range-btn" data-period="monthly">30 ngày</button>
+                    <button class="range-btn" data-period="quarterly">90 ngày</button>
+                </div>
             </div>
             <div th:if="${#lists.isEmpty(revenue7Days)}" class="empty-state">
                 Chưa có dữ liệu doanh thu
             </div>
-            <div class="chart-wrapper" th:if="${!#lists.isEmpty(revenue7Days)}">
+            <div class="chart-wrapper" th:if="${!#lists.isEmpty(revenue7Days)}" style="height: 260px; position: relative;">
                 <canvas id="weeklyRevenueChart"></canvas>
             </div>
         </div>
 
-        <!-- RECENT ORDERS -->
         <div class="dashboard-card">
             <div class="card-header">
                 <h3>Đơn hàng gần đây</h3>
@@ -94,36 +91,38 @@
             </div>
             <table class="admin-table">
                 <thead>
-                    <tr>
-                        <th>Mã ĐH</th>
-                        <th>Khách hàng</th>
-                        <th>Tổng tiền</th>
-                        <th>Trạng thái</th>
-                    </tr>
-                </thead>
-            <tbody th:if="${!#lists.isEmpty(recentOrders)}">
-                <tr th:each="order : ${recentOrders}">
-                    <td th:text="${order.orderInvoice}">ORD-123</td>
-                    <td th:text="${order.customerName}">Nguyễn Văn A</td>
-                    <td th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</td>
-                    <td>
-                        <span class="badge"
-                              th:classappend="${order.statusBadgeClass}"
-                              th:text="${order.status != null ? order.status.displayName : 'Chờ xử lý'}">Trạng thái</span>
-                    </td>
-                </tr>
-            </tbody>
-            <tbody th:if="${#lists.isEmpty(recentOrders)}">
                 <tr>
-                    <td colspan="9" style="text-align: center; padding: 20px; color: #999;">
-                        Chưa có đơn hàng mới
+                    <th>Mã ĐH</th>
+                    <th>Khách hàng</th>
+                    <th style="text-align: right;">Tổng tiền</th>
+                    <th>Trạng thái</th>
+                </tr>
+                </thead>
+                <tbody th:if="${!#lists.isEmpty(recentOrders)}">
+                <tr th:each="order : ${recentOrders}">
+                    <td>
+                        <a th:href="@{/admin/orders/{id}(id=${order.orderId})}"
+                           style="font-weight: 600; font-size: 12px; color: var(--primary);"
+                           th:text="${order.orderInvoice}">ORD-123</a>
+                    </td>
+                    <td th:text="${order.customerName}">Nguyễn Văn A</td>
+                    <td style="text-align: right; font-weight: 600;"
+                        th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</td>
+                    <td>
+                            <span class="badge"
+                                  th:classappend="${order.statusBadgeClass}"
+                                  th:text="${order.status != null ? order.status.displayName : 'Chờ xử lý'}">Trạng thái</span>
                     </td>
                 </tr>
-            </tbody>
-        </table>
-    </div>
+                </tbody>
+                <tbody th:if="${#lists.isEmpty(recentOrders)}">
+                <tr>
+                    <td colspan="4" class="empty-state">Chưa có đơn hàng mới</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
 
-        <!-- TOP PRODUCTS -->
         <div class="dashboard-card">
             <div class="card-header">
                 <h3>Sản phẩm bán chạy</h3>
@@ -139,7 +138,7 @@
                          th:text="${iter.index + 1}">1</div>
                     <div class="top-product-details">
                         <div class="top-product-name" th:text="${product.productName}">Sản phẩm</div>
-                        <div class="top-product-sold" th:text="'Số lượng: ' + ${product.quantity}">Số lượng: 0</div>
+                        <div class="top-product-sold" th:text="'Đã bán: ' + ${product.quantity} + ' sản phẩm'">Số lượng: 0</div>
                     </div>
                     <div class="top-product-revenue modern"
                          th:text="${#numbers.formatDecimal(product.revenue, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</div>
@@ -148,115 +147,146 @@
         </div>
     </div>
 
-    <!-- DAILY SALES TABLE (same as /admin/reports/sales) -->
-    <div class="dashboard-card" style="margin-top: 32px;">
+    <div class="dashboard-card" style="margin-top: 24px;">
         <div class="card-header">
-            <h3>Chi tiết doanh thu theo ngày</h3>
+            <h3>Chi tiết doanh thu 7 ngày gần nhất</h3>
         </div>
         <table class="admin-table">
             <thead>
             <tr>
                 <th>Ngày</th>
-                <th>Doanh thu</th>
-                <th>Đơn hàng</th>
+                <th style="text-align: right;">Doanh thu</th>
+                <th style="text-align: center;">Đơn hàng</th>
             </tr>
             </thead>
             <tbody th:if="${todayReport.dailySales != null and !#lists.isEmpty(todayReport.dailySales)}">
             <tr th:each="daily : ${todayReport.dailySales}">
                 <td th:text="${#temporals.format(daily.date, 'dd/MM/yyyy')}">01/01/2025</td>
-                <td th:text="${#numbers.formatDecimal(daily.amount, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</td>
-                <td th:text="${daily.orderCount}">0</td>
+                <td style="text-align: right; font-weight: 600;"
+                    th:text="${#numbers.formatDecimal(daily.amount, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</td>
+                <td style="text-align: center;" th:text="${daily.orderCount}">0</td>
             </tr>
             </tbody>
             <tbody th:if="${todayReport.dailySales == null or #lists.isEmpty(todayReport.dailySales)}">
             <tr>
-                <td colspan="3" style="text-align:center;color:#999;padding:20px;">
-                    Chưa có dữ liệu doanh thu
-                </td>
+                <td colspan="3" class="empty-state">Chưa có dữ liệu doanh thu hôm nay</td>
             </tr>
             </tbody>
         </table>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
-<script th:inline="javascript">
-    /*<![CDATA[*/
-    const revenueLabels = [[${revenue7Days}.![#temporals.format(date, 'dd/MM')]}];
-    const revenueValues = [[${revenue7Days}.![revenue]}];
-    /*]]>*/
+<div layout:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        // Nhận dữ liệu thô từ Server dưới dạng JSON array
+        const rawRevenueData = /*[[${revenue7Days}]]*/ [];
 
-    document.addEventListener('DOMContentLoaded', function() {
-        const canvas = document.getElementById('weeklyRevenueChart');
-        if (!canvas) {
-            return;
+        let revenueChart = null;
+
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency', currency: 'VND', minimumFractionDigits: 0
+            }).format(value);
         }
 
-        const parsedLabels = Array.isArray(revenueLabels) ? revenueLabels : [];
-        const parsedValues = Array.isArray(revenueValues)
-            ? revenueValues.map(value => {
-                const parsed = value != null ? parseFloat(value) : NaN;
-                return Number.isFinite(parsed) ? parsed : 0;
-            })
-            : [];
+        function renderChart(labels, values) {
+            const canvas = document.getElementById('weeklyRevenueChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            if (!ctx) return;
 
-        const ctx = canvas.getContext('2d');
-        if (!ctx) {
-            return;
-        }
+            if (revenueChart) {
+                revenueChart.destroy();
+            }
 
-        const millionData = parsedValues.map(value => parseFloat((value / 1000000).toFixed(2)));
+            const millionData = values.map(v => parseFloat((parseFloat(v) / 1000000).toFixed(2)));
 
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: parsedLabels,
-                datasets: [{
-                    label: 'Doanh thu (triệu ₫)',
-                    data: millionData,
-                    backgroundColor: '#2196F3',
-                    borderColor: '#1565C0',
-                    borderWidth: 1,
-                    borderRadius: 6
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    x: {
-                        ticks: {
-                            color: '#555'
-                        },
-                        grid: { display: false }
-                    },
-                    y: {
-                        beginAtZero: true,
-                        max: 10,
-                        ticks: {
-                            stepSize: 1,
-                            callback: value => value + 'M',
-                            color: '#555'
-                        },
-                        grid: {
-                            color: '#f0f0f0'
-                        }
-                    }
+            revenueChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Doanh thu (triệu ₫)',
+                        data: millionData,
+                        backgroundColor: 'rgba(197,168,130,0.7)',
+                        borderColor: '#C5A882',
+                        borderWidth: 1,
+                        borderRadius: 0
+                    }]
                 },
-                plugins: {
-                    tooltip: {
-                        callbacks: {
-                            label(context) {
-                                return context.parsed.y + ' triệu ₫';
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(28,28,26,0.9)',
+                            padding: 12,
+                            callbacks: {
+                                label: context => formatCurrency(context.parsed.y * 1000000)
                             }
                         }
                     },
-                    legend: { display: false }
+                    scales: {
+                        x: { ticks: { color: '#6B6B67' }, grid: { display: false } },
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: value => value + 'M',
+                                color: '#6B6B67'
+                            },
+                            grid: { color: '#E8E6E1' }
+                        }
+                    }
                 }
+            });
+        }
+
+        function loadApiChart(period) {
+            fetch(`/admin/reports/api/${period}`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.dailySales && data.dailySales.length) {
+                        const labels = data.dailySales.map(s => {
+                            const d = new Date(s.date);
+                            return d.toLocaleDateString('vi-VN', { month: '2-digit', day: '2-digit' });
+                        });
+                        const values = data.dailySales.map(s => parseFloat(s.amount));
+                        renderChart(labels, values);
+                    }
+                })
+                .catch(err => console.error('Chart load error:', err));
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            // Map dữ liệu khởi tạo từ Server bằng JavaScript thay vì SpEL để tránh lỗi parse
+            if (Array.isArray(rawRevenueData) && rawRevenueData.length > 0) {
+                const initialLabels = rawRevenueData.map(item => {
+                    if (!item.date) return "";
+                    const d = new Date(item.date);
+                    const day = String(d.getDate()).padStart(2, '0');
+                    const month = String(d.getMonth() + 1).padStart(2, '0');
+                    return `${day}/${month}`;
+                });
+                const initialValues = rawRevenueData.map(item => item.revenue || 0);
+
+                renderChart(initialLabels, initialValues);
             }
+
+            // Range buttons
+            document.querySelectorAll('.range-btn').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    loadApiChart(this.dataset.period);
+                });
+            });
         });
-    });
-</script>
+        /*]]>*/
+    </script>
+</div>
 
 </body>
 </html>
