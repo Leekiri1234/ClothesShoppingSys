@@ -20,7 +20,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     boolean existsByProductSlug(String productSlug);
 
     // Chỉ lấy sản phẩm thuộc danh mục đang hoạt động
-    @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId AND p.isActive = true")
+    @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId AND p.isActive =      true")
     List<Product> findByCategoryId(@Param("categoryId") Long categoryId);
 
     /**
