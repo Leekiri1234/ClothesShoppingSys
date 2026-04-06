@@ -20,17 +20,6 @@
 </div>
 
 <div layout:fragment="content">
-    <!-- SUCCESS MESSAGE -->
-    <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert"
-         style="background: #e8f5e9; border: 1px solid #4CAF50; color: #2e7d32; padding: 12px 16px; border-radius: 4px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
-        <svg style="width: 16px; height: 16px; flex-shrink: 0;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-        </svg>
-        <span th:text="${successMessage}" style="flex: 1;">Thành công!</span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"
-                style="background: none; border: none; font-size: 20px; cursor: pointer; opacity: 0.5; padding: 0; width: 20px; height: 20px;">&times;</button>
-    </div>
 
     <!-- FILTER BAR -->
     <div class="filter-bar">
@@ -95,9 +84,7 @@
         <table class="admin-table">
             <thead>
                 <tr>
-                    <th style="width: 50px;">
-                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)">
-                    </th>
+
                     <th>Danh mục</th>
                     <th style="width: 200px;">Slug</th>
                     <th style="width: 180px;">Danh mục cha</th>
@@ -115,27 +102,25 @@
                              data-deleted=${!cat.isActive},
                              data-level=${cat.parentId == null ? 'root' : 'child'}"
                     th:classappend="${!cat.isActive} ? 'inactive-row' : ''">
-                    <td>
-                        <input type="checkbox" class="row-checkbox" th:value="${cat.id}" th:if="${cat.isActive}">
-                    </td>
+
                     <td>
                         <div style="display: flex; align-items: center; gap: 10px;">
                             <!-- Icon for Root Category -->
                             <div th:if="${cat.parentId == null}"
-                                 style="width: 36px; height: 36px; border-radius: 6px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                 style="width: 36px; height: 36px; background: var(--primary); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                 <svg style="width: 18px; height: 18px; stroke: white;" viewBox="0 0 24 24" fill="none" stroke-width="2">
                                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                                 </svg>
                             </div>
                             <!-- Icon for Child Category -->
                             <div th:unless="${cat.parentId == null}"
-                                 style="width: 36px; height: 36px; border-radius: 6px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                 style="width: 36px; height: 36px; background: var(--accent); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                                 <svg style="width: 16px; height: 16px; stroke: white;" viewBox="0 0 24 24" fill="none" stroke-width="2">
                                     <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
                                 </svg>
                             </div>
                             <div style="min-width: 0;">
-                                <div style="font-weight: 600; font-size: 13px; color: #2c2c2c;" th:text="${cat.categoryName}">Category Name</div>
+                                <div style="font-weight: 600; font-size: 13px; color: var(--primary);" th:text="${cat.categoryName}">Category Name</div>
                                 <div th:if="${!cat.isActive}" style="font-size: 11px; color: #e63946; margin-top: 2px;">
                                     <svg style="width: 10px; height: 10px; display: inline; margin-right: 2px;" viewBox="0 0 24 24" fill="currentColor">
                                         <circle cx="12" cy="12" r="10"/>
@@ -146,29 +131,29 @@
                         </div>
                     </td>
                     <td>
-                        <code style="font-size: 12px; background: #f5f5f5; padding: 4px 8px; border-radius: 3px; color: #2c2c2c;"
+                        <code style="font-size: 12px; background: var(--bg); padding: 4px 8px; color: var(--primary);"
                               th:text="${cat.categorySlug}">category-slug</code>
                     </td>
                     <td>
                         <span th:if="${cat.parentName}"
-                              style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: #666;">
+                              style="display: inline-flex; align-items: center; gap: 4px; font-size: 13px; color: var(--muted);">
                             <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <polyline points="9 18 15 12 9 6"></polyline>
                             </svg>
                             <span th:text="${cat.parentName}">Parent Category</span>
                         </span>
-                        <span th:unless="${cat.parentName}" style="color: #999; font-style: italic; font-size: 12px;">─ Gốc ─</span>
+                        <span th:unless="${cat.parentName}" style="color: var(--muted); font-style: italic; font-size: 12px;">─ Gốc ─</span>
                     </td>
                     <td>
                         <span th:if="${cat.parentId == null}"
-                              style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase;">
+                              style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--primary); color: white; font-size: 11px; font-weight: 600; text-transform: uppercase;">
                             <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
                                 <circle cx="12" cy="12" r="10"/>
                             </svg>
                             Level 0
                         </span>
                         <span th:unless="${cat.parentId == null}"
-                              style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase;">
+                              style="display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; background: var(--accent); color: var(--primary); font-size: 11px; font-weight: 600; text-transform: uppercase;">
                             <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
                                 <circle cx="12" cy="12" r="10"/>
                             </svg>
@@ -199,9 +184,9 @@
                         </span>
                     </td>
                     <td>
-                        <div style="font-size: 13px; color: #2c2c2c;"
+                        <div style="font-size: 13px; color: var(--primary);"
                              th:text="${#temporals.format(cat.createdAt, 'dd/MM/yyyy')}">01/01/2024</div>
-                        <div style="font-size: 11px; color: #666; margin-top: 2px;"
+                        <div style="font-size: 11px; color: var(--muted); margin-top: 2px;"
                              th:text="${#temporals.format(cat.createdAt, 'HH:mm')}">14:30</div>
                     </td>
                     <td>
@@ -259,8 +244,8 @@
             <svg style="width: 64px; height: 64px; color: #ccc; margin-bottom: 16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
             </svg>
-            <h3 style="font-size: 16px; font-weight: 600; color: #666; margin-bottom: 8px;">Chưa có danh mục nào</h3>
-            <p style="font-size: 13px; color: #999; margin-bottom: 16px;">Bắt đầu bằng cách tạo danh mục đầu tiên cho cửa hàng của bạn</p>
+            <h3 style="font-size: 16px; font-weight: 600; color: var(--muted); margin-bottom: 8px;">Chưa có danh mục nào</h3>
+            <p style="font-size: 13px; color: var(--muted); margin-bottom: 16px;">Bắt đầu bằng cách tạo danh mục đầu tiên cho cửa hàng của bạn</p>
             <a th:href="@{/admin/categories/create}" class="btn btn-primary">
                 <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
                     <line x1="12" y1="5" x2="12" y2="19"/>
@@ -347,12 +332,7 @@
         // Real-time search
         document.getElementById('searchInput').addEventListener('input', applyFilters);
 
-        // Select all checkbox
-        function toggleSelectAll(checkbox) {
-            document.querySelectorAll('.row-checkbox').forEach(cb => {
-                cb.checked = checkbox.checked;
-            });
-        }
+
 
         // Auto-dismiss alerts after 5 seconds
         setTimeout(() => {
