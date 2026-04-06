@@ -65,4 +65,19 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @EntityGraph(attributePaths = {"variants", "images", "category"})
     @Query("SELECT p FROM Product p WHERE p.isActive = true")
     List<Product> findTop100ActiveProductsWithDetails(Pageable pageable);
+
+    @EntityGraph(attributePaths = {"category"})
+    @Query("SELECT DISTINCT p FROM Product p " +
+            "LEFT JOIN p.category cat " +
+            "LEFT JOIN p.variants v " +
+            "WHERE (:keyword IS NULL OR :keyword = '' OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "   OR LOWER(v.sku) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+            "   OR LOWER(cat.categoryName) LIKE LOWER(CONCAT('%', :keyword, '%'))) " +
+            "AND (:categoryId IS NULL OR p.category.id = :categoryId) " +
+            "AND (:prodStatus IS NULL OR p.prodStatus = :prodStatus)")
+    Page<Product> filterProductsForAdmin(
+            @Param("keyword") String keyword,
+            @Param("categoryId") Long categoryId,
+            @Param("prodStatus") com.clothshop.domain.enums.ProductStatus prodStatus,
+            Pageable pageable);
 }
