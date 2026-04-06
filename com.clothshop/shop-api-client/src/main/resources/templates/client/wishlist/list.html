@@ -5,7 +5,8 @@
 <head>
     <title>Danh sách yêu thích</title>
     <th:block layout:fragment="styles">
-        <link rel="stylesheet" th:href="@{/css/home.css}">
+        <link rel="stylesheet" th:href="@{/css/home/home.css}">
+        <link rel="stylesheet" th:href="@{/css/wishlist/wishlist.css}">
     </th:block>
 </head>
 
@@ -120,200 +121,18 @@
                         </div>
 
                         <!-- Action Buttons -->
-                        <div style="display: flex; gap: 12px; margin-bottom: 16px;">
-                            <button class="btn btn--primary" style="flex: 1;" onclick="addModalToCart()">Thêm vào giỏ</button>
-                            <button class="btn btn--outline" style="flex: 1;" onclick="closeQuickViewModal()">Xem chi tiết</button>
+                        <div class="modal-action-buttons">
+                            <button class="btn btn--primary" onclick="addModalToCart()">Thêm vào giỏ</button>
+                            <button class="btn btn--outline" onclick="closeQuickViewModal()">Xem chi tiết</button>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <style>
-            .quick-view-modal {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: 1000;
-            }
-
-            .quick-view-modal .modal-overlay {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.4);
-                cursor: pointer;
-            }
-
-            .quick-view-modal .modal-content {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: white;
-                border-radius: 8px;
-                width: 90%;
-                max-width: 800px;
-                max-height: 90vh;
-                overflow-y: auto;
-                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-            }
-
-            .quick-view-modal .modal-close {
-                position: absolute;
-                top: 12px;
-                right: 16px;
-                background: none;
-                border: none;
-                font-size: 24px;
-                cursor: pointer;
-                color: #999;
-                z-index: 10;
-            }
-
-            .quick-view-modal .modal-inner {
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 24px;
-                padding: 32px;
-            }
-
-            .quick-view-modal .modal-image-section {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                background: #f5f5f5;
-                border-radius: 4px;
-                min-height: 400px;
-            }
-
-            .quick-view-modal .modal-image {
-                width: 100%;
-                height: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .product-card .product-card-actions {
-                position: absolute;
-                top: 12px;
-                right: 12px;
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-                z-index: 10;
-                opacity: 0;
-                transform: translateX(20px);
-                transition: all 0.3s ease;
-            }
-
-            .product-card:hover .product-card-actions {
-                opacity: 1;
-                transform: translateX(0);
-            }
-
-            .product-card-action-btn {
-                width: 36px;
-                height: 36px;
-                border-radius: 4px;
-                background: white;
-                border: 1px solid #e8e8e8;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: all 0.2s ease;
-                color: #1C1C1A;
-            }
-
-            .product-card-action-btn:hover {
-                background: #f5f5f5;
-                border-color: #ccc;
-            }
-
-            .product-card-action-btn.active {
-                background: #1C1C1A;
-                border-color: #1C1C1A;
-                color: white;
-                fill: white;
-            }
-
-            @media (max-width: 640px) {
-                .quick-view-modal .modal-inner {
-                    grid-template-columns: 1fr;
-                    gap: 16px;
-                    padding: 20px;
-                }
-            }
-        </style>
-
-        <script>
-            function removeWishlistCard(button) {
-                const card = button.closest('.wishlist-card');
-                if (card) {
-                    setTimeout(() => {
-                        card.style.opacity = '0';
-                        card.style.transform = 'scale(0.95)';
-                        setTimeout(() => card.remove(), 300);
-                    }, 200);
-                }
-            }
-
-            function decreaseModalQty() {
-                const input = document.getElementById('modal-qty');
-                input.value = Math.max(1, parseInt(input.value) - 1);
-            }
-
-            function increaseModalQty() {
-                const input = document.getElementById('modal-qty');
-                input.value = Math.min(10, parseInt(input.value) + 1);
-            }
-
-            function addModalToCart() {
-                const productId = document.getElementById('modal-image-section').dataset.productId;
-                if (!productId) {
-                    showToast('Vui lòng chọn sản phẩm', 'error');
-                    return;
-                }
-                fetch('/cart/add', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]')?.content || ''
-                    },
-                    body: JSON.stringify({
-                        variantId: 1, // Simplified: use default variant ID
-                        quantity: parseInt(document.getElementById('modal-qty').value)
-                    })
-                })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.success) {
-                        showToast(data.message, 'success');
-                        closeQuickViewModal();
-                    }
-                })
-                .catch(e => showToast('Có lỗi xảy ra', 'error'));
-            }
-
-            function closeQuickViewModal() {
-                document.getElementById('quick-view-modal').style.display = 'none';
-            }
-
-            function showToast(msg, type) {
-                const toast = document.createElement('div');
-                toast.className = `toast ${type}`;
-                toast.textContent = msg;
-                toast.style.cssText = 'position:fixed;bottom:20px;right:20px;padding:12px 16px;background:#1C1C1A;color:white;border-radius:4px;z-index:9999;animation:slideIn 0.3s ease';
-                document.body.appendChild(toast);
-                setTimeout(() => toast.remove(), 3000);
-            }
-        </script>
+        <th:block layout:fragment="scripts">
+            <script th:src="@{/js/wishlist/wishlist.js}"></script>
+        </th:block>
     </section>
 </body>
 

@@ -1,0 +1,57 @@
+/* ===== RMA / FORM PAGE CSS ===== */
+
+.rma-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-select,
+.form-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+    font-family: inherit;
+}
+
+.form-select:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: #000;
+}
+
+.order-brief {
+    background: #f9f9f9;
+    padding: 24px;
+    border-radius: 8px;
+    margin-bottom: 32px;
+}
+
+.order-brief h4 {
+    margin-bottom: 12px;
+    font-weight: 400;
+}
+
+.order-brief p {
+    font-size: 14px;
+    color: #666;
+}
+
+.order-brief p + p {
+    margin-top: 8px;
+}
