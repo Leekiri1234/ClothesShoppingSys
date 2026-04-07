@@ -8,7 +8,109 @@ function changeQty(btn, delta) {
             if (val > max) val = max;
 
             input.value = val;
-            form.submit();
+            submitCartFormAjax(form);
+        }
+
+        function submitCartFormAjax(form) {
+            const action = form.getAttribute('action');
+            const formData = new FormData(form);
+
+            form.style.opacity = '0.5';
+
+            fetch(action, {
+                method: 'POST',
+                body: new URLSearchParams(formData),
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            })
+            .then(r => r.json())
+            .then(data => {
+                form.style.opacity = '1';
+                if (data.success) {
+                    refreshCartUI();
+                } else {
+                    alert(data.message || 'Có lỗi xảy ra');
+                }
+            })
+            .catch(e => {
+                form.style.opacity = '1';
+                console.error('Lỗi khi cập nhật giỏ hàng:', e);
+            });
+        }
+
+        function refreshCartUI() {
+            fetch('/cart/summary')
+                .then(r => r.json())
+                .then(data => {
+                    // Cập nhật lại UI dựa trên dữ liệu mới
+                    if (!data || !data.items || data.items.length === 0) {
+                        const cartTable = document.querySelector('.cart-table');
+                        if (cartTable) {
+                            cartTable.innerHTML = `
+                                <div class="empty-cart">
+                                    <p class="empty-cart__text">Giỏ hàng của bạn đang trống</p>
+                                    <a class="empty-cart__btn" href="/products">Tiếp tục mua sắm</a>
+                                </div>
+                            `;
+                        }
+                        const sumSubtotal = document.getElementById('sum-subtotal');
+                        if (sumSubtotal) sumSubtotal.textContent = '0đ';
+                        recalcTotal();
+                        updateCartBadge(0);
+                        return;
+                    }
+
+                    const currentRows = document.querySelectorAll('.cart-table__row');
+                    currentRows.forEach(row => {
+                        const itemId = parseInt(row.getAttribute('data-item-id'));
+                        const itemData = data.items.find(i => i.cartItemId === itemId);
+
+                        if (!itemData) {
+                            row.style.opacity = '0';
+                            row.style.transform = 'scale(0.95)';
+                            row.style.transition = 'all 0.3s ease';
+                            setTimeout(() => row.remove(), 300);
+                        } else {
+                            const lineTotalEl = row.querySelector('.cart-line-total');
+                            if (lineTotalEl) {
+                                lineTotalEl.textContent = Number(itemData.subtotal).toLocaleString('vi-VN') + 'đ';
+                            }
+                            const inputEl = row.querySelector('input[name="quantity"]');
+                            if (inputEl && inputEl.value != itemData.quantity) {
+                                inputEl.value = itemData.quantity;
+                            }
+                        }
+                    });
+
+                    const sumSubtotal = document.getElementById('sum-subtotal');
+                    if (sumSubtotal) {
+                        sumSubtotal.textContent = Number(data.totalAmount).toLocaleString('vi-VN') + 'đ';
+                    }
+
+                    const voucherInput = document.getElementById('voucher-input');
+                    if (voucherInput && voucherInput.value.trim() !== '') {
+                        applyVoucher();
+                    } else {
+                        recalcTotal();
+                    }
+                    updateCartBadge(data.totalItems);
+                })
+                .catch(e => console.error('Lỗi update UI:', e));
+        }
+
+        function updateCartBadge(count) {
+            const el1 = document.getElementById('cart-count');
+            const el2 = document.getElementById('cart-sidebar-count');
+
+            if (el1) {
+                el1.textContent = count;
+                el1.style.display = count > 0 ? 'inline-flex' : 'none';
+            }
+
+            if (el2) {
+                el2.textContent = count;
+            }
         }
 
         function applyVoucher() {

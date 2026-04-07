@@ -28,7 +28,7 @@
                     </div>
 
                     <div th:if="${cart != null and cart.items != null and !#lists.isEmpty(cart.items)}">
-                        <div class="cart-table__row" th:each="item : ${cart.items}">
+                        <div class="cart-table__row" th:each="item : ${cart.items}" th:attr="data-item-id=${item.cartItemId}">
                             <div class="cart-product">
                                 <div class="cart-product__thumb"
                                      th:style="${item.imageUrl != null} ? 'background-image:url(' + ${item.imageUrl} + ');' : ''">
@@ -70,7 +70,7 @@
                                                min="1"
                                                th:attr="max=${item.maxStock}"
                                                th:value="${item.quantity}"
-                                               onchange="this.form.submit()">
+                                               onchange="submitCartFormAjax(this.form)">
                                         <button type="button" onclick="changeQty(this,1)">+</button>
                                     </div>
                                 </form>
@@ -82,7 +82,7 @@
                             </div>
 
                             <div>
-                                <form th:action="@{/cart/remove/{itemId}(itemId=${item.cartItemId})}" method="post">
+                                <form th:action="@{/cart/remove/{itemId}(itemId=${item.cartItemId})}" method="post" onsubmit="event.preventDefault(); submitCartFormAjax(this);">
                                     <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                                     <button type="submit" class="cart-remove" title="Xóa">×</button>
                                 </form>
