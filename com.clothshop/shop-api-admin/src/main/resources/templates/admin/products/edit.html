@@ -118,16 +118,13 @@
                 <div class="form-card">
                     <h3>Trạng thái</h3>
 
-                    <label class="toggle-switch">
-                        <input type="checkbox"
-                               name="isActive"
-                               th:checked="${product.isActive}">
-                        <span class="toggle-slider"></span>
-                        <span class="toggle-label">Hiển thị sản phẩm</span>
-                    </label>
+                    <div style="margin-bottom: 8px;">
+                        <span th:if="${product.isActive}" class="badge badge-success">Đang bán</span>
+                        <span th:unless="${product.isActive}" class="badge badge-danger">Ngưng bán</span>
+                    </div>
 
-                    <small style="font-size: 11px; color: var(--muted); display: block; margin-top: 8px;">
-                        Bật để sản phẩm hiển thị trên website
+                    <small style="font-size: 11px; color: var(--muted); display: block;">
+                        Sử dụng nút dưới cùng để thay đổi trạng thái sản phẩm
                     </small>
                 </div>
 
@@ -159,21 +156,25 @@
                 Lưu thay đổi
             </button>
             <a th:href="@{/admin/products}" class="btn btn-outline">Hủy</a>
-            <form th:action="@{/admin/products/{id}/toggle-status(id=${product.productId})}"
-                  method="post" style="display: inline; margin-left: auto;">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                <button type="submit"
-                        class="btn"
-                        th:classappend="${product.isActive} ? 'btn-danger' : 'btn-success'"
-                        th:onclick="${product.isActive}
-                            ? 'return confirm(\'⚠️ Ẩn sản phẩm này?\n\nSản phẩm sẽ không hiển thị trên cửa hàng!\')'
-                            : 'return confirm(\'✅ Khôi phục sản phẩm này?\n\nSản phẩm sẽ hiển thị lại trên cửa hàng!\')'">
-                    <span th:if="${product.isActive}">Ẩn sản phẩm</span>
-                    <span th:unless="${product.isActive}">Hiện sản phẩm</span>
-                </button>
-            </form>
         </div>
 
+    </form>
+
+    <form th:action="@{/admin/products/{id}/toggle-status(id=${product.productId})}"
+          method="post" style="display: flex; justify-content: flex-end; margin-top: -55px;">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit"
+                th:if="${product.isActive}"
+                class="btn btn-danger"
+                onclick="return confirm('⚠️ Ẩn sản phẩm này?\n\nSản phẩm sẽ không hiển thị trên cửa hàng!')">
+            Ẩn sản phẩm
+        </button>
+        <button type="submit"
+                th:unless="${product.isActive}"
+                class="btn btn-success"
+                onclick="return confirm('✅ Khôi phục sản phẩm này?\n\nSản phẩm sẽ hiển thị lại trên cửa hàng!')">
+            Hiện sản phẩm
+        </button>
     </form>
 </div>
 
