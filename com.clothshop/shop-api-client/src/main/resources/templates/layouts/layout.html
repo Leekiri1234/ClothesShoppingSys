@@ -311,13 +311,81 @@
             }
         }
 
-      function toggleCartSidebar() {
-    const sidebar = document.getElementById("cart-sidebar");
-    const overlay = document.getElementById("cart-overlay");
+        function formatSidebarCurrency(amount) {
+            const safeValue = Number.isFinite(Number(amount)) ? Number(amount) : 0;
+            return new Intl.NumberFormat('vi-VN').format(Math.round(safeValue)) + '₫';
+        }
 
-    if (sidebar) sidebar.classList.toggle("open");
-    if (overlay) overlay.classList.toggle("open");
-}
+        function renderCartSidebar(summary) {
+            const body = document.getElementById('cart-sidebar-body');
+            const badge = document.getElementById('cart-count');
+            const sidebarCount = document.getElementById('cart-sidebar-count');
+            const totalEl = document.getElementById('cart-sidebar-total');
+
+            if (!body) return;
+
+            const items = summary?.items || [];
+            const totalItems = summary?.totalItems || 0;
+            const totalAmount = summary?.totalAmount || 0;
+
+            if (badge) badge.textContent = totalItems;
+            if (sidebarCount) sidebarCount.textContent = totalItems;
+            if (totalEl) totalEl.textContent = formatSidebarCurrency(totalAmount);
+
+            if (!items.length) {
+                body.innerHTML = '<div style="text-align:center;padding:60px 0;color:#999;font-size:14px">Giỏ hàng trống</div>';
+                return;
+            }
+
+            body.innerHTML = items.map(item => `
+                <div class="cart-sidebar-item" style="display:flex;gap:12px;padding:16px 0;border-bottom:1px solid #f0f0f0;align-items:flex-start;">
+                    <a href="/products/${item.productSlug || ''}" style="flex-shrink:0;">
+                        <img src="${item.imageUrl || '/images/no-image.png'}" alt="${item.productName || ''}" style="width:72px;height:90px;object-fit:cover;background:#f5f5f5;">
+                    </a>
+                    <div style="flex:1;min-width:0;">
+                        <a href="/products/${item.productSlug || ''}" style="font-size:13px;font-weight:400;color:#1C1C1A;text-decoration:none;display:block;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                            ${item.productName || ''}
+                        </a>
+                        <div style="font-size:12px;color:#888;margin-bottom:8px;">
+                            ${(item.colorName || '') + ((item.colorName && item.sizeName) ? ' / ' : '') + (item.sizeName || '')}
+                        </div>
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                            <span style="font-size:12px;color:#666;">SL: ${item.quantity || 0}</span>
+                            <span style="font-size:13px;font-weight:500;color:#1C1C1A;">${formatSidebarCurrency(item.subtotal || 0)}</span>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function loadCartSidebar() {
+            try {
+                const response = await fetch('/cart/summary');
+                const summary = await response.json();
+                renderCartSidebar(summary);
+            } catch (e) {
+                console.log('Failed to load cart sidebar:', e);
+            }
+        }
+
+        async function toggleCartSidebar(forceOpen) {
+            const sidebar = document.getElementById('cart-sidebar');
+            const overlay = document.getElementById('cart-overlay');
+            if (!sidebar || !overlay) return;
+
+            const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : !sidebar.classList.contains('open');
+
+            if (shouldOpen) {
+                await loadCartSidebar();
+                sidebar.classList.add('open');
+                overlay.classList.add('open');
+                document.body.style.overflow = 'hidden';
+            } else {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('open');
+                document.body.style.overflow = '';
+            }
+        }
 
         function closeModal(e) {
             if (e && e.target.id === 'modal-overlay') {
@@ -334,6 +402,7 @@
         document.addEventListener('DOMContentLoaded', function () {
             loadWishlistCount();
             loadCartCount();
+            loadCartSidebar();
         });
 
         function loadWishlistCount() {
@@ -356,8 +425,12 @@
                 .then(r => r.json())
                 .then(data => {
                     const cartBadge = document.getElementById('cart-count');
+                    const sidebarCount = document.getElementById('cart-sidebar-count');
                     if (cartBadge) {
                         cartBadge.textContent = data.count;
+                    }
+                    if (sidebarCount) {
+                        sidebarCount.textContent = data.count;
                     }
                 })
                 .catch(e => console.log('Failed to load cart count:', e));
@@ -366,7 +439,6 @@
 
     <th:block layout:fragment="scripts">
         <script th:src="@{/js/product-actions.js}"></script>
-        <script th:src="@{/js/script.js}"></script>
     </th:block>
 
 </body>
