@@ -57,7 +57,7 @@ public class ProductSpecification {
                 }
 
                 if (sizes != null && !sizes.isEmpty()) {
-                    predicates.add(variantJoin.get("size").in(sizes));
+                    predicates.add(variantJoin.get("sizeValue").in(sizes));
                 }
             }
 
