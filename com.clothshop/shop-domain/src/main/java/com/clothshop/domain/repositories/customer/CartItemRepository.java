@@ -10,11 +10,11 @@ import java.util.Optional;
 
 @Repository
 public interface CartItemRepository extends JpaRepository<CartItem, Long> {
-    // Xóa sạch giỏ hàng sau khi checkout thành công
+
     @Modifying
     @Query("DELETE FROM CartItem ci WHERE ci.cart.id = :cartId")
     void deleteAllByCartId(Long cartId);
 
-    // Tìm xem variant này đã có trong giỏ hàng chưa để cộng dồn quantity
-    Optional<CartItem> findByCartIdAndVariantId(Long cartId, Long variantId);
+    @Query("SELECT ci FROM CartItem ci WHERE ci.cart.id = :cartId AND ci.variant.id = :variantId")
+    Optional<CartItem> findExistingCartItem(Long cartId, Long variantId);
 }

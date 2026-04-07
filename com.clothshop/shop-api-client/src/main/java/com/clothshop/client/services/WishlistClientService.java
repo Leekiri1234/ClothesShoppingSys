@@ -83,11 +83,21 @@ public class WishlistClientService {
             WishlistItem newItem = WishlistItem.builder()
                     .wishlist(wishlist)
                     .product(product)
+                    .isActive(true)
                     .build();
+
             wishlistItemRepository.save(newItem);
             log.info("Added new product {} to wishlist of user {}", productId, username);
             return true;
         }
+
+        // Nếu tồn tại → toggle
+        boolean newStatus = !Boolean.TRUE.equals(item.getIsActive());
+        item.setIsActive(newStatus);
+        wishlistItemRepository.save(item);
+
+        log.info("Toggle product {} in wishlist of user {} → {}", productId, username, newStatus);
+        return newStatus;
     }
 
     @Transactional // CHỐT: Bỏ readOnly = true vì hàm này gọi getOrCreateWishlist (có thể gây INSERT)
