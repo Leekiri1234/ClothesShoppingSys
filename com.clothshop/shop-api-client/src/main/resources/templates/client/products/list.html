@@ -6,13 +6,34 @@
 <main layout:fragment="content" class="container" style="padding-top: 120px;">
     <h1 th:text="${categoryName != null ? categoryName : 'Tất cả sản phẩm'}"></h1>
     <div class="product-grid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
-        <div th:each="p : ${products.content}" class="product-card">
+        <article class="product-card" th:each="p : ${products.content}" th:data-product-id="${p.id != null ? p.id : (p.productId != null ? p.productId : '')}" th:data-product-slug="${p.productSlug}">
             <a th:href="@{/products/{slug}(slug=${p.productSlug})}">
-                <img th:src="${p.imageUrl}" style="width: 100%; aspect-ratio: 3/4; object-fit: cover;">
-                <h3 th:text="${p.productName}" style="font-size: 14px; margin-top: 10px;"></h3>
-                <p th:text="${#numbers.formatDecimal(p.price, 0, 'COMMA', 0, 'POINT') + '₫'}"></p>
+                <div class="product-card-image">
+                    <div class="product-card-actions" th:if="${#authorization.expression('isAuthenticated()')}">
+                        <!-- Wishlist Button -->
+                        <button class="product-card-action-btn wishlist-btn" th:data-product-id="${p.id != null ? p.id : (p.productId != null ? p.productId : '')}" onclick="event.stopPropagation(); event.preventDefault(); wishlistToggle(this, event)" title="Yêu thích">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                        </button>
+                        <!-- Quick View Button -->
+                        <button class="product-card-action-btn quick-view-btn" th:data-product-slug="${p.productSlug}" onclick="event.stopPropagation(); event.preventDefault(); openQuickViewModal(this, event)" title="Xem nhanh">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </button>
+                        <!-- Quick Cart Button -->
+                        <button class="product-card-action-btn cart-btn" th:data-product-id="${p.id != null ? p.id : (p.productId != null ? p.productId : '')}" onclick="event.stopPropagation(); event.preventDefault(); quickAddToCart(this, event)" title="Thêm vào giỏ">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                        </button>
+                    </div>
+                    <img th:src="${p.imageUrl}" th:alt="${p.productName}" loading="lazy" style="width: 100%; aspect-ratio: 3/4; object-fit: cover;">
+                </div>
+                <div class="product-card-info" style="margin-top: 10px;">
+                    <div class="product-card-brand">MINIMAL</div>
+                    <h3 class="product-card-name" th:text="${p.productName}" style="font-size: 14px; margin: 0 0 5px 0; font-weight: normal; color: #333;"></h3>
+                    <div class="product-card-price">
+                        <span class="product-price-current" th:text="${#numbers.formatDecimal(p.price, 0, 'POINT', 0, 'COMMA')} + '₫'" style="font-weight: 500;"></span>
+                    </div>
+                </div>
             </a>
-        </div>
+        </article>
     </div>
 </main>
 </body>

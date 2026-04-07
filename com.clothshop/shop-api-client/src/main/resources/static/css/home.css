@@ -724,3 +724,24 @@
            pointer-events: auto;
        }
    }
+   .product-card-actions {
+       z-index: 20;
+   }
+
+   .product-card-action-btn {
+       width: 36px !important;
+       height: 36px !important;
+       min-width: 36px;
+       min-height: 36px;
+       padding: 0 !important;
+       box-sizing: border-box;
+       flex: 0 0 36px;
+       border-radius: 0;
+   }
+
+   .product-card-action-btn svg {
+       width: 14px;
+       height: 14px;
+       flex-shrink: 0;
+       pointer-events: none;
+   }

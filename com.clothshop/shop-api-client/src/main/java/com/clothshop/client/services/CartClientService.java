@@ -38,6 +38,11 @@ public class CartClientService {
     private Customer getCustomerByUsername(String username) {
         Account account = accountRepository.findByUsernameWithCustomer(username)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_EXISTED));
+
+        if (account.getCustomer() == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_EXISTED, "Tài khoản không có thông tin customer");
+        }
+
         return account.getCustomer();
     }
 
@@ -54,6 +59,11 @@ public class CartClientService {
 
     @Transactional
     public void addToCart(String username, AddToCartRequest request) {
+        log.info("=== ADD TO CART START ===");
+        log.info("username = {}", username);
+        log.info("request.variantId = {}", request.getVariantId());
+        log.info("request.quantity = {}", request.getQuantity());
+
         Customer customer = getCustomerByUsername(username);
         Cart cart = getOrCreateCart(customer);
 
@@ -61,18 +71,26 @@ public class CartClientService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Sản phẩm không tồn tại"));
 
         if (variant.getStockQuantity() < request.getQuantity()) {
-            throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK, "Sản phẩm chỉ còn " + variant.getStockQuantity() + " chiếc");
+            throw new BusinessException(
+                    ErrorCode.INSUFFICIENT_STOCK,
+                    "Sản phẩm chỉ còn " + variant.getStockQuantity() + " chiếc"
+            );
         }
 
-        CartItem existingItem = cartItemRepository.findByCartIdAndVariantId(cart.getId(), variant.getId()).orElse(null);
+        CartItem existingItem = cartItemRepository
+                .findExistingCartItem(cart.getId(), variant.getId())
+                .orElse(null);
 
         if (existingItem != null) {
             int newQty = existingItem.getQuantity() + request.getQuantity();
+
             if (variant.getStockQuantity() < newQty) {
                 throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK, "Vượt quá số lượng tồn kho cho phép");
             }
+
             existingItem.setQuantity(newQty);
             cartItemRepository.save(existingItem);
+            log.info("Updated existing cart item. newQty = {}", newQty);
         } else {
             CartItem newItem = CartItem.builder()
                     .cart(cart)
@@ -80,8 +98,12 @@ public class CartClientService {
                     .quantity(request.getQuantity())
                     .price(variant.getRetailPrice())
                     .build();
-            cartItemRepository.save(newItem);
+
+            cartItemRepository.saveAndFlush(newItem);
+            log.info("Inserted new cart item");
         }
+
+        log.info("=== ADD TO CART END ===");
     }
 
     @Transactional
@@ -138,7 +160,11 @@ public class CartClientService {
     public int getCartItemCount(String username) {
         Customer customer = getCustomerByUsername(username);
         Cart cart = cartRepository.findByCustomerId(customer.getId()).orElse(null);
-        if (cart == null || cart.getItems() == null) return 0;
+
+        if (cart == null || cart.getItems() == null) {
+            return 0;
+        }
+
         return cart.getItems().stream().mapToInt(CartItem::getQuantity).sum();
     }
 }

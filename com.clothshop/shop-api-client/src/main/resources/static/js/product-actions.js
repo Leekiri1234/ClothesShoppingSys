@@ -507,6 +507,30 @@ function loadWishlistCount() {
         .catch(e => console.log('Failed to load wishlist count:', e));
 }
 
+function loadWishlistIds() {
+    // Check if there are any wishlist buttons first to avoid unnecessary requests
+    const wishlistBtns = document.querySelectorAll('.wishlist-btn');
+    if (wishlistBtns.length === 0) return;
+
+    fetch('/wishlist/ids')
+        .then(r => r.json())
+        .then(ids => {
+            if (!Array.isArray(ids)) return;
+            wishlistBtns.forEach(btn => {
+                const productId = parseInt(btn.dataset.productId);
+                if (ids.includes(productId)) {
+                    btn.classList.add('active');
+                    const svg = btn.querySelector('svg');
+                    if (svg) {
+                        svg.setAttribute('fill', 'currentColor');
+                        svg.style.fill = 'currentColor';
+                    }
+                }
+            });
+        })
+        .catch(e => console.log('Failed to load wishlist ids:', e));
+}
+
 function loadCartCount() {
     fetch('/cart/count')
         .then(r => r.json())
@@ -574,3 +598,10 @@ if (!document.getElementById('product-actions-styles')) {
     `;
     document.head.appendChild(style);
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadWishlistCount();
+    loadWishlistIds();
+    loadCartCount();
+});
+
