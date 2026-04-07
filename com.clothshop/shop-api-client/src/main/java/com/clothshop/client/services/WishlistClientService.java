@@ -131,4 +131,15 @@ public class WishlistClientService {
                 .map(w -> wishlistItemRepository.existsByWishlistIdAndProductId(w.getId(), productId))
                 .orElse(false);
     }
+
+    @Transactional(readOnly = true)
+    public List<Long> getWishlistProductIds(String username) {
+        Customer customer = getCustomerByUsername(username);
+        return wishlistRepository.findByCustomerId(customer.getId())
+                .map(w -> w.getItems().stream()
+                        .filter(i -> Boolean.TRUE.equals(i.getIsActive()))
+                        .map(i -> i.getProduct().getId())
+                        .collect(Collectors.toList()))
+                .orElse(new ArrayList<>());
+    }
 }

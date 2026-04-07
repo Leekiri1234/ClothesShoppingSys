@@ -68,4 +68,14 @@ public class WishlistController {
         boolean inWishlist = wishlistService.isProductInWishlist(principal.getName(), productId);
         return ResponseEntity.ok(Map.of("inWishlist", inWishlist));
     }
+
+    // 6. Lấy danh sách ID sản phẩm trong wishlist (AJAX)
+    @GetMapping("/ids")
+    @ResponseBody
+    public ResponseEntity<?> getWishlistIds(Principal principal) {
+        if (principal == null) {
+            return ResponseEntity.ok(java.util.Collections.emptyList());
+        }
+        return ResponseEntity.ok(wishlistService.getWishlistProductIds(principal.getName()));
+    }
 }
