@@ -98,7 +98,7 @@
                 <tr th:each="cat : ${categories}"
                     th:attr="data-id=${cat.id},
                              data-name=${cat.categoryName},
-                             data-status=${cat.isActive ? (cat.catStatus != null ? cat.catStatus : 'ACTIVE') : 'DELETED'},
+                             data-status=${cat.isActive ? (cat.status != null ? cat.status : 'ACTIVE') : 'DELETED'},
                              data-deleted=${!cat.isActive},
                              data-level=${cat.parentId == null ? 'root' : 'child'}"
                     th:classappend="${!cat.isActive} ? 'inactive-row' : ''">
@@ -161,14 +161,14 @@
                         </span>
                     </td>
                     <td>
-                        <span th:if="${cat.isActive && cat.catStatus == 'ACTIVE'}"
+                        <span th:if="${cat.isActive && cat.status == 'ACTIVE'}"
                               class="status-badge status-active">
                             <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
                                 <circle cx="12" cy="12" r="10"/>
                             </svg>
                             Hoạt động
                         </span>
-                        <span th:if="${cat.isActive && cat.catStatus != 'ACTIVE'}"
+                        <span th:if="${cat.isActive && cat.status != 'ACTIVE'}"
                               class="status-badge status-pending">
                             <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
                                 <circle cx="12" cy="12" r="10"/>
