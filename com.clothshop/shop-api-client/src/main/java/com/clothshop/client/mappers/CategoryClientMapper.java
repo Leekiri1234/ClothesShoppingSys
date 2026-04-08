@@ -22,6 +22,7 @@ public interface CategoryClientMapper {
      */
     @Mapping(source = "categoryName", target = "name")
     @Mapping(source = "categorySlug", target = "slug")
+    @Mapping(source = "parent.id", target = "parentId")
     CategoryResponse toCategoryResponse(Category category);
 
     /**
@@ -32,4 +33,3 @@ public interface CategoryClientMapper {
      */
     List<CategoryResponse> toCategoryResponseList(List<Category> categories);
 }
-
