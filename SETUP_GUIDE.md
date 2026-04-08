@@ -35,7 +35,12 @@ cd ../../shop-api-client/src/main/resources
 cp application.yaml.example application.yaml
 ```
 
-Sửa username và password trong file vừa tạo.
+Sửa `application.yaml` (username, password MySQL và **OpenAI API Key** cho tính năng Try-On).
+```yaml
+openai:
+  api:
+    key: "sk-your-openai-api-key-here" # Thay bằng API key thật của bạn
+```
 
 ## Bước 4: Build Project
 ```bash
