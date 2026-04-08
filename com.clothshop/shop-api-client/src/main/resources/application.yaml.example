@@ -24,8 +24,6 @@ spring:
   thymeleaf:
     prefix: classpath:/templates/
     suffix: .html
-    cache: false
-
   # CẤU HÌNH CACHE CAFFEINE
     cache:
         type: caffeine
