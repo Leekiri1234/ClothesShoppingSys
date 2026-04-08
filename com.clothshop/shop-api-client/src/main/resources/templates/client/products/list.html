@@ -280,26 +280,17 @@
                     </div>
                 </div>
 
-                <!-- Color Filter -->
-                <div class="filter-section">
-                    <div class="filter-title">Màu sắc</div>
-                    <div class="filter-checkbox-group">
-                        <label>
-                            <input type="checkbox" name="colors" class="filter-input" value="Black" th:checked="${searchRequest.colors != null and #lists.contains(searchRequest.colors, 'Black')}"> Đen
-                        </label>
-                        <label>
-                            <input type="checkbox" name="colors" class="filter-input" value="White" th:checked="${searchRequest.colors != null and #lists.contains(searchRequest.colors, 'White')}"> Trắng
-                        </label>
-                        <label>
-                            <input type="checkbox" name="colors" class="filter-input" value="Blue" th:checked="${searchRequest.colors != null and #lists.contains(searchRequest.colors, 'Blue')}"> Xanh
-                        </label>
-                        <label>
-                            <input type="checkbox" name="colors" class="filter-input" value="Red" th:checked="${searchRequest.colors != null and #lists.contains(searchRequest.colors, 'Red')}"> Đỏ
-                        </label>
+                    <!-- Availability Status Filter -->
+                    <div class="filter-section">
+                        <div class="filter-title">Tình trạng hàng</div>
+                        <select name="availabilityStatus" class="filter-input" style="width: 100%; padding: 8px; border: 1px solid #ddd;">
+                            <option value="ALL" th:selected="${searchRequest.availabilityStatus != null and searchRequest.availabilityStatus.name() == 'ALL'}">Tất cả</option>
+                            <option value="IN_STOCK" th:selected="${searchRequest.availabilityStatus != null and searchRequest.availabilityStatus.name() == 'IN_STOCK'}">Còn hàng</option>
+                            <option value="LOW_STOCK" th:selected="${searchRequest.availabilityStatus != null and searchRequest.availabilityStatus.name() == 'LOW_STOCK'}">Sắp cháy hàng</option>
+                        </select>
                     </div>
-                </div>
 
-                <input type="hidden" name="keyword" th:value="${searchRequest.keyword}">
+                    <input type="hidden" name="keyword" th:value="${searchRequest.keyword}">
 
                 <button type="button" class="filter-btn" style="background-color: #fff; color: #000; border: 1px solid #000; margin-top: 20px;" onclick="window.location.href=window.location.pathname">
                     XÓA BỘ LỌC

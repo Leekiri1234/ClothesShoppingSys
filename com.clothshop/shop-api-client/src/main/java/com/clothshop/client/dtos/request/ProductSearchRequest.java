@@ -1,5 +1,6 @@
 package com.clothshop.client.dtos.request;
 
+import com.clothshop.domain.enums.AvailabilityStatus;
 import lombok.*;
 
 import java.util.List;
@@ -16,7 +17,8 @@ public class ProductSearchRequest {
     private Double minPrice;
     private Double maxPrice;
     private List<String> sizes;
-    private List<String> colors;
+
+    private AvailabilityStatus availabilityStatus = AvailabilityStatus.ALL;
 
     @Builder.Default
     private Integer page = 0;
@@ -26,4 +28,9 @@ public class ProductSearchRequest {
 
     @Builder.Default
     private String sort = "newest";
+
+    private Boolean isNew;
+    private Boolean isSale;
+
+    private Long filterMask;
 }
