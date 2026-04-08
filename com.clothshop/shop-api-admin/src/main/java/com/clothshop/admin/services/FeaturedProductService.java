@@ -1,8 +1,8 @@
 package com.clothshop.admin.services;
 
 import com.clothshop.admin.dtos.request.marketing.FeaturedProductRequest;
-import com.clothshop.domain.entities.marketing.FeaturedProduct;
-import com.clothshop.domain.entities.product.Product;
+import com.clothshop.domain.models.marketing.FeaturedProduct;
+import com.clothshop.domain.models.product.Product;
 import com.clothshop.domain.repositories.marketing.FeaturedProductRepository;
 import com.clothshop.domain.repositories.product.ProductRepository;
 import lombok.RequiredArgsConstructor;

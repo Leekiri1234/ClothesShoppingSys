@@ -9,7 +9,7 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication
 @ComponentScan(basePackages = "com.clothshop")
 @EnableJpaRepositories(basePackages = "com.clothshop.domain.repositories")
-@EntityScan(basePackages = "com.clothshop.domain.entities")
+@EntityScan(basePackages = "com.clothshop.domain.models")
 public class AdminApplication {
     public static void main(String[] args) {
         SpringApplication.run(AdminApplication.class, args);

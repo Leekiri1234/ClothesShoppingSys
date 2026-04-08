@@ -6,7 +6,7 @@ import com.clothshop.admin.mappers.CategoryAdminMapper;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
 import com.clothshop.common.utils.SlugUtils;
-import com.clothshop.domain.entities.product.Category;
+import com.clothshop.domain.models.product.Category;
 import com.clothshop.domain.enums.CategoryStatus;
 import com.clothshop.domain.repositories.product.CategoryRepository;
 import lombok.RequiredArgsConstructor;

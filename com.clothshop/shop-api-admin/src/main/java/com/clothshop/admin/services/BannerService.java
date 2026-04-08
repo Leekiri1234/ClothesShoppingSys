@@ -6,7 +6,7 @@ import com.clothshop.admin.mappers.BannerMapper;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
 import com.clothshop.common.utils.FileUploadUtil;
-import com.clothshop.domain.entities.cms.Banner;
+import com.clothshop.domain.models.cms.Banner;
 import com.clothshop.domain.repositories.cms.BannerRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

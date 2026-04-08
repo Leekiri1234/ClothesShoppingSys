@@ -3,9 +3,8 @@ package com.clothshop.admin.mappers;
 import com.clothshop.admin.dtos.BannerFormDTO;
 import com.clothshop.admin.dtos.request.banner.BannerRequest;
 import com.clothshop.admin.dtos.response.banner.BannerResponse;
-import com.clothshop.domain.entities.cms.Banner;
+import com.clothshop.domain.models.cms.Banner;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
 
 import java.util.List;
 

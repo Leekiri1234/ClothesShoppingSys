@@ -7,10 +7,10 @@
     import com.clothshop.common.dtos.response.PageResponse;
     import com.clothshop.common.exceptions.BusinessException;
     import com.clothshop.common.exceptions.ErrorCode;
-    import com.clothshop.domain.entities.auth.Account;
-    import com.clothshop.domain.entities.marketing.Voucher;
-    import com.clothshop.domain.entities.order.Order;
-    import com.clothshop.domain.entities.order.OrderStatusHistory;
+    import com.clothshop.domain.models.auth.Account;
+    import com.clothshop.domain.models.marketing.Voucher;
+    import com.clothshop.domain.models.order.Order;
+    import com.clothshop.domain.models.order.OrderStatusHistory;
     import com.clothshop.domain.enums.OrderStatus;
     import com.clothshop.domain.repositories.auth.AccountRepository;
     import com.clothshop.domain.repositories.marketing.VoucherRedemptionRepository;
@@ -23,7 +23,6 @@
     import org.springframework.stereotype.Service;
     import org.springframework.transaction.annotation.Transactional;
 
-    import java.math.BigDecimal;
     import java.util.Comparator;
     import java.util.List;
     import java.util.stream.Collectors;

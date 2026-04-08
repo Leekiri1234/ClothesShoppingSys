@@ -2,11 +2,11 @@ package com.clothshop.client.mappers;
 
 import com.clothshop.client.dtos.response.CollectionResponse;
 import com.clothshop.client.dtos.response.ProductListResponse;
-import com.clothshop.domain.entities.marketing.Collection;
-import com.clothshop.domain.entities.marketing.CollectionItem;
-import com.clothshop.domain.entities.product.Category;
-import com.clothshop.domain.entities.product.Product;
-import com.clothshop.domain.entities.product.ProductImage;
+import com.clothshop.domain.models.marketing.Collection;
+import com.clothshop.domain.models.marketing.CollectionItem;
+import com.clothshop.domain.models.product.Category;
+import com.clothshop.domain.models.product.Product;
+import com.clothshop.domain.models.product.ProductImage;
 import jakarta.persistence.EntityNotFoundException;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

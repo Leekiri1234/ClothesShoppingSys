@@ -3,7 +3,7 @@ package com.clothshop.client.services;
 import com.clothshop.client.dtos.request.ProductSearchRequest;
 import com.clothshop.client.dtos.response.ProductListResponse;
 import com.clothshop.client.mappers.ProductClientMapper;
-import com.clothshop.domain.entities.product.Product;
+import com.clothshop.domain.models.product.Product;
 import com.clothshop.domain.repositories.product.ProductRepository;
 import com.clothshop.domain.specifications.ProductSpecification;
 import lombok.RequiredArgsConstructor;

@@ -5,11 +5,11 @@ import com.clothshop.client.dtos.response.WishlistResponse;
 import com.clothshop.client.mappers.WishlistClientMapper;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
-import com.clothshop.domain.entities.auth.Account;
-import com.clothshop.domain.entities.auth.Customer;
-import com.clothshop.domain.entities.customer.Wishlist;
-import com.clothshop.domain.entities.customer.WishlistItem; // Gộp lại 1 cái thôi
-import com.clothshop.domain.entities.product.Product;
+import com.clothshop.domain.models.auth.Account;
+import com.clothshop.domain.models.auth.Customer;
+import com.clothshop.domain.models.customer.Wishlist;
+import com.clothshop.domain.models.customer.WishlistItem; // Gộp lại 1 cái thôi
+import com.clothshop.domain.models.product.Product;
 import com.clothshop.domain.repositories.auth.AccountRepository;
 import com.clothshop.domain.repositories.customer.WishlistItemRepository;
 import com.clothshop.domain.repositories.customer.WishlistRepository;

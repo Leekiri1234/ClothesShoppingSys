@@ -6,7 +6,7 @@ import com.clothshop.admin.dtos.response.marketing.VoucherResponse;
 import com.clothshop.admin.mappers.VoucherMapper;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
-import com.clothshop.domain.entities.marketing.Voucher;
+import com.clothshop.domain.models.marketing.Voucher;
 import com.clothshop.domain.enums.VoucherStatus;
 import com.clothshop.domain.repositories.marketing.VoucherRepository;
 import lombok.RequiredArgsConstructor;

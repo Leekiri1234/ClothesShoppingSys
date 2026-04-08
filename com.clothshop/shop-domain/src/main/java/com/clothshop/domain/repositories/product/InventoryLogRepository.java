@@ -1,7 +1,7 @@
 package com.clothshop.domain.repositories.product;
 
-import com.clothshop.domain.entities.product.InventoryLog;
-import com.clothshop.domain.entities.product.ProductVariant;
+import com.clothshop.domain.models.product.InventoryLog;
+import com.clothshop.domain.models.product.ProductVariant;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

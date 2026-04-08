@@ -3,8 +3,8 @@ package com.clothshop.admin.mappers;
 import com.clothshop.admin.dtos.request.products.ProductCreateRequest;
 import com.clothshop.admin.dtos.request.products.ProductUpdateRequest;
 import com.clothshop.admin.dtos.response.products.ProductAdminResponse;
-import com.clothshop.domain.entities.product.Category;
-import com.clothshop.domain.entities.product.Product;
+import com.clothshop.domain.models.product.Category;
+import com.clothshop.domain.models.product.Product;
 import jakarta.persistence.EntityNotFoundException;
 import org.mapstruct.*;
 

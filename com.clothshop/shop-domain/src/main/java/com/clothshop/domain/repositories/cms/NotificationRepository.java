@@ -1,6 +1,6 @@
 package com.clothshop.domain.repositories.cms;
 
-import com.clothshop.domain.entities.cms.Notification;
+import com.clothshop.domain.models.cms.Notification;
 import com.clothshop.domain.enums.NotificationType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

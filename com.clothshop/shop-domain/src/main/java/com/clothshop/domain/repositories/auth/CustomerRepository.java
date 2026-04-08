@@ -1,6 +1,6 @@
 package com.clothshop.domain.repositories.auth;
 
-import com.clothshop.domain.entities.auth.Customer;
+import com.clothshop.domain.models.auth.Customer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

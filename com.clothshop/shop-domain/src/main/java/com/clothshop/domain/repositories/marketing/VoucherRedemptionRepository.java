@@ -1,6 +1,6 @@
 package com.clothshop.domain.repositories.marketing;
 
-import com.clothshop.domain.entities.marketing.VoucherRedemption;
+import com.clothshop.domain.models.marketing.VoucherRedemption;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;

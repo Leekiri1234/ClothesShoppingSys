@@ -1,6 +1,6 @@
 package com.clothshop.domain.repositories.order;
 
-import com.clothshop.domain.entities.order.RmaRequest;
+import com.clothshop.domain.models.order.RmaRequest;
 import com.clothshop.domain.enums.RmaStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

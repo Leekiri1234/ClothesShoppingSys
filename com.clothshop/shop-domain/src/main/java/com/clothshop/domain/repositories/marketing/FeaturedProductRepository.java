@@ -1,7 +1,7 @@
 package com.clothshop.domain.repositories.marketing;
 
-import com.clothshop.domain.entities.marketing.FeaturedProduct;
-import com.clothshop.domain.entities.product.Product;
+import com.clothshop.domain.models.marketing.FeaturedProduct;
+import com.clothshop.domain.models.product.Product;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

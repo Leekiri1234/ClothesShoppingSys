@@ -3,7 +3,7 @@ package com.clothshop.admin.mappers;
 import com.clothshop.admin.dtos.request.marketing.VoucherCreateRequest;
 import com.clothshop.admin.dtos.request.marketing.VoucherUpdateRequest;
 import com.clothshop.admin.dtos.response.marketing.VoucherResponse;
-import com.clothshop.domain.entities.marketing.Voucher;
+import com.clothshop.domain.models.marketing.Voucher;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

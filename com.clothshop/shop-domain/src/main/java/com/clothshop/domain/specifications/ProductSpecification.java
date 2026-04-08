@@ -1,8 +1,8 @@
 package com.clothshop.domain.specifications;
 
-import com.clothshop.domain.entities.product.Category;
-import com.clothshop.domain.entities.product.Product;
-import com.clothshop.domain.entities.product.ProductVariant;
+import com.clothshop.domain.models.product.Category;
+import com.clothshop.domain.models.product.Product;
+import com.clothshop.domain.models.product.ProductVariant;
 import jakarta.persistence.criteria.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;

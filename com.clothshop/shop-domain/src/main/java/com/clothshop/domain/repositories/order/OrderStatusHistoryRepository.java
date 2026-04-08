@@ -1,6 +1,6 @@
 package com.clothshop.domain.repositories.order;
 
-import com.clothshop.domain.entities.order.OrderStatusHistory;
+import com.clothshop.domain.models.order.OrderStatusHistory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import java.util.List;

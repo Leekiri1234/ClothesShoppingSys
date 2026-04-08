@@ -2,9 +2,9 @@ package com.clothshop.client.mappers;
 
 import com.clothshop.client.dtos.response.OrderDetailResponse;
 import com.clothshop.client.dtos.response.OrderListClientResponse;
-import com.clothshop.domain.entities.order.Order;
-import com.clothshop.domain.entities.order.OrderItem;
-import com.clothshop.domain.entities.order.OrderStatusHistory;
+import com.clothshop.domain.models.order.Order;
+import com.clothshop.domain.models.order.OrderItem;
+import com.clothshop.domain.models.order.OrderStatusHistory;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

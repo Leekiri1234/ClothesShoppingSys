@@ -1,10 +1,10 @@
 package com.clothshop.domain.config;
 
-import com.clothshop.domain.entities.auth.*;
-import com.clothshop.domain.entities.cms.*;
-import com.clothshop.domain.entities.marketing.*;
-import com.clothshop.domain.entities.order.*;
-import com.clothshop.domain.entities.product.*;
+import com.clothshop.domain.models.auth.*;
+import com.clothshop.domain.models.cms.*;
+import com.clothshop.domain.models.marketing.*;
+import com.clothshop.domain.models.order.*;
+import com.clothshop.domain.models.product.*;
 import com.clothshop.domain.enums.*;
 import com.clothshop.domain.enums.OrderStatus;
 import com.clothshop.domain.repositories.auth.*;
