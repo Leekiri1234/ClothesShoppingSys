@@ -2,10 +2,23 @@ let currentSelectedProductId = null;
 let currentImageFile = null;
 
 document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const productIdParam = urlParams.get('productId');
+
+    if (productIdParam) {
+        const itemToSelect = document.querySelector(`.tryon-catalog-item[data-product-id="${productIdParam}"]`);
+        if (itemToSelect) {
+            selectTryOnItem(itemToSelect, productIdParam);
+            setTimeout(() => itemToSelect.scrollIntoView({ behavior: 'smooth', block: 'center' }), 100);
+            return;
+        }
+    }
+
     // Select the first item by default if available
     const firstItem = document.querySelector('.tryon-catalog-item');
     if (firstItem) {
         currentSelectedProductId = firstItem.getAttribute('data-product-id');
+        firstItem.classList.add('selected');
     }
 });
 
