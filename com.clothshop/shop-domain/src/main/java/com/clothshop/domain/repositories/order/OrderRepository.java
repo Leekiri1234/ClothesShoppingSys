@@ -1,6 +1,6 @@
 package com.clothshop.domain.repositories.order;
 
-import com.clothshop.domain.entities.order.Order;
+import com.clothshop.domain.models.order.Order;
 import com.clothshop.domain.enums.OrderStatus;
 import com.clothshop.domain.projections.DailyRevenueSummary;
 import com.clothshop.domain.projections.ProductSalesSummary;

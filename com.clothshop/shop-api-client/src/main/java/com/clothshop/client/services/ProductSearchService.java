@@ -3,7 +3,8 @@ package com.clothshop.client.services;
 import com.clothshop.client.dtos.request.ProductSearchRequest;
 import com.clothshop.client.dtos.response.ProductListResponse;
 import com.clothshop.client.mappers.ProductClientMapper;
-import com.clothshop.domain.entities.product.Product;
+import com.clothshop.domain.enums.AvailabilityStatus;
+import com.clothshop.domain.models.product.Product;
 import com.clothshop.domain.repositories.product.ProductRepository;
 import com.clothshop.domain.specifications.ProductSpecification;
 import lombok.RequiredArgsConstructor;
@@ -45,8 +46,8 @@ public class ProductSearchService {
                 request.getCategoryIds(),
                 minPrice,
                 maxPrice,
-                request.getColors(),
-                request.getSizes()
+                request.getSizes(),
+                request.getAvailabilityStatus() != null ? request.getAvailabilityStatus() : AvailabilityStatus.ALL
         );
 
         // Also add collection logic if needed, but since it's just dynamic filter we can combine:

@@ -1,7 +1,7 @@
 package com.clothshop.admin.mappers;
 
 import com.clothshop.admin.dtos.response.order.*;
-import com.clothshop.domain.entities.order.*;
+import com.clothshop.domain.models.order.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

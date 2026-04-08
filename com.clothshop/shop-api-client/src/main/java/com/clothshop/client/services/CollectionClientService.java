@@ -2,7 +2,7 @@ package com.clothshop.client.services;
 
 import com.clothshop.client.dtos.response.CollectionResponse;
 import com.clothshop.client.mappers.CollectionClientMapper;
-import com.clothshop.domain.entities.marketing.Collection;
+import com.clothshop.domain.models.marketing.Collection;
 import com.clothshop.domain.repositories.marketing.CollectionRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;

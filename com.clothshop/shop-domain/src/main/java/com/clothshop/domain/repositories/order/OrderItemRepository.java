@@ -1,7 +1,7 @@
 package com.clothshop.domain.repositories.order;
 
-import com.clothshop.domain.entities.auth.Customer;
-import com.clothshop.domain.entities.order.OrderItem;
+import com.clothshop.domain.models.auth.Customer;
+import com.clothshop.domain.models.order.OrderItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

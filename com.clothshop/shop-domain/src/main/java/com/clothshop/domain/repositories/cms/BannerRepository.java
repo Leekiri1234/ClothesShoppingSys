@@ -1,6 +1,6 @@
 package com.clothshop.domain.repositories.cms;
 
-import com.clothshop.domain.entities.cms.Banner;
+import com.clothshop.domain.models.cms.Banner;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,7 +1,7 @@
 package com.clothshop.client.mappers;
 
 import com.clothshop.client.dtos.response.CategoryResponse;
-import com.clothshop.domain.entities.product.Category;
+import com.clothshop.domain.models.product.Category;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

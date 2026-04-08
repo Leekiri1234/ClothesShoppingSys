@@ -1,6 +1,6 @@
 package com.clothshop.domain.repositories.auth;
 
-import com.clothshop.domain.entities.auth.Role;
+import com.clothshop.domain.models.auth.Role;
 import com.clothshop.domain.enums.StaffRole;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

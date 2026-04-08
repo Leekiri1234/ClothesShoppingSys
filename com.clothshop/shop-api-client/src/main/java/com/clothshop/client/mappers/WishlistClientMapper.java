@@ -1,9 +1,9 @@
 package com.clothshop.client.mappers;
 
 import com.clothshop.client.dtos.response.WishlistItemResponse;
-import com.clothshop.domain.entities.customer.WishlistItem;
-import com.clothshop.domain.entities.product.Product;
-import com.clothshop.domain.entities.product.ProductImage;
+import com.clothshop.domain.models.customer.WishlistItem;
+import com.clothshop.domain.models.product.Product;
+import com.clothshop.domain.models.product.ProductImage;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

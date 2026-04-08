@@ -1,6 +1,6 @@
 package com.clothshop.domain.repositories.marketing;
 
-import com.clothshop.domain.entities.marketing.CollectionItem;
+import com.clothshop.domain.models.marketing.CollectionItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

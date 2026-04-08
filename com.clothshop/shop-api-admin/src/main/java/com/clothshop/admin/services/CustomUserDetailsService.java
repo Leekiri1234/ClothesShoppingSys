@@ -1,8 +1,6 @@
 package com.clothshop.admin.services;
 
-import com.clothshop.domain.entities.auth.Account;
-import com.clothshop.domain.entities.auth.Role;
-import com.clothshop.domain.entities.auth.Staff;
+import com.clothshop.domain.models.auth.Account;
 import com.clothshop.domain.enums.AccountStatus;
 import com.clothshop.domain.enums.AccountType;
 import com.clothshop.domain.enums.StaffRole;

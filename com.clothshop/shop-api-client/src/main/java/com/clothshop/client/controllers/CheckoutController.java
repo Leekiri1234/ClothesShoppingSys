@@ -6,7 +6,7 @@ import com.clothshop.client.services.CartClientService;
 import com.clothshop.client.services.CheckoutClientService;
 import com.clothshop.client.services.ClientVoucherService;
 import com.clothshop.common.exceptions.BusinessException;
-import com.clothshop.domain.entities.auth.Account;
+import com.clothshop.domain.models.auth.Account;
 import com.clothshop.domain.enums.PaymentMethod;
 import com.clothshop.domain.repositories.auth.AccountRepository;
 import jakarta.validation.Valid;

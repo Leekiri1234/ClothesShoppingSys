@@ -1,0 +1,28 @@
+package com.clothshop.domain.models.customer;
+
+import com.clothshop.domain.models.base.BaseEntity;
+import com.clothshop.domain.models.auth.Customer;
+import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
+
+import java.util.List;
+
+@Entity
+@Table(name = "wishlists")
+@SQLDelete(sql = "UPDATE wishlists SET is_active = false WHERE id = ?")
+@SQLRestriction("is_active = true")
+@AttributeOverride(name = "id", column = @Column(name = "wishlist_id"))
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
+public class Wishlist extends BaseEntity {
+
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id", unique = true, nullable = false)
+    private Customer customer;
+
+    @OneToMany(mappedBy = "wishlist", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<WishlistItem> items;
+}
+

@@ -2,9 +2,9 @@ package com.clothshop.admin.services;
 
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
-import com.clothshop.domain.entities.auth.Account;
-import com.clothshop.domain.entities.product.InventoryLog;
-import com.clothshop.domain.entities.product.ProductVariant;
+import com.clothshop.domain.models.auth.Account;
+import com.clothshop.domain.models.product.InventoryLog;
+import com.clothshop.domain.models.product.ProductVariant;
 import com.clothshop.domain.repositories.auth.AccountRepository;
 import com.clothshop.domain.repositories.product.InventoryLogRepository;
 import lombok.RequiredArgsConstructor;

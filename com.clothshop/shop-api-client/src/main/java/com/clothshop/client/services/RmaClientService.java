@@ -3,10 +3,10 @@ package com.clothshop.client.services;
 import com.clothshop.client.dtos.request.RmaCreateRequest;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
-import com.clothshop.domain.entities.auth.Account;
-import com.clothshop.domain.entities.auth.Customer;
-import com.clothshop.domain.entities.order.Order;
-import com.clothshop.domain.entities.order.RmaRequest;
+import com.clothshop.domain.models.auth.Account;
+import com.clothshop.domain.models.auth.Customer;
+import com.clothshop.domain.models.order.Order;
+import com.clothshop.domain.models.order.RmaRequest;
 import com.clothshop.domain.enums.OrderStatus;
 import com.clothshop.domain.enums.RmaStatus;
 import com.clothshop.domain.enums.RmaType; // Quan trọng: Import Enum này

@@ -1,7 +1,7 @@
 package com.clothshop.admin.mappers;
 
 import com.clothshop.admin.dtos.response.order.RmaAdminResponse;
-import com.clothshop.domain.entities.order.RmaRequest;
+import com.clothshop.domain.models.order.RmaRequest;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;

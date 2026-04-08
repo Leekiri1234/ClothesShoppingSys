@@ -2,7 +2,7 @@ package com.clothshop.client.mappers;
 
 import com.clothshop.client.dtos.request.ProfileUpdateRequest;
 import com.clothshop.client.dtos.response.CustomerProfileResponse;
-import com.clothshop.domain.entities.auth.Customer;
+import com.clothshop.domain.models.auth.Customer;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;

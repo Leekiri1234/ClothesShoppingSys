@@ -1,6 +1,6 @@
 package com.clothshop.domain.repositories.product;
 
-import com.clothshop.domain.entities.product.ProductVariant;
+import com.clothshop.domain.models.product.ProductVariant;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

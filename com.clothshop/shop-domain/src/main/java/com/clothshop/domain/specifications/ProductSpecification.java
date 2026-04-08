@@ -1,8 +1,9 @@
 package com.clothshop.domain.specifications;
 
-import com.clothshop.domain.entities.product.Category;
-import com.clothshop.domain.entities.product.Product;
-import com.clothshop.domain.entities.product.ProductVariant;
+import com.clothshop.domain.enums.AvailabilityStatus;
+import com.clothshop.domain.models.product.Category;
+import com.clothshop.domain.models.product.Product;
+import com.clothshop.domain.models.product.ProductVariant;
 import jakarta.persistence.criteria.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
@@ -13,7 +14,7 @@ import java.util.List;
 
 public class ProductSpecification {
 
-    public static Specification<Product> filterProducts(String keyword, List<Long> categoryIds, BigDecimal minPrice, BigDecimal maxPrice, List<String> colors, List<String> sizes) {
+    public static Specification<Product> filterProducts(String keyword, List<Long> categoryIds, BigDecimal minPrice, BigDecimal maxPrice, List<String> sizes, AvailabilityStatus availabilityStatus) {
         return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -40,9 +41,9 @@ public class ProductSpecification {
                 predicates.add(cb.or(exactCategory, childCategory));
             }
 
-            // 3. Variant filters (Price, Color, Size)
-            if (minPrice != null || maxPrice != null || (colors != null && !colors.isEmpty()) || (sizes != null && !sizes.isEmpty())) {
-                Join<Product, ProductVariant> variantJoin = root.join("variants", JoinType.INNER);
+            // 3. Variant filters (Price, Size, Availability)
+            if (minPrice != null || maxPrice != null || (sizes != null && !sizes.isEmpty()) || availabilityStatus != AvailabilityStatus.ALL) {
+                Join<Product, ProductVariant> variantJoin = root.join("variants", JoinType.LEFT);
 
                 if (minPrice != null) {
                     predicates.add(cb.greaterThanOrEqualTo(variantJoin.get("retailPrice"), minPrice));
@@ -52,13 +53,34 @@ public class ProductSpecification {
                     predicates.add(cb.lessThanOrEqualTo(variantJoin.get("retailPrice"), maxPrice));
                 }
 
-                if (colors != null && !colors.isEmpty()) {
-                    predicates.add(variantJoin.get("color").in(colors));
-                }
-
                 if (sizes != null && !sizes.isEmpty()) {
                     predicates.add(variantJoin.get("sizeValue").in(sizes));
                 }
+            }
+
+            if (availabilityStatus == AvailabilityStatus.IN_STOCK) {
+                Subquery<Long> subquery = query.subquery(Long.class);
+                Root<Product> subRoot = subquery.from(Product.class);
+                Join<Product, ProductVariant> subVariantJoin = subRoot.join("variants", JoinType.LEFT);
+                subquery.select(subRoot.get("id"))
+                        .where(
+                            cb.equal(subRoot, root),
+                            cb.greaterThan(subVariantJoin.get("stockQuantity"), 0)
+                        );
+                predicates.add(cb.exists(subquery));
+            } else if (availabilityStatus == AvailabilityStatus.LOW_STOCK) {
+                Subquery<Long> subquery = query.subquery(Long.class);
+                Root<Product> subRoot = subquery.from(Product.class);
+                Join<Product, ProductVariant> subVariantJoin = subRoot.join("variants", JoinType.LEFT);
+                subquery.select(subRoot.get("id"))
+                        .where(
+                            cb.equal(subRoot, root),
+                            cb.and(
+                                cb.greaterThan(subVariantJoin.get("stockQuantity"), 0),
+                                cb.lessThanOrEqualTo(subVariantJoin.get("stockQuantity"), 10)
+                            )
+                        );
+                predicates.add(cb.exists(subquery));
             }
 
             // Must be active
