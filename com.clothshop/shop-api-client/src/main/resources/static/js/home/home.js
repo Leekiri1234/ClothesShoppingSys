@@ -192,11 +192,18 @@ async function removeSidebarItem(itemId) {
 
 // ── Mở/Đóng Sidebar ──────────────────────────
 function openCartSidebar() {
-    // FIX: layout.html dùng id="cart-sidebar" và id="cart-overlay"
+    if (typeof toggleCartSidebar === "function") {
+        toggleCartSidebar(true);
+        return;
+    }
+
     const sidebar = document.getElementById("cart-sidebar");
     const overlay = document.getElementById("cart-overlay");
-    if (sidebar) sidebar.classList.add("active");
-    if (overlay) overlay.classList.add("active");
+    if (!sidebar || !overlay) return;
+
+    sidebar.classList.add("open");
+    overlay.classList.add("open");
+    document.body.style.overflow = "hidden";
 }
 
 // ── Toast Notification ────────────────────────
@@ -420,13 +427,3 @@ document.addEventListener("DOMContentLoaded", () => {
     // Load cart sidebar data ngay khi trang load (để có sẵn items)
     loadCartSidebar();
 });
-function openCartSidebar() {
-    const sidebar = document.getElementById("cart-sidebar");
-    const overlay = document.getElementById("cart-overlay");
-
-    if (!sidebar || !overlay) return;
-
-    sidebar.classList.add("open");
-    overlay.classList.add("open");
-    document.body.style.overflow = "hidden";
-}

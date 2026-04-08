@@ -335,6 +335,9 @@ function addQuickViewToCart() {
         if (data.success) {
             showToast(data.message || 'Đã thêm vào giỏ hàng', 'success');
             loadCartCount();
+            if (typeof loadCartSidebar === 'function') {
+                loadCartSidebar();
+            }
             closeQuickViewModal();
         } else {
             showToast(data.message || 'Không thể thêm vào giỏ', 'error');
@@ -378,7 +381,8 @@ function quickAddToCart(button, event) {
     }
     
     const productId = button.dataset.productId;
-    const productSlug = button.parentElement.parentElement.parentElement.dataset.productSlug || button.dataset.productSlug;
+    const productCard = button.closest('[data-product-slug]');
+    const productSlug = productCard?.dataset?.productSlug || button.dataset.productSlug;
     
     if (!productId || !productSlug) {
         showToast('Sản phẩm không hợp lệ', 'error');
@@ -429,6 +433,9 @@ function quickAddToCart(button, event) {
                 if (data && data.success) {
                     showToast('Đã thêm vào giỏ hàng', 'success');
                     loadCartCount();
+                    if (typeof loadCartSidebar === 'function') {
+                        loadCartSidebar();
+                    }
                 } else if (data && data.message) {
                     showToast(data.message, 'error');
                 } else {
