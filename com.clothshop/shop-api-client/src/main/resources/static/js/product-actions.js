@@ -605,3 +605,82 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCartCount();
 });
 
+window.__REFLECT_DATA__ = {
+    init: function() {
+        const filterForm = document.getElementById('filterForm');
+        if (!filterForm) return; // Only run on list page
+
+        const gridContainer = document.getElementById('productGridContainer');
+        const inputs = document.querySelectorAll('.filter-input');
+        let timeoutId = null;
+
+        inputs.forEach(input => {
+            input.addEventListener('change', function() {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    applyFilters();
+                }, 500);
+            });
+            if(input.type === 'number') {
+                input.addEventListener('keyup', function() {
+                    clearTimeout(timeoutId);
+                    timeoutId = setTimeout(() => {
+                        applyFilters();
+                    }, 500);
+                });
+            }
+        });
+
+        function applyFilters() {
+            const formData = new FormData(filterForm);
+            const searchParams = new URLSearchParams(formData);
+
+            for(const [key, value] of [...searchParams.entries()]) {
+                if (!value || value.trim() === '') {
+                    searchParams.delete(key);
+                }
+            }
+
+            const newUrl = `${window.location.pathname}?${searchParams.toString()}`;
+            window.history.pushState({path: newUrl}, '', newUrl);
+
+            gridContainer.classList.add('grid-loading');
+
+            fetch(`/products/filter-ajax?${searchParams.toString()}`)
+                .then(response => response.text())
+                .then(html => {
+                    gridContainer.innerHTML = html;
+                    setTimeout(() => gridContainer.classList.remove('grid-loading'), 200);
+
+                    const hiddenCount = document.getElementById('hidden-total-count');
+                    if (hiddenCount) {
+                        const totalProductsCount = document.getElementById('totalProductsCount');
+                        if (totalProductsCount) {
+                            totalProductsCount.textContent = hiddenCount.value + ' sản phẩm';
+                        }
+                    }
+
+                    attachHoverEffect();
+                })
+                .catch(error => {
+                    console.error('Error fetching filtered products:', error);
+                    gridContainer.classList.remove('grid-loading');
+                });
+        }
+
+        function attachHoverEffect() {
+            document.querySelectorAll('.product-card').forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    const img = card.querySelector('img');
+                    if (img) img.style.transform = 'scale(1.05)';
+                });
+                card.addEventListener('mouseleave', () => {
+                    const img = card.querySelector('img');
+                    if (img) img.style.transform = 'scale(1)';
+                });
+            });
+        }
+
+        attachHoverEffect();
+    }
+};

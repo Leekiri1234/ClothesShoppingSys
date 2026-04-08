@@ -390,85 +390,21 @@
         </div>
     </div>
 
+    <link rel="js-implementation" th:href="@{/js/product-actions.js}">
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            const filterForm = document.getElementById('filterForm');
-            const gridContainer = document.getElementById('productGridContainer');
-            const inputs = document.querySelectorAll('.filter-input');
-            let timeoutId = null;
-
-            inputs.forEach(input => {
-                input.addEventListener('change', function() {
-                    // Cập nhật khi checkbox đổi hoặc input (type=number/select) đổi
-                    clearTimeout(timeoutId);
-                    timeoutId = setTimeout(() => {
-                        applyFilters();
-                    }, 500); // debounce 500ms
-                });
-                if(input.type === 'number') {
-                    input.addEventListener('keyup', function() {
-                        clearTimeout(timeoutId);
-                        timeoutId = setTimeout(() => {
-                            applyFilters();
-                        }, 500);
-                    });
-                }
-            });
-
-            function applyFilters() {
-                const formData = new FormData(filterForm);
-                const searchParams = new URLSearchParams(formData);
-
-                // Dọn dẹp URL bằng cách xóa các param trống
-                for(const [key, value] of [...searchParams.entries()]) {
-                    if (!value || value.trim() === '') {
-                        searchParams.delete(key);
+            const link = document.querySelector('link[rel="js-implementation"]');
+            if (link) {
+                const script = document.createElement('script');
+                script.src = link.href;
+                script.async = true;
+                script.onload = function() {
+                    if (window.__REFLECT_DATA__ && typeof window.__REFLECT_DATA__.init === 'function') {
+                        window.__REFLECT_DATA__.init();
                     }
-                }
-
-                // Cập nhật URL không reload trang
-                const newUrl = `${window.location.pathname}?${searchParams.toString()}`;
-                window.history.pushState({path: newUrl}, '', newUrl);
-
-                // Thêm skeleton loading (Opacity Fade)
-                gridContainer.classList.add('grid-loading');
-
-                // Gọi AJAX lấy Fragment HTML
-                fetch(`/products/filter-ajax?${searchParams.toString()}`)
-                    .then(response => response.text())
-                    .then(html => {
-                        gridContainer.innerHTML = html;
-                        // Khôi phục sau 200ms để hiệu ứng mượt mà
-                        setTimeout(() => gridContainer.classList.remove('grid-loading'), 200);
-
-                        // Cập nhật tổng số kết quả
-                        const hiddenCount = document.getElementById('hidden-total-count');
-                        if (hiddenCount) {
-                            document.getElementById('totalProductsCount').textContent = hiddenCount.value + ' sản phẩm';
-                        }
-
-                        attachHoverEffect(); // Gắn lại hiệu ứng cho các phần tử mới
-                    })
-                    .catch(error => {
-                        console.error('Error fetching filtered products:', error);
-                        gridContainer.classList.remove('grid-loading');
-                    });
+                };
+                document.body.appendChild(script);
             }
-
-            function attachHoverEffect() {
-                document.querySelectorAll('.product-card').forEach(card => {
-                    card.addEventListener('mouseenter', () => {
-                        const img = card.querySelector('img');
-                        if (img) img.style.transform = 'scale(1.05)';
-                    });
-                    card.addEventListener('mouseleave', () => {
-                        const img = card.querySelector('img');
-                        if (img) img.style.transform = 'scale(1)';
-                    });
-                });
-            }
-
-            attachHoverEffect();
         });
     </script>
 </main>
