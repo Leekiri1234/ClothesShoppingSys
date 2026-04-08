@@ -49,11 +49,12 @@ public class StaffManagementController {
     // 1. TRANG DANH SÁCH (Hỗ trợ tìm kiếm & Phân trang)
     @GetMapping
     public String listStaff(StaffFilterRequest filter,
+                            @RequestParam(value = "filtered", defaultValue = "false") boolean filtered,
                             @PageableDefault(size = 10, sort = "id") Pageable pageable,
                             Principal principal,
                             Model model) {
 
-        if (filter.getStatus() == null && filter.getKeyword() == null && filter.getRoleId() == null) {
+        if (!filtered && filter.getStatus() == null && filter.getKeyword() == null && filter.getRoleId() == null) {
             filter.setStatus(AccountStatus.ACTIVE);
         }
 

@@ -284,6 +284,8 @@ function filterStaff() {
         url.searchParams.delete('status');
     }
 
+    url.searchParams.set('filtered', 'true');
+
     window.location.href = url.toString();
 }
 
