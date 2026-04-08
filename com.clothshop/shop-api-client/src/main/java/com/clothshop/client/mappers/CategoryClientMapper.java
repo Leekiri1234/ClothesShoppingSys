@@ -23,6 +23,7 @@ public interface CategoryClientMapper {
     @Mapping(source = "categoryName", target = "name")
     @Mapping(source = "categorySlug", target = "slug")
     @Mapping(source = "parent.id", target = "parentId")
+    @Mapping(target = "children", ignore = true)
     CategoryResponse toCategoryResponse(Category category);
 
     /**
