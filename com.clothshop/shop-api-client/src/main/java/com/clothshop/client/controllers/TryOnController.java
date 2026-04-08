@@ -4,6 +4,7 @@ import com.clothshop.client.dtos.request.ProductSearchRequest;
 import com.clothshop.client.dtos.response.ProductListResponse;
 import com.clothshop.client.services.ProductSearchService;
 import com.clothshop.client.services.TryOnService;
+import com.clothshop.client.services.CategoryClientService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -25,16 +27,31 @@ public class TryOnController {
 
     private final ProductSearchService productSearchService;
     private final TryOnService tryOnService;
+    private final CategoryClientService categoryClientService;
 
     @GetMapping
-    public String showTryOnPage(Model model) {
-        ProductSearchRequest searchRequest = ProductSearchRequest.builder()
-                .page(0)
-                .size(12)
-                .build();
+    public String showTryOnPage(
+            @ModelAttribute ProductSearchRequest searchRequest,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long productId,
+            Model model) {
+
+        if (categoryId != null) {
+            searchRequest.setCategoryIds(Collections.singletonList(categoryId));
+        }
+
+        if (searchRequest.getSize() == null || searchRequest.getSize() < 1) {
+            searchRequest.setSize(12);
+        }
+
         Page<ProductListResponse> productPage = productSearchService.search(searchRequest);
 
         model.addAttribute("tryOnProducts", productPage.getContent());
+        model.addAttribute("productPage", productPage);
+        model.addAttribute("categories", categoryClientService.getCategoryTree());
+        model.addAttribute("searchRequest", searchRequest);
+        model.addAttribute("selectedCategoryId", categoryId);
+        model.addAttribute("preselectedProductId", productId);
         model.addAttribute("pageTitle", "Virtual Try-On");
         return "client/try-on/try-on";
     }
