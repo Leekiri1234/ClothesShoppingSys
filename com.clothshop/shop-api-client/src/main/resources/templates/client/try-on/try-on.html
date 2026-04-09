@@ -24,19 +24,9 @@
                     <h5 style="margin:0;font-size:12px;letter-spacing:2px;text-transform:uppercase">Chọn sản phẩm để thử</h5>
                 </div>
                 
-                <!-- Filter Form -->
                 <form action="/try-on" method="get" class="tryon-filter-form" style="display: flex; gap: 8px; margin-bottom: 16px;">
                     <input type="text" name="keyword" th:value="${searchRequest.keyword}" placeholder="Tìm kiếm..." style="flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
-                    <select name="categoryId" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" onchange="this.form.submit()">
-                        <option value="">Tất cả danh mục</option>
-                        <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.name}" th:selected="${cat.id == selectedCategoryId}"></option>
-                    </select>
-                    <select name="sort" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;" onchange="this.form.submit()">
-                        <option value="newest" th:selected="${searchRequest.sort == 'newest'}">Mới nhất</option>
-                        <option value="price_asc" th:selected="${searchRequest.sort == 'price_asc'}">Giá tăng dần</option>
-                        <option value="price_desc" th:selected="${searchRequest.sort == 'price_desc'}">Giá giảm dần</option>
-                    </select>
-                    <button type="submit" class="btn btn--outline btn--sm" style="padding: 8px 12px;">Tìm</button>
+                    <button type="submit" class="btn btn--outline btn--sm" style="padding: 8px 12px; white-space: nowrap;">Tìm</button>
                 </form>
 
                 <div class="tryon-catalog-grid" id="tryon-items">
