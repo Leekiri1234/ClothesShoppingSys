@@ -23,7 +23,7 @@
                 <p style="font-size: 14px; color: #666; margin-top: 8px;">Tổng tiền: <strong th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + '₫'}"></strong></p>
             </div>
 
-            <form th:action="@{/orders/{inv}/rma(inv=${order.orderInvoice})}" th:object="${rmaRequest}" method="post">
+            <form th:action="@{/orders/{inv}/rma(inv=${order.orderInvoice})}" th:object="${rmaRequest}" method="post" enctype="multipart/form-data">
                 <div class="form-group">
                     <label class="form-label">Loại yêu cầu</label>
                     <select th:field="*{type}" class="form-select" required>
@@ -38,6 +38,17 @@
                     <textarea th:field="*{reason}" class="form-textarea" rows="6" placeholder="Vui lòng mô tả chi tiết lý do bạn muốn đổi/trả sản phẩm..." required></textarea>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">Hình ảnh minh chứng <span style="color: #999; font-weight: 400;">(tối đa 5 ảnh, không bắt buộc)</span></label>
+                    <div class="file-upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click();">
+                        <div class="upload-icon">📷</div>
+                        <p class="upload-text">Nhấn hoặc kéo thả ảnh vào đây</p>
+                        <p class="upload-hint">Hỗ trợ: JPG, PNG, WEBP — Tối đa 5MB/ảnh</p>
+                    </div>
+                    <input type="file" id="fileInput" name="evidenceImages" multiple accept="image/*" style="display: none;" onchange="previewImages(this)">
+                    <div class="image-preview-container" id="previewContainer"></div>
+                </div>
+
                 <div style="margin-top: 40px; display: flex; gap: 16px;">
                     <button type="submit" class="btn btn--primary" style="padding: 16px 40px;">Gửi yêu cầu</button>
                     <a th:href="@{/orders/{inv}(inv=${order.orderInvoice})}" class="btn btn--outline" style="padding: 16px 40px; text-decoration: none; text-align: center;">Hủy bỏ</a>
@@ -45,6 +56,67 @@
             </form>
         </div>
     </main>
+
+    <th:block layout:fragment="scripts">
+    <script>
+        const maxFiles = 5;
+
+        function previewImages(input) {
+            const container = document.getElementById('previewContainer');
+            const uploadArea = document.getElementById('uploadArea');
+            container.innerHTML = '';
+
+            if (input.files.length > maxFiles) {
+                alert('Chỉ được chọn tối đa ' + maxFiles + ' ảnh.');
+                input.value = '';
+                return;
+            }
+
+            if (input.files.length > 0) {
+                uploadArea.classList.add('has-files');
+            } else {
+                uploadArea.classList.remove('has-files');
+                return;
+            }
+
+            Array.from(input.files).forEach(function(file, index) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const item = document.createElement('div');
+                    item.className = 'preview-item';
+                    item.innerHTML =
+                        '<img src="' + e.target.result + '" alt="Preview ' + (index + 1) + '">' +
+                        '<span class="preview-name">' + file.name + '</span>';
+                    container.appendChild(item);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Drag and drop support
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                fileInput.files = e.dataTransfer.files;
+                previewImages(fileInput);
+            }
+        });
+    </script>
+    </th:block>
 </body>
 
 </html>

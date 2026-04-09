@@ -74,7 +74,14 @@ public class OrderClientController {
     }
 
     @GetMapping("/{orderInvoice}/rma")
-    public String showRmaForm(@PathVariable String orderInvoice, Principal principal, Model model) {
+    public String showRmaForm(@PathVariable String orderInvoice,
+                              Principal principal,
+                              Model model,
+                              RedirectAttributes redirectAttributes) {
+        if (rmaService.hasRmaRequest(orderInvoice, principal.getName())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Bạn đã gửi yêu cầu này từ trước đó.");
+            return "redirect:/orders/" + orderInvoice;
+        }
         OrderDetailResponse order = orderService.getOrderDetail(principal.getName(), orderInvoice);
         model.addAttribute("order", order);
         model.addAttribute("rmaRequest", RmaCreateRequest.builder()
@@ -89,9 +96,10 @@ public class OrderClientController {
                             Principal principal,
                             RedirectAttributes redirectAttributes) {
         try {
+            // Check for any rma request to prevent spamming
             rmaRequest.setOrderInvoice(orderInvoice);
             rmaService.submitRequest(principal.getName(), rmaRequest);
-            redirectAttributes.addFlashAttribute("successMessage", "Yêu cầu đổi trả đã được gửi thành công.");
+            redirectAttributes.addFlashAttribute("successMessage", "Yêu cầu đổi trả đã được gửi thành công. Vui lòng chú ý thông báo Gmail!");
             return "redirect:/orders/" + orderInvoice;
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "Không thể gửi yêu cầu đổi trả: " + e.getMessage());
