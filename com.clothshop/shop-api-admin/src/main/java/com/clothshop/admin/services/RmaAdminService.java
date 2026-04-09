@@ -7,8 +7,15 @@ import com.clothshop.common.dtos.request.PagingRequest;
 import com.clothshop.common.dtos.response.PageResponse;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
+import com.clothshop.domain.models.order.Order;
+import com.clothshop.domain.models.order.OrderItem;
 import com.clothshop.domain.models.order.RmaRequest;
+import com.clothshop.domain.models.product.InventoryLog;
+import com.clothshop.domain.models.product.ProductVariant;
+import com.clothshop.domain.enums.RmaStatus;
 import com.clothshop.domain.repositories.order.RmaRequestRepository;
+import com.clothshop.domain.repositories.product.InventoryLogRepository;
+import com.clothshop.domain.repositories.product.ProductVariantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -18,6 +25,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -27,10 +35,9 @@ public class RmaAdminService {
 
     private final RmaRequestRepository rmaRepository;
     private final RmaAdminMapper rmaMapper;
+    private final ProductVariantRepository variantRepository; // Inject thêm
+    private final InventoryLogRepository inventoryLogRepository; // Inject thêm
 
-    /**
-     * Lấy tất cả yêu cầu RMA phân trang
-     */
     @Transactional(readOnly = true)
     public PageResponse<RmaAdminResponse> getAllRmaRequests(PagingRequest pagingRequest) {
         pagingRequest.validate();
@@ -51,18 +58,18 @@ public class RmaAdminService {
                 .build();
     }
 
-    /**
-     * Cập nhật trạng thái RMA (Approve, Reject, Receive, Complete)
-     */
     @Transactional
     public RmaAdminResponse updateRmaStatus(Long rmaId, RmaStatusUpdateRequest request) {
         RmaRequest rmaRequest = rmaRepository.findById(rmaId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy yêu cầu RMA"));
 
-        log.info("Updating RMA status: ID={}, NewStatus={}", rmaId, request.getStatus());
+        RmaStatus oldStatus = rmaRequest.getStatus();
+        RmaStatus newStatus = request.getStatus();
 
-        // Cập nhật các thông tin từ Admin
-        rmaRequest.setStatus(request.getStatus());
+        log.info("Updating RMA status: ID={}, Old={}, New={}", rmaId, oldStatus, newStatus);
+
+        // 1. Cập nhật các thông tin từ Admin
+        rmaRequest.setStatus(newStatus);
         if (request.getAdminNote() != null) {
             rmaRequest.setAdminNote(request.getAdminNote());
         }
@@ -70,13 +77,50 @@ public class RmaAdminService {
             rmaRequest.setRefundAmount(request.getRefundAmount());
         }
 
+        // 2. Logic xử lý KHO: Chỉ chạy khi chuyển sang COMPLETED lần đầu tiên
+        if (newStatus == RmaStatus.COMPLETED && oldStatus != RmaStatus.COMPLETED) {
+            handleInventoryRestock(rmaRequest);
+            rmaRequest.setProcessedAt(LocalDateTime.now());
+        }
+
         RmaRequest savedRma = rmaRepository.save(rmaRequest);
         return rmaMapper.toResponse(savedRma);
     }
 
     /**
-     * Lấy chi tiết 1 yêu cầu RMA
+     * Hàm hỗ trợ duyệt danh sách sản phẩm trong đơn và cộng lại kho
      */
+    private void handleInventoryRestock(RmaRequest rmaRequest) {
+        Order order = rmaRequest.getOrder();
+        log.info("Bắt đầu hoàn kho cho đơn hàng: {}", order.getOrderInvoice());
+
+        for (OrderItem item : order.getOrderItems()) {
+            ProductVariant variant = item.getVariant();
+            int quantityToReturn = item.getQuantity();
+
+            // 1. Tính toán số lượng tồn kho mới
+            int oldStock = variant.getStockQuantity() != null ? variant.getStockQuantity() : 0;
+            int updatedStock = oldStock + quantityToReturn;
+
+            // 2. Cập nhật ProductVariant
+            variant.setStockQuantity(updatedStock);
+            variantRepository.save(variant);
+
+            // 3. Ghi InventoryLog
+            InventoryLog logEntry = InventoryLog.builder()
+                    .productVariant(variant)
+                    .changeQty(quantityToReturn)
+                    .newStock(updatedStock)
+                    .reason("RETURN")
+                    .note("Hoàn kho từ RMA #" + rmaRequest.getId() + " - Đơn: " + order.getOrderInvoice())
+                    .createdBy("ADMIN_SYSTEM")
+                    .build();
+
+            inventoryLogRepository.save(logEntry);
+
+            log.info("Đã hoàn {} sản phẩm cho SKU: {}. Tồn mới: {}", quantityToReturn, variant.getSku(), updatedStock);
+        }
+    }
     @Transactional(readOnly = true)
     public RmaAdminResponse getRmaById(Long rmaId) {
         return rmaRepository.findById(rmaId)
