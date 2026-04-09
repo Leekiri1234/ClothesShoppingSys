@@ -60,10 +60,7 @@ public class ProductSearchService {
         }
 
         if (Boolean.TRUE.equals(request.getMustHaveImage())) {
-            Specification<Product> imageSpec = (root, query, cb) -> cb.and(
-                    cb.isNotNull(root.get("imageUrl")),
-                    cb.notEqual(root.get("imageUrl"), "")
-            );
+            Specification<Product> imageSpec = (root, query, cb) -> cb.isNotEmpty(root.get("images"));
             spec = spec.and(imageSpec);
         }
 
