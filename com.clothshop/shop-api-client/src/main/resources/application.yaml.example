@@ -37,4 +37,4 @@ logging:
 # CẤU HÌNH VIRTUAL TRY-ON (AI)
 openai:
   api:
-    key: "sk-your-openai-api-key-here" # Thay bằng API key thật của bạn
+    key: ${OPENAI_API_KEY} # Lấy từ biến môi trường (export OPENAI_API_KEY="...")
