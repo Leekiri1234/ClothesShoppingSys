@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+    <title>Chính sách đổi trả — MINIMAL</title>
+    <link rel="stylesheet" th:href="@{/css/pages/pages.css}">
+</head>
+
+<body>
+
+<main layout:fragment="content" class="container page-wrapper">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <h1>Chính sách đổi trả</h1>
+        <p>Đảm bảo quyền lợi khách hàng khi mua sắm tại MINIMAL.</p>
+    </div>
+
+    <!-- 1. QUY ĐỊNH -->
+    <div class="info-card">
+        <div class="icon"></div>
+        <div>
+            <h3>1. Quy định chung</h3>
+            <ul style="margin-top: 10px; padding-left: 18px;">
+                <li>• Sản phẩm phải <b>chưa sử dụng</b>, còn tem tag, không giặt tẩy.</li>
+                <li>• Áp dụng <b>1 lần đổi / 1 hóa đơn</b>.</li>
+                <li>• Không hoàn tiền dưới mọi hình thức.</li>
+                <li>• Miễn phí đổi nếu lỗi từ nhà sản xuất.</li>
+                <li>• Chỉ hỗ trợ đổi với sản phẩm <b>giảm dưới 20%</b>.</li>
+                <li>• Đổi sản phẩm khác cần <b>bù chênh lệch giá</b>.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 2. CHÍNH SÁCH -->
+    <div class="info-card">
+        <div class="icon"></div>
+        <div>
+            <h3>2. Chính sách đổi trả sản phẩm</h3>
+
+            <div style="margin-top: 10px;">
+                <b>• Sàn thương mại điện tử </b>
+                <ul style="padding-left: 18px;">
+                    <li>Đổi trong vòng <b>7 ngày</b> từ khi nhận hàng.</li>
+                    <li>Hoàn hàng liên hệ trực tiếp sàn.</li>
+                    <li>Hỗ trợ <b>phí ship 1 chiều</b>.</li>
+                </ul>
+            </div>
+
+            <div style="margin-top: 10px;">
+                <b>• Website / Facebook / Instagram</b>
+                <ul style="padding-left: 18px;">
+                    <li>Đổi trong vòng <b>7 ngày</b>.</li>
+                    <li><b>Miễn phí 100%</b> chi phí đổi.</li>
+                </ul>
+            </div>
+
+            <div style="margin-top: 10px;">
+                <b>• Cửa hàng</b>
+                <ul style="padding-left: 18px;">
+                    <li>Đổi trong vòng <b>7 ngày</b> từ ngày mua.</li>
+                    <li>Phải có <b>hóa đơn</b> hoặc SĐT mua hàng.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTE -->
+    <div class="note-box">
+        ⚠️ Lưu ý: Không hỗ trợ đổi trả nếu sản phẩm đã qua sử dụng hoặc không có thông tin mua hàng.
+    </div>
+
+</main>
+
+<script th:src="@{/js/pages/pages.js}"></script>
+
+</body>
+</html>

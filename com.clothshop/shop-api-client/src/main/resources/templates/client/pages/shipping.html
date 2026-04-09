@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+    <title>Chính sách vận chuyển — MINIMAL</title>
+    <link rel="stylesheet" th:href="@{/css/pages/pages.css}">
+</head>
+
+<body>
+
+<main layout:fragment="content" class="container page-wrapper">
+
+    <!-- HEADER -->
+    <div class="page-header">
+        <h1>Chính sách vận chuyển</h1>
+        <p>Thông tin về phí và thời gian giao hàng</p>
+    </div>
+
+
+    <div class="info-card">
+        <div class="icon"></div>
+        <div>
+            <h3>Thời gian giao hàng dự kiến</h3>
+            <p>Nội thành: 1 – 2 ngày</p>
+            <p>Tỉnh khác: 3 – 5 ngày</p>
+        </div>
+    </div>
+
+    <div class="size-table-wrapper">
+        <table class="size-table">
+            <thead>
+            <tr>
+                <th>Khu vực</th>
+                <th>Dưới 500.000đ</th>
+                <th>Trên 500.000đ</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Hồ Chí Minh</td>
+                <td>25.000đ</td>
+                <td>Miễn phí</td>
+            </tr>
+            <tr>
+                <td>Hà Nội</td>
+                <td>30.000đ</td>
+                <td>Miễn phí</td>
+            </tr>
+            <tr>
+                <td>Tỉnh thành khác</td>
+                <td>30.000đ</td>
+                <td>Miễn phí</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- THANH TOÁN -->
+    <div class="info-card" style="margin-top: 20px;">
+        <div class="icon">💳</div>
+        <div>
+            <h3>Phương thức thanh toán</h3>
+            <p>1. Thanh toán khi nhận hàng (COD)</p>
+            <p>2. Chuyển khoản ngân hàng</p>
+        </div>
+    </div>
+
+    <!-- NOTE -->
+    <div class="note-box">
+        ⚠️ Phí vận chuyển có thể thay đổi tùy khu vực và thời điểm.
+    </div>
+
+</main>
+
+</body>
+</html>
