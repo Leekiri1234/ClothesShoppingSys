@@ -18,6 +18,7 @@ public class ProductSearchRequest {
     private Double maxPrice;
     private List<String> sizes;
 
+    @Builder.Default
     private AvailabilityStatus availabilityStatus = AvailabilityStatus.ALL;
 
     @Builder.Default
@@ -33,4 +34,6 @@ public class ProductSearchRequest {
     private Boolean isSale;
 
     private Long filterMask;
+    
+    private Boolean mustHaveImage;
 }

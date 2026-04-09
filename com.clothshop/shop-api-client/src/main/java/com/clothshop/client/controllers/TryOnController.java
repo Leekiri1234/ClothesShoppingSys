@@ -43,6 +43,8 @@ public class TryOnController {
         if (searchRequest.getSize() == null || searchRequest.getSize() < 1) {
             searchRequest.setSize(12);
         }
+        
+        searchRequest.setMustHaveImage(true);
 
         Page<ProductListResponse> productPage = productSearchService.search(searchRequest);
 
