@@ -28,6 +28,7 @@ import com.clothshop.common.dtos.response.PageResponse;
 // --- Services & Repositories ---
 import com.clothshop.admin.services.StaffManagementService;
 import com.clothshop.domain.repositories.auth.RoleRepository;
+import com.clothshop.domain.repositories.auth.StaffRepository;
 import com.clothshop.domain.enums.AccountStatus;
 
 // --- Exceptions ---
@@ -43,23 +44,32 @@ public class StaffManagementController {
 
     private final StaffManagementService staffService;
     private final RoleRepository roleRepository;
+    private final StaffRepository staffRepository;
 
     // 1. TRANG DANH SÁCH (Hỗ trợ tìm kiếm & Phân trang)
     @GetMapping
     public String listStaff(StaffFilterRequest filter,
+                            @RequestParam(value = "filtered", defaultValue = "false") boolean filtered,
                             @PageableDefault(size = 10, sort = "id") Pageable pageable,
                             Principal principal,
                             Model model) {
 
-        if (filter.getStatus() == null && filter.getKeyword() == null && filter.getRoleId() == null) {
+        if (!filtered && filter.getStatus() == null && filter.getKeyword() == null && filter.getRoleId() == null) {
             filter.setStatus(AccountStatus.ACTIVE);
         }
 
         PageResponse<StaffResponse> response = staffService.getAllStaff(filter, pageable);
 
+        // Global stats (luôn tính toàn bộ, không bị ảnh hưởng bởi filter)
+        long totalAllStaff = staffRepository.count();
+        long activeStaff = staffRepository.countByAccountStatus(AccountStatus.ACTIVE);
+        long superAdminCount = staffRepository.countSuperAdmins();
+
         model.addAttribute("staffPage", response);
+        model.addAttribute("totalAllStaff", totalAllStaff);
+        model.addAttribute("activeStaff", activeStaff);
+        model.addAttribute("superAdminCount", superAdminCount);
         model.addAttribute("roles", roleRepository.findAll());
-        model.addAttribute("allStatus", AccountStatus.values());
         model.addAttribute("filter", filter);
         model.addAttribute("currentUsername", principal.getName());
 
@@ -104,7 +114,8 @@ public class StaffManagementController {
         StaffResponse staff = staffService.getStaffById(id);
 
         // Đưa dữ liệu vào form (Lưu ý: Thymeleaf sẽ map các field tương ứng)
-        model.addAttribute("staffRequest", staff);
+        model.addAttribute("staff", staff); // For display in template
+        model.addAttribute("staffRequest", staff); // For form binding
         model.addAttribute("roles", roleRepository.findAll());
         return "admin/staff/edit";
     }

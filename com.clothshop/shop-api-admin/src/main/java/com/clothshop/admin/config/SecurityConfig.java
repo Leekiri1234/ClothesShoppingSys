@@ -10,6 +10,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
 /**
  * Spring Security configuration for Admin module.
@@ -59,9 +60,16 @@ public class SecurityConfig {
             )
 
             // CSRF Protection (MANDATORY for session-based apps)
-            .csrf(csrf -> csrf
-                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-            )
+            // Spring Security 6: Need CsrfTokenRequestAttributeHandler for proper cookie-based CSRF
+            .csrf(csrf -> {
+                CookieCsrfTokenRepository tokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+                CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+                // Make CSRF token available as request attribute (for Thymeleaf meta tags)
+                requestHandler.setCsrfRequestAttributeName("_csrf");
+
+                csrf.csrfTokenRepository(tokenRepository)
+                    .csrfTokenRequestHandler(requestHandler);
+            })
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/admin/login", "/css/**", "/js/**", "/images/**").permitAll()
                         .requestMatchers("/admin/staff/**").hasRole("SUPER_ADMIN")

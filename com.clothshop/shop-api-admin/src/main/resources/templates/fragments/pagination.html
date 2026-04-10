@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- ============================================================
+     PAGINATION FRAGMENT
+     Usage: th:replace="~{fragments/pagination :: pagination(page=${pageData}, baseUrl='/admin/products')}"
+     Parameters:
+       - page: a PageResponse or Spring Page object with pageNumber, totalPages
+       - baseUrl: the base URL for pagination links
+     ============================================================ -->
+<div th:fragment="pagination(page, baseUrl)" class="pagination" th:if="${page.totalPages > 1}">
+    <button class="page-btn"
+            th:disabled="${page.pageNumber == 0}"
+            th:onclick="'navigatePage(' + (${page.pageNumber - 1}) + ')'">
+        ‹
+    </button>
+
+    <th:block th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}">
+        <button class="page-btn"
+                th:classappend="${i == page.pageNumber} ? 'active' : ''"
+                th:text="${i + 1}"
+                th:onclick="'navigatePage(' + ${i} + ')'">
+            1
+        </button>
+    </th:block>
+
+    <button class="page-btn"
+            th:disabled="${page.pageNumber == page.totalPages - 1}"
+            th:onclick="'navigatePage(' + (${page.pageNumber + 1}) + ')'">
+        ›
+    </button>
+
+    <script th:inline="javascript">
+        function navigatePage(pageNum) {
+            var url = new URL(window.location.href);
+            // Delete path specific base url handling because window.location already has it
+            url.searchParams.set('page', pageNum);
+            window.location.href = url.href;
+        }
+    </script>
+</div>
+</html>

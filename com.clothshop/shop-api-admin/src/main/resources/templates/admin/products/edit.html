@@ -1,195 +1,182 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layouts/layout}">
 <head>
-    <title>Edit Product</title>
+    <title>Chỉnh sửa sản phẩm</title>
 </head>
 <body>
-    <div layout:fragment="page-title">
-        <h1 class="h2">Edit Product</h1>
-    </div>
 
-    <div layout:fragment="content">
-        <div class="row">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Product Information</h5>
-                        <span class="badge bg-secondary">ID: <span th:text="${product.productId}">1</span></span>
+<h1 layout:fragment="page-title">Chỉnh sửa sản phẩm</h1>
+
+<div layout:fragment="page-actions">
+    <a th:href="@{/admin/products}" class="btn btn-outline">
+        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Quay lại
+    </a>
+</div>
+
+<div layout:fragment="content">
+    <form th:action="@{/admin/products/{id}/edit(id=${product.productId})}"
+          method="post"
+          data-validate>
+
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        <div class="product-form-layout">
+            <!-- LEFT COLUMN -->
+            <div class="product-form-left">
+
+                <!-- THÔNG TIN CƠ BẢN -->
+                <div class="form-card">
+                    <h3>Thông tin cơ bản</h3>
+
+                    <div class="form-group">
+                        <label>Tên sản phẩm <span style="color: var(--danger);">*</span></label>
+                        <input type="text"
+                               name="productName"
+                               th:value="${product.productName}"
+                               placeholder="VD: Áo thun cotton nam basic"
+                               required>
                     </div>
-                    <div class="card-body">
-                        <form th:action="@{/admin/products/{id}/edit(id=${product.productId})}"
-                              th:object="${product}"
-                              method="post">
 
-                            <!-- Product Name -->
-                            <div class="mb-3">
-                                <label for="productName" class="form-label">
-                                    Product Name <span class="text-danger">*</span>
-                                </label>
-                                <input type="text"
-                                       class="form-control"
-                                       id="productName"
-                                       th:field="*{productName}"
-                                       placeholder="e.g., Áo Thun Nam Cotton">
-                                <small class="form-text text-muted">
-                                    Current slug: <code th:text="${product.productSlug}">slug</code>
-                                    <br>Changing name will regenerate slug
-                                </small>
-                            </div>
+                    <div class="form-group">
+                        <label>Slug</label>
+                        <input type="text"
+                               th:value="${product.productSlug}"
+                               readonly
+                               style="background: var(--bg); cursor: not-allowed;">
+                        <small style="font-size: 11px; color: var(--muted);">
+                            URL thân thiện SEO (tự động tạo từ tên sản phẩm)
+                        </small>
+                    </div>
 
-                            <!-- Category -->
-                            <div class="mb-3">
-                                <label for="categoryId" class="form-label">
-                                    Category <span class="text-danger">*</span>
-                                </label>
-                                <select class="form-select"
-                                        id="categoryId"
-                                        th:field="*{categoryId}">
-                                    <option value="">-- Select Category --</option>
-                                    <option th:each="category : ${categories}"
-                                            th:value="${category.categoryId}"
-                                            th:text="${category.categoryName}"
-                                            th:selected="${category.categoryId == product.categoryId}">Category</option>
-                                </select>
-                            </div>
+                    <div class="form-group">
+                        <label>Mô tả sản phẩm</label>
+                        <textarea name="description"
+                                  rows="5"
+                                  placeholder="Mô tả chi tiết về sản phẩm..."
+                                  th:text="${product.description}"></textarea>
+                    </div>
 
-                            <!-- Description -->
-                            <div class="mb-3">
-                                <label for="description" class="form-label">
-                                    Description <span class="text-danger">*</span>
-                                </label>
-                                <textarea class="form-control"
-                                          id="description"
-                                          th:field="*{description}"
-                                          rows="4"
-                                          placeholder="Detailed product description"></textarea>
-                            </div>
+                    <div class="form-group">
+                        <label>Giá gốc <span style="color: var(--danger);">*</span></label>
+                        <input type="number"
+                               name="price"
+                               th:value="${product.price}"
+                               placeholder="0"
+                               min="0"
+                               step="1000"
+                               required>
+                    </div>
 
-                            <!-- Price & Stock -->
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="price" class="form-label">
-                                            Price (VND) <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="number"
-                                               class="form-control"
-                                               id="price"
-                                               th:field="*{price}"
-                                               min="0"
-                                               step="1000">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="stock" class="form-label">
-                                            Stock Quantity <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="number"
-                                               class="form-control"
-                                               id="stock"
-                                               th:field="*{stock}"
-                                               min="0">
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="form-group">
+                        <label>URL hình ảnh</label>
+                        <input type="text"
+                               name="imageUrl"
+                               th:value="${product.imageUrl}"
+                               placeholder="https://example.com/image.jpg">
+                    </div>
 
-                            <!-- Image URL -->
-                            <div class="mb-3">
-                                <label for="imageUrl" class="form-label">Image URL</label>
-                                <input type="text"
-                                       class="form-control"
-                                       id="imageUrl"
-                                       th:field="*{imageUrl}"
-                                       placeholder="https://example.com/image.jpg">
-                                <div th:if="${product.imageUrl}" class="mt-2">
-                                    <img th:src="${product.imageUrl}"
-                                         alt="Product Preview"
-                                         style="max-width: 200px; max-height: 200px; object-fit: cover;"
-                                         class="img-thumbnail">
-                                </div>
-                            </div>
-
-                            <!-- Active Status -->
-                            <div class="mb-3 form-check">
-                                <input type="checkbox"
-                                       class="form-check-input"
-                                       id="isActive"
-                                       th:field="*{isActive}">
-                                <label class="form-check-label" for="isActive">
-                                    Active (visible to customers)
-                                </label>
-                            </div>
-
-                            <!-- Metadata -->
-                            <div class="alert alert-light">
-                                <small class="text-muted">
-                                    <i class="fas fa-clock"></i>
-                                    Created: <strong th:text="${#temporals.format(product.createdAt, 'dd/MM/yyyy HH:mm')}">date</strong>
-                                    <br>
-                                    <i class="fas fa-sync"></i>
-                                    Last Updated: <strong th:text="${#temporals.format(product.updatedAt, 'dd/MM/yyyy HH:mm')}">date</strong>
-                                </small>
-                            </div>
-
-                            <!-- Action Buttons -->
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Update Product
-                                </button>
-                                <a th:href="@{/admin/products}" class="btn btn-secondary">
-                                    <i class="fas fa-times"></i> Cancel
-                                </a>
-                                <a th:href="@{/admin/products/{id}(id=${product.productId})}"
-                                   class="btn btn-info">
-                                    <i class="fas fa-eye"></i> View Detail
-                                </a>
-                            </div>
-                        </form>
+                    <div class="form-group">
+                        <label>Tồn kho hiện tại (readonly)</label>
+                        <input type="text"
+                               th:value="${product.stock}"
+                               readonly
+                               style="background: var(--bg); cursor: not-allowed;">
+                        <small style="font-size: 11px; color: var(--muted);">
+                            Tồn kho được quản lý ở variants. Đây là tổng kho của tất cả variants.
+                        </small>
                     </div>
                 </div>
+
             </div>
 
-            <!-- Side Panel -->
-            <div class="col-md-4">
-                <div class="card mb-3">
-                    <div class="card-header bg-warning">
-                        <i class="fas fa-exclamation-triangle"></i> Important
-                    </div>
-                    <div class="card-body">
-                        <p class="small">
-                            <strong>Partial Update:</strong> Only fields you modify will be updated.
-                        </p>
-                        <p class="small">
-                            <strong>Slug Regeneration:</strong> Changing the product name will create a new SEO-friendly slug.
-                        </p>
+            <!-- RIGHT COLUMN -->
+            <div class="product-form-right">
+
+                <!-- DANH MỤC -->
+                <div class="form-card">
+                    <h3>Danh mục</h3>
+
+                    <div class="form-group">
+                        <label>Chọn danh mục <span style="color: var(--danger);">*</span></label>
+                        <select name="categoryId" required>
+                            <option value="">-- Chọn danh mục --</option>
+                            <option th:each="cat : ${categories}"
+                                    th:value="${cat.id}"
+                                    th:text="${cat.categoryName}"
+                                    th:selected="${cat.id == product.categoryId}">Category</option>
+                        </select>
                     </div>
                 </div>
 
-                <div class="card">
-                    <div class="card-header bg-info text-white">
-                        <i class="fas fa-chart-line"></i> Quick Stats
+                <!-- TRẠNG THÁI -->
+                <div class="form-card">
+                    <h3>Trạng thái</h3>
+
+                    <div style="margin-bottom: 8px;">
+                        <span th:if="${product.isActive}" class="badge badge-success">Đang bán</span>
+                        <span th:unless="${product.isActive}" class="badge badge-danger">Ngưng bán</span>
                     </div>
-                    <div class="card-body">
-                        <p class="small mb-1">
-                            <strong>Status:</strong>
-                            <span th:if="${product.isActive}" class="badge bg-success">Active</span>
-                            <span th:unless="${product.isActive}" class="badge bg-secondary">Inactive</span>
-                        </p>
-                        <p class="small mb-1">
-                            <strong>Current Stock:</strong>
-                            <span th:text="${product.stock}">0</span> units
-                        </p>
-                        <p class="small mb-0">
-                            <strong>Price:</strong>
-                            <span th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' đ'">0đ</span>
-                        </p>
+
+                    <small style="font-size: 11px; color: var(--muted); display: block;">
+                        Sử dụng nút dưới cùng để thay đổi trạng thái sản phẩm
+                    </small>
+                </div>
+
+                <!-- THÔNG TIN HỆ THỐNG -->
+                <div class="form-card">
+                    <h3>Thông tin</h3>
+
+                    <div style="font-size: 12px; color: var(--muted); line-height: 1.6;">
+                        <div style="margin-bottom: 6px;">
+                            <strong>Ngày tạo:</strong>
+                            <span th:text="${#temporals.format(product.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span>
+                        </div>
+                        <div>
+                            <strong>Cập nhật:</strong>
+                            <span th:text="${#temporals.format(product.updatedAt, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:00</span>
+                        </div>
                     </div>
                 </div>
+
             </div>
         </div>
-    </div>
+
+        <!-- FORM ACTIONS -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Lưu thay đổi
+            </button>
+            <a th:href="@{/admin/products}" class="btn btn-outline">Hủy</a>
+        </div>
+
+    </form>
+
+    <form th:action="@{/admin/products/{id}/toggle-status(id=${product.productId})}"
+          method="post" style="display: flex; justify-content: flex-end; margin-top: -55px;">
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        <button type="submit"
+                th:if="${product.isActive}"
+                class="btn btn-danger"
+                onclick="return confirm('⚠️ Ẩn sản phẩm này?\n\nSản phẩm sẽ không hiển thị trên cửa hàng!')">
+            Ẩn sản phẩm
+        </button>
+        <button type="submit"
+                th:unless="${product.isActive}"
+                class="btn btn-success"
+                onclick="return confirm('✅ Khôi phục sản phẩm này?\n\nSản phẩm sẽ hiển thị lại trên cửa hàng!')">
+            Hiện sản phẩm
+        </button>
+    </form>
+</div>
+
 </body>
 </html>

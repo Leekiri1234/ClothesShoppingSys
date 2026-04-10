@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Cập nhật tồn kho variant</title>
+</head>
+<body>
+
+<h1 layout:fragment="page-title">Cập nhật tồn kho variant</h1>
+
+<div layout:fragment="page-actions">
+    <a th:href="@{/admin/products/{id}(id=${variant.productId})}" class="btn btn-outline">
+        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Quay lại
+    </a>
+</div>
+
+<div layout:fragment="content">
+
+    <div style="max-width: 500px; margin: 0 auto;">
+        <form th:action="@{/admin/variants/{id}/update-stock(id=${variant.variantId})}"
+              th:object="${stockRequest}"
+              method="post"
+              data-validate>
+
+            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+            <div class="form-card">
+                <h3>Thông tin variant</h3>
+
+                <div style="background: var(--bg); padding: 16px; border-radius: var(--radius); margin-bottom: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; font-size: 13px;">
+                        <div>
+                            <div style="color: var(--muted); margin-bottom: 4px;">SKU</div>
+                            <div style="font-weight: 600; font-family: monospace;" th:text="${variant.sku}">SKU001</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--muted); margin-bottom: 4px;">Màu sắc</div>
+                            <div style="font-weight: 600;" th:text="${variant.color}">Đỏ</div>
+                        </div>
+                        <div>
+                            <div style="color: var(--muted); margin-bottom: 4px;">Kích thước</div>
+                            <div style="font-weight: 600;" th:text="${variant.sizeValue}">M</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Tồn kho hiện tại</label>
+                    <div style="font-size: 24px; font-weight: 700; margin-bottom: 16px;"
+                         th:text="${variant.stockQuantity}">
+                        120
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Số lượng mới <span style="color: var(--danger);">*</span></label>
+                    <input type="number"
+                           th:field="*{newStock}"
+                           placeholder="0"
+                           min="0"
+                           required
+                           autofocus>
+                    <span class="text-danger" th:if="${#fields.hasErrors('newStock')}" th:errors="*{newStock}"></span>
+                    <small style="font-size: 11px; color: var(--muted);">
+                        Nhập số lượng tồn kho thực tế hiện tại
+                    </small>
+                </div>
+
+                <div class="form-group">
+                    <label>Lý do <span style="color: var(--danger);">*</span></label>
+                    <input type="text"
+                           th:field="*{reason}"
+                           placeholder="VD: RESTOCK, MANUAL_ADJUSTMENT, RETURN..."
+                           required>
+                    <span class="text-danger" th:if="${#fields.hasErrors('reason')}" th:errors="*{reason}"></span>
+                </div>
+
+                <div class="form-group">
+                    <label>Ghi chú (Optional)</label>
+                    <textarea th:field="*{note}"
+                              rows="3"
+                              placeholder="VD: Nhập hàng mới, Kiểm kê kho..."></textarea>
+                </div>
+
+                <div style="padding: 12px; background: #e8f5e9; border: 1px solid #c3e6cb; border-radius: var(--radius); margin-top: 16px;">
+                    <div style="display: flex; gap: 8px;">
+                        <svg style="width: 16px; height: 16px; color: #4CAF50; flex-shrink: 0; margin-top: 2px;" viewBox="0 0 24 24">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="12" y1="16" x2="12" y2="12"/>
+                            <line x1="12" y1="8" x2="12.01" y2="8"/>
+                        </svg>
+                        <div style="font-size: 12px; color: #2e7d32; line-height: 1.5;">
+                            <strong>Lưu ý:</strong> Nhập số lượng tồn kho thực tế. Hệ thống sẽ tự tính độ lệch và ghi log.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    Cập nhật tồn kho
+                </button>
+                <a th:href="@{/admin/products/{id}(id=${variant.productId})}" class="btn btn-outline">Hủy</a>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+</body>
+</html>

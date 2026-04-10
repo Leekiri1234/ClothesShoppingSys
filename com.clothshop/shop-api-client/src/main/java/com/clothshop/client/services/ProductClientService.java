@@ -7,7 +7,8 @@ import com.clothshop.common.dtos.request.PagingRequest;
 import com.clothshop.common.dtos.response.PageResponse;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
-import com.clothshop.domain.entities.product.Product;
+import com.clothshop.domain.models.product.Product;
+import com.clothshop.domain.repositories.marketing.FeaturedProductRepository;
 import com.clothshop.domain.repositories.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,7 @@ public class ProductClientService {
 
     private final ProductRepository productRepository;
     private final ProductClientMapper productMapper;
+    private final FeaturedProductRepository featuredProductRepository;
 
     /**
      * Get product detail by slug (SEO-friendly URL).
@@ -46,13 +48,30 @@ public class ProductClientService {
      * Only returns active products.
      */
     @Transactional(readOnly = true)
-    @Cacheable(value = "productDetail", key = "#slug", unless = "#result == null")
     public ProductDetailResponse getProductBySlug(String slug) {
         log.debug("Fetching product detail for slug: {}", slug);
 
         Product product = productRepository.findByProductSlug(slug)
-                .filter(p -> Boolean.TRUE.equals(p.getIsActive())) // Only active products
+                .filter(p -> Boolean.TRUE.equals(p.getIsActive()))
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
+
+        // Cực kỳ quan trọng: Ép nạp (Initialize) danh sách variants và các thông tin liên quan
+        if (product.getVariants() != null) {
+            product.getVariants().size();
+        }
+
+        return productMapper.toDetailResponse(product);
+    }
+
+    @Transactional(readOnly = true)
+    public ProductDetailResponse getProductById(Long id) {
+        Product product = productRepository.findById(id)
+                .filter(p -> Boolean.TRUE.equals(p.getIsActive()))
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
+
+        if (product.getVariants() != null) {
+            product.getVariants().size();
+        }
 
         return productMapper.toDetailResponse(product);
     }
@@ -94,15 +113,15 @@ public class ProductClientService {
      * @return List of featured products
      */
     @Transactional(readOnly = true)
-    @Cacheable(value = "featuredProducts", key = "#limit")
+    @Cacheable(value = "featuredProducts", key = "#limit") // Đọc note số 3 bên dưới về Cache
     public List<ProductListResponse> getFeaturedProducts(int limit) {
-        log.debug("Fetching {} featured products", limit);
+        log.debug("Fetching top {} featured products from DB", limit);
 
-        Pageable pageable = PageRequest.of(0, limit, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<Product> productPage = productRepository.findAll(pageable);
+        // Đẩy việc limit xuống tận Database (LIMIT ?) thay vì filter trên RAM
+        Pageable pageable = PageRequest.of(0, limit);
+        List<Product> featuredProducts = featuredProductRepository.findTopFeaturedProducts(pageable);
 
-        return productPage.getContent().stream()
-                .filter(p -> Boolean.TRUE.equals(p.getIsActive()))
+        return featuredProducts.stream()
                 .map(productMapper::toListResponse)
                 .collect(Collectors.toList());
     }

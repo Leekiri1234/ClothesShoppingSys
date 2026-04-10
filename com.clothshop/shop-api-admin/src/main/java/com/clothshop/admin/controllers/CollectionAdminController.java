@@ -1,0 +1,292 @@
+package com.clothshop.admin.controllers;
+
+import com.clothshop.admin.dtos.request.marketing.CollectionSaveRequest;
+import com.clothshop.admin.dtos.response.marketing.BulkAssignResult;
+import com.clothshop.admin.dtos.response.marketing.CollectionResponse;
+import com.clothshop.admin.services.FeaturedCollectionService;
+import com.clothshop.common.exceptions.BusinessException;
+import com.clothshop.common.exceptions.ErrorCode;
+import com.clothshop.domain.models.marketing.Collection;
+import com.clothshop.domain.models.marketing.CollectionItem;
+import com.clothshop.domain.models.product.Product;
+import com.clothshop.domain.repositories.marketing.CollectionItemRepository;
+import com.clothshop.domain.repositories.marketing.CollectionRepository;
+import com.clothshop.domain.repositories.product.ProductRepository;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.security.Principal;
+import java.util.List;
+
+@Controller
+@RequestMapping("/admin/collections")
+@RequiredArgsConstructor
+@Slf4j
+@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MARKETING_STAFF')")
+public class CollectionAdminController {
+
+    private final FeaturedCollectionService featuredCollectionService;
+    private final CollectionRepository collectionRepository;
+    private final CollectionItemRepository collectionItemRepository;
+    private final ProductRepository productRepository;
+
+    /**
+     * Hiển thị danh sách các bộ sưu tập (Có phân trang và tìm kiếm)
+     */
+    @GetMapping
+    public String listCollections(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @ModelAttribute com.clothshop.admin.dtos.request.marketing.CollectionFilterRequest filter,
+            Model model) {
+
+        // Cần dùng tên cột thực tế trong DB 'created_at' do sử dụng nativeQuery
+        Pageable pageable = PageRequest.of(page, size, Sort.by("created_at").descending());
+
+        // Luôn sử dụng filter để gọi query native, lấy được mọi trạng thái theo ý muốn (kể cả khi không có điều kiện nào để lấy TẤT CẢ)
+        Page<CollectionResponse> collectionPage = featuredCollectionService.getCollectionsWithFilter(filter, pageable);
+
+        model.addAttribute("collections", collectionPage);
+        model.addAttribute("filter", filter);
+        return "admin/collections/list";
+    }
+
+    /**
+     * Màn hình Form dùng chung cho Thêm mới và Chỉnh sửa
+     */
+    @GetMapping("/form")
+    public String showForm(@RequestParam(required = false) Long id, Model model) {
+        CollectionSaveRequest request = new CollectionSaveRequest();
+
+        // Nếu có ID truyền vào -> Chế độ Edit
+        if (id != null) {
+            Collection collection = collectionRepository.findByIdIncludeDeleted(id)
+                    .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy bộ sưu tập"));
+
+            request.setId(collection.getId());
+            request.setName(collection.getName());
+            request.setDescription(collection.getDescription());
+            request.setIsActive(collection.getIsActive());
+            model.addAttribute("pageTitle", "Chỉnh sửa Bộ sưu tập");
+        } else {
+            // Chế độ Create
+            request.setIsActive(true); // Mặc định tạo mới là active
+            model.addAttribute("pageTitle", "Thêm Bộ sưu tập mới");
+        }
+
+        model.addAttribute("collectionDTO", request);
+        return "admin/collections/form";
+    }
+
+    /**
+     * Xử lý submit lưu Form (Tạo hoặc Sửa)
+     */
+    @PostMapping("/save")
+    public String saveCollection(
+            @Valid @ModelAttribute("collectionDTO") CollectionSaveRequest request,
+            BindingResult bindingResult,
+            Principal principal,
+            Model model,
+            RedirectAttributes redirectAttributes) {
+
+        // Validate lỗi từ DTO (ví dụ: Tên trống, quá độ dài)
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("pageTitle", request.getId() == null ? "Thêm Bộ sưu tập mới" : "Chỉnh sửa Bộ sưu tập");
+            return "admin/collections/form";
+        }
+
+        // Validate trùng lặp tên
+        boolean isNameExist = request.getId() == null
+                ? collectionRepository.existsByName(request.getName())
+                : collectionRepository.existsByNameAndIdNot(request.getName(), request.getId());
+
+        if (isNameExist) {
+            bindingResult.rejectValue("name", "error.collectionDTO", "Tên bộ sưu tập đã tồn tại!");
+            model.addAttribute("pageTitle", request.getId() == null ? "Thêm Bộ sưu tập mới" : "Chỉnh sửa Bộ sưu tập");
+            return "admin/collections/form";
+        }
+
+        // Gọi Service lưu
+        featuredCollectionService.saveCollection(request, principal.getName());
+
+        redirectAttributes.addFlashAttribute("successMessage", "Lưu bộ sưu tập thành công!");
+        return "redirect:/admin/collections";
+    }
+
+    /**
+     * Xóa mềm bộ sưu tập
+     */
+    @PostMapping("/{id}/delete")
+    public String deleteCollection(@PathVariable Long id, Principal principal, RedirectAttributes redirectAttributes) {
+        featuredCollectionService.deleteCollection(id, principal.getName());
+        redirectAttributes.addFlashAttribute("successMessage", "Đã xóa bộ sưu tập!");
+        return "redirect:/admin/collections";
+    }
+
+    /**
+     * Bật/Tắt bộ sưu tập
+     */
+    @PostMapping("/{id}/toggle-status")
+    public String toggleCollectionStatus(@PathVariable Long id, Principal principal, RedirectAttributes redirectAttributes) {
+        featuredCollectionService.toggleStatus(id, principal.getName());
+        redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật trạng thái bộ sưu tập!");
+        return "redirect:/admin/collections";
+    }
+
+    /**
+     * ==========================================
+     * QUẢN LÝ SẢN PHẨM TRONG BỘ SƯU TẬP
+     * ==========================================
+     */
+
+    /**
+     * Màn hình Gán Sản Phẩm (Hiển thị 2 bảng: Sản phẩm đang có và Sản phẩm có thể thêm)
+     */
+    @GetMapping("/{id}/assign")
+    @Transactional
+    public String showAssignPage(@PathVariable Long id, Model model) {
+        // Lấy thông tin Collection kể cả tắt
+        Collection collection = collectionRepository.findByIdIncludeDeleted(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy bộ sưu tập"));
+
+        // Lấy danh sách sản phẩm ĐÃ nằm trong bộ sưu tập (JOIN FETCH Product để tránh LazyInitializationException)
+        List<CollectionItem> currentItems = collectionItemRepository.findActiveItemsWithProductByCollectionId(id);
+
+        // Initialize lazy collections (images and variants) to avoid LazyInitializationException
+        currentItems.forEach(item -> {
+            Product product = item.getProduct();
+            if (product != null) {
+                // Force initialization of images collection
+                if (product.getImages() != null) {
+                    product.getImages().size();
+                }
+                // Force initialization of variants collection
+                if (product.getVariants() != null) {
+                    product.getVariants().size();
+                }
+            }
+        });
+
+        // Lấy danh sách TOÀN BỘ sản phẩm đang kinh doanh để Marketing chọn.
+        // JOIN FETCH images, category, variants để tránh LazyInitializationException
+        Pageable top100 = PageRequest.of(0, 100);
+        List<Product> availableProducts = productRepository.findTop100ActiveProductsWithDetails(top100);
+
+        // Initialize lazy collections for available products
+        availableProducts.forEach(product -> {
+            if (product.getImages() != null) {
+                product.getImages().size();
+            }
+            if (product.getVariants() != null) {
+                product.getVariants().size();
+            }
+        });
+
+        model.addAttribute("collection", collection);
+        model.addAttribute("currentItems", currentItems);
+        model.addAttribute("availableProducts", availableProducts);
+
+        return "admin/collections/assign-products";
+    }
+
+    /**
+     * Xử lý khi Admin chọn nhiều sản phẩm và nhấn "Thêm vào Bộ Sưu Tập"
+     * HOẶC khi kéo thả để cập nhật thứ tự hiển thị
+     */
+    @PostMapping("/{id}/assign")
+    @Transactional
+    public String processAssignProducts(
+            @PathVariable Long id,
+            @RequestParam(value = "productIds", required = false) List<Long> productIds,
+            @RequestParam(value = "itemIds[]", required = false) List<Long> itemIds,
+            @RequestParam(value = "orders[]", required = false) List<Integer> orders,
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
+
+        // TH1: Thêm sản phẩm mới vào bộ sưu tập
+        if (productIds != null && !productIds.isEmpty()) {
+            BulkAssignResult result = featuredCollectionService.addProductsToCollection(id, productIds, principal.getName());
+
+            if (result.isAllDuplicates()) {
+                // Tất cả sản phẩm đã có trong bộ sưu tập
+                redirectAttributes.addFlashAttribute("warningMessage",
+                        "Tất cả " + result.getDuplicateCount() + " sản phẩm đã có trong bộ sưu tập rồi!");
+                redirectAttributes.addFlashAttribute("duplicateProductNames", result.getDuplicateProductNames());
+            } else if (result.hasAnyDuplicates()) {
+                // Một số sản phẩm bị trùng, một số được thêm
+                redirectAttributes.addFlashAttribute("successMessage",
+                        "Đã gán " + result.getAddedCount() + " sản phẩm mới vào bộ sưu tập!");
+                redirectAttributes.addFlashAttribute("warningMessage",
+                        result.getDuplicateCount() + " sản phẩm đã có sẵn nên bị bỏ qua.");
+                redirectAttributes.addFlashAttribute("duplicateProductNames", result.getDuplicateProductNames());
+            } else {
+                // Tất cả đều mới
+                redirectAttributes.addFlashAttribute("successMessage",
+                        "Đã gán " + result.getAddedCount() + " sản phẩm vào bộ sưu tập!");
+            }
+            return "redirect:/admin/collections/" + id + "/assign";
+        }
+
+        // TH2: Cập nhật thứ tự hiển thị sau khi kéo thả
+        if (itemIds != null && orders != null && !itemIds.isEmpty() && !orders.isEmpty()) {
+            if (itemIds.size() != orders.size()) {
+                redirectAttributes.addFlashAttribute("errorMessage", "Dữ liệu không hợp lệ!");
+                return "redirect:/admin/collections/" + id + "/assign";
+            }
+
+            // Update display order for each item
+            for (int i = 0; i < itemIds.size(); i++) {
+                Long itemId = itemIds.get(i);
+                Integer newOrder = orders.get(i);
+
+                CollectionItem item = collectionItemRepository.findById(itemId)
+                        .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy item"));
+
+                item.setDisplayOrder(newOrder);
+                item.setUpdatedBy(principal.getName());
+                collectionItemRepository.save(item);
+            }
+
+            log.info("Updated display orders for {} items in collection {}", itemIds.size(), id);
+            redirectAttributes.addFlashAttribute("successMessage", "Đã cập nhật thứ tự hiển thị!");
+            return "redirect:/admin/collections/" + id + "/assign";
+        }
+
+        // TH3: Không có dữ liệu gì
+        redirectAttributes.addFlashAttribute("errorMessage", "Vui lòng chọn ít nhất 1 sản phẩm!");
+        return "redirect:/admin/collections/" + id + "/assign";
+    }
+
+    /**
+     * Xóa 1 sản phẩm khỏi bộ sưu tập (Xóa mềm bản ghi trung gian)
+     */
+    @PostMapping("/{collectionId}/remove-item/{itemId}")
+    public String removeProductFromCollection(
+            @PathVariable Long collectionId,
+            @PathVariable Long itemId,
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
+
+        CollectionItem item = collectionItemRepository.findById(itemId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy liên kết"));
+
+        item.setIsActive(false);
+        item.setUpdatedBy(principal.getName());
+        collectionItemRepository.save(item);
+
+        redirectAttributes.addFlashAttribute("successMessage", "Đã loại bỏ sản phẩm khỏi bộ sưu tập!");
+        return "redirect:/admin/collections/" + collectionId + "/assign";
+    }
+}

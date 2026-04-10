@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title th:text="${pageTitle}">Form Bộ Sưu Tập</title>
+</head>
+<body>
+
+<h1 layout:fragment="page-title" th:text="${pageTitle}">Form Bộ Sưu Tập</h1>
+
+<div layout:fragment="page-actions">
+    <a th:href="@{/admin/collections}" class="btn btn-outline">
+        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Quay lại
+    </a>
+</div>
+
+<div layout:fragment="content">
+    <div style="max-width: 800px;">
+
+        <div class="form-card">
+            <h3>
+                <svg style="width: 16px; height: 16px; margin-right: 6px;" viewBox="0 0 24 24">
+                    <rect x="3" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="3" width="7" height="7" rx="1"/>
+                    <rect x="14" y="14" width="7" height="7" rx="1"/>
+                    <rect x="3" y="14" width="7" height="7" rx="1"/>
+                </svg>
+                <span th:text="${collectionDTO.id == null ? 'Thông tin bộ sưu tập mới' : 'Cập nhật thông tin bộ sưu tập'}">
+                    Thông tin bộ sưu tập
+                </span>
+            </h3>
+
+            <form th:action="@{/admin/collections/save}"
+                  th:object="${collectionDTO}"
+                  method="post">
+
+                <input type="hidden" th:field="*{id}">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="name">Tên Bộ Sưu Tập <span class="text-danger">*</span></label>
+                        <input type="text"
+                               id="name"
+                               th:field="*{name}"
+                               placeholder="VD: Bộ sưu tập mùa hè 2026"
+                               required
+                               maxlength="100">
+                        <span class="text-danger" th:if="${#fields.hasErrors('name')}" th:errors="*{name}">Error</span>
+                        <small style="color: var(--muted); font-size: 12px;">Tối đa 100 ký tự, phải là duy nhất</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="isActive">Trạng thái</label>
+                        <select id="isActive" th:field="*{isActive}">
+                            <option th:value="true">Hoạt động</option>
+                            <option th:value="false">Tắt</option>
+                        </select>
+                        <small style="color: var(--muted); font-size: 12px;">Chỉ bộ sưu tập đang hoạt động mới hiển thị ở trang khách hàng</small>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description">Mô tả</label>
+                    <textarea id="description"
+                              th:field="*{description}"
+                              rows="4"
+                              maxlength="500"
+                              placeholder="Nhập mô tả chi tiết về bộ sưu tập (tối đa 500 ký tự)..."></textarea>
+                    <span class="text-danger" th:if="${#fields.hasErrors('description')}" th:errors="*{description}">Error</span>
+                    <small style="color: var(--muted); font-size: 12px;">Tối đa 500 ký tự</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary"
+                            th:text="${collectionDTO.id == null ? 'Tạo mới' : 'Cập nhật'}">Lưu</button>
+                    <button type="reset" class="btn btn-outline">Đặt lại</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Quick Link (Edit mode only) -->
+        <div th:if="${collectionDTO.id != null}" class="dashboard-card" style="margin-top: 20px;">
+            <div class="card-header">
+                <h3>
+                    <svg style="width: 16px; height: 16px; margin-right: 6px;" viewBox="0 0 24 24">
+                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                    </svg>
+                    Hành động liên quan
+                </h3>
+            </div>
+            <p style="font-size: 13px; color: var(--muted); margin-bottom: 12px;">Quản lý sản phẩm trong bộ sưu tập này</p>
+            <a th:href="@{/admin/collections/{id}/assign(id=${collectionDTO.id})}" class="btn btn-sm btn-outline">
+                <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                </svg>
+                Gán sản phẩm
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<div layout:fragment="scripts">
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Character counter for description
+            const descriptionTextarea = document.getElementById('description');
+            if (descriptionTextarea) {
+                const maxLength = descriptionTextarea.getAttribute('maxlength');
+                const counterDiv = document.createElement('div');
+                counterDiv.style.cssText = 'text-align: right; color: var(--muted); font-size: 11px; margin-top: 4px;';
+                descriptionTextarea.parentNode.appendChild(counterDiv);
+
+                function updateCounter() {
+                    const currentLength = descriptionTextarea.value.length;
+                    counterDiv.textContent = currentLength + '/' + maxLength + ' ký tự';
+                    counterDiv.style.color = currentLength > maxLength * 0.9 ? '#f0a500' : '';
+                }
+
+                descriptionTextarea.addEventListener('input', updateCounter);
+                updateCounter();
+            }
+
+            // Auto-trim inputs on submit
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function() {
+                    const nameInput = document.getElementById('name');
+                    if (nameInput) nameInput.value = nameInput.value.trim();
+                });
+            }
+        });
+    </script>
+</div>
+</body>
+</html>

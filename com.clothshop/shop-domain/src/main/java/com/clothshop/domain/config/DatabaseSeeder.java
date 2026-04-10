@@ -1,9 +1,16 @@
 package com.clothshop.domain.config;
 
-import com.clothshop.domain.entities.auth.*;
-import com.clothshop.domain.entities.product.*;
+import com.clothshop.domain.models.auth.*;
+import com.clothshop.domain.models.cms.*;
+import com.clothshop.domain.models.marketing.*;
+import com.clothshop.domain.models.order.*;
+import com.clothshop.domain.models.product.*;
 import com.clothshop.domain.enums.*;
+import com.clothshop.domain.enums.OrderStatus;
 import com.clothshop.domain.repositories.auth.*;
+import com.clothshop.domain.repositories.cms.*;
+import com.clothshop.domain.repositories.marketing.*;
+import com.clothshop.domain.repositories.order.*;
 import com.clothshop.domain.repositories.product.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +20,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Database Seeder - Seeds initial data for development/testing.
@@ -28,7 +42,12 @@ import java.math.BigDecimal;
  * 1. Roles: 4 staff roles (SUPER_ADMIN, MARKETING_STAFF, SALE_PRODUCT_STAFF, CUSTOMER_SERVICE)
  * 2. Accounts: 1 admin (admin/admin@123), 1 customer (customer/customer@123)
  * 3. Categories: 5 categories (Men Fashion, Women Fashion, Accessories, Shoes, Bags)
- * 4. Products: 3 sample products with variants and images
+ * 4. Products: 13 sample products with variants and images
+ * 5. Collections: 2 collections (Summer, Winter)
+ * 6. Featured Products: 5 products for homepage
+ * 7. Vouchers & Orders: 3 vouchers and 5 sample client orders
+ * 8. Banners: 2 promotional banners
+ * 9. Flash Sales: 1 ongoing flash sale with 3 products
  *
  * To disable: Remove @Component annotation or set spring.jpa.hibernate.ddl-auto=none
  * To modify: Edit the seedXXX() methods and restart application (will only run if DB is empty)
@@ -46,14 +65,30 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final ProductRepository productRepository;
     private final ProductVariantRepository productVariantRepository;
     private final ProductImageRepository productImageRepository;
+    private final CollectionRepository collectionRepository;
+    private final CollectionItemRepository collectionItemRepository;
+    private final VoucherRepository voucherRepository;
+    private final VoucherRedemptionRepository voucherRedemptionRepository;
+    private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
+    private final OrderStatusHistoryRepository orderStatusHistoryRepository;
+    private final PaymentRepository paymentRepository;
+    private final RmaRequestRepository rmaRequestRepository;
     private final PasswordEncoder passwordEncoder;
+    private final FeaturedProductRepository featuredProductRepository;
+    private final BannerRepository bannerRepository;
+    private final FlashSaleRepository flashSaleRepository;
+    private final FlashSaleItemRepository flashSaleItemRepository;
 
     @Override
     @Transactional
     public void run(String... args) {
-        // Only seed if database is empty
         if (roleRepository.count() > 0) {
-            log.info("Database already seeded. Skipping...");
+            log.info("Base data already seeded. Checking supplemental banner/order/RMA data...");
+            seedBanners();
+            seedVouchersAndOrders();
+            seedRmaRequests();
+            log.info("Supplemental seeding completed.");
             return;
         }
 
@@ -63,6 +98,12 @@ public class DatabaseSeeder implements CommandLineRunner {
         seedAccounts();
         seedCategories();
         seedProducts();
+        seedCollections();
+        seedFeaturedProducts();
+        seedVouchersAndOrders();
+        seedBanners();
+        seedFlashSales();
+        seedRmaRequests();
 
         log.info("Database seeding completed successfully!");
     }
@@ -94,45 +135,119 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     /**
-     * 2. Seed Accounts (Admin + Customer)
-     * Password: admin@123 and customer@123
+     * 2. Seed Accounts (Admin + Staff + Customers)
+     * Password: admin@123, marketing@123, sale@123, support@123, customer@123
      */
     private void seedAccounts() {
         log.info("Seeding accounts...");
 
-        // Admin Account
+        // 1. Super Admin Account
         Account adminAccount = createAccount("admin", "admin@123", "admin@clothshop.com",
             AccountType.STAFF, AccountStatus.ACTIVE);
         accountRepository.save(adminAccount);
 
-        // Create Staff for Admin
         Role superAdminRole = roleRepository.findByStaffRole(StaffRole.SUPER_ADMIN)
             .orElseThrow(() -> new RuntimeException("SUPER_ADMIN role not found"));
 
-        Staff staff = new Staff();
-        staff.setFullName("System Administrator");
-        staff.setPhoneNumber("0901234567");
-        staff.setRole(superAdminRole);
-        staff.setAccount(adminAccount);
-        staff.setCreatedBy("SYSTEM");
-        staffRepository.save(staff);
+        Staff superAdmin = new Staff();
+        superAdmin.setFullName("System Administrator");
+        superAdmin.setPhoneNumber("0901234567");
+        superAdmin.setRole(superAdminRole);
+        superAdmin.setAccount(adminAccount);
+        superAdmin.setCreatedBy("SYSTEM");
+        staffRepository.save(superAdmin);
 
-        // Customer Account
-        Account customerAccount = createAccount("customer", "customer@123", "customer@email.com",
+        // 2. Marketing Staff Account
+        Account marketingAccount = createAccount("marketing", "marketing@123", "marketing@clothshop.com",
+            AccountType.STAFF, AccountStatus.ACTIVE);
+        accountRepository.save(marketingAccount);
+
+        Role marketingRole = roleRepository.findByStaffRole(StaffRole.MARKETING_STAFF)
+            .orElseThrow(() -> new RuntimeException("MARKETING_STAFF role not found"));
+
+        Staff marketingStaff = new Staff();
+        marketingStaff.setFullName("Nguyen Van Marketing");
+        marketingStaff.setPhoneNumber("0902345678");
+        marketingStaff.setRole(marketingRole);
+        marketingStaff.setAccount(marketingAccount);
+        marketingStaff.setCreatedBy("SYSTEM");
+        staffRepository.save(marketingStaff);
+
+        // 3. Sale Product Staff Account
+        Account saleAccount = createAccount("sale", "sale@123", "sale@clothshop.com",
+            AccountType.STAFF, AccountStatus.ACTIVE);
+        accountRepository.save(saleAccount);
+
+        Role saleRole = roleRepository.findByStaffRole(StaffRole.SALE_PRODUCT_STAFF)
+            .orElseThrow(() -> new RuntimeException("SALE_PRODUCT_STAFF role not found"));
+
+        Staff saleStaff = new Staff();
+        saleStaff.setFullName("Tran Thi Sale");
+        saleStaff.setPhoneNumber("0903456789");
+        saleStaff.setRole(saleRole);
+        saleStaff.setAccount(saleAccount);
+        saleStaff.setCreatedBy("SYSTEM");
+        staffRepository.save(saleStaff);
+
+        // 4. Customer Service Staff Account
+        Account supportAccount = createAccount("support", "support@123", "support@clothshop.com",
+            AccountType.STAFF, AccountStatus.ACTIVE);
+        accountRepository.save(supportAccount);
+
+        Role customerServiceRole = roleRepository.findByStaffRole(StaffRole.CUSTOMER_SERVICE)
+            .orElseThrow(() -> new RuntimeException("CUSTOMER_SERVICE role not found"));
+
+        Staff supportStaff = new Staff();
+        supportStaff.setFullName("Le Van Support");
+        supportStaff.setPhoneNumber("0904567890");
+        supportStaff.setRole(customerServiceRole);
+        supportStaff.setAccount(supportAccount);
+        supportStaff.setCreatedBy("SYSTEM");
+        staffRepository.save(supportStaff);
+
+        // 5. Customer 1
+        Account customer1Account = createAccount("customer", "customer@123", "customer@email.com",
             AccountType.CUSTOMER, AccountStatus.ACTIVE);
-        accountRepository.save(customerAccount);
+        accountRepository.save(customer1Account);
 
-        // Create Customer
-        Customer customer = new Customer();
-        customer.setFullName("Nguyen Van A");
-        customer.setEmail("customer@email.com");
-        customer.setPhoneNumber("0909876543");
-        customer.setAddress("123 Nguyen Hue, District 1, Ho Chi Minh City");
-        customer.setAccount(customerAccount);
-        customer.setCreatedBy("SYSTEM");
-        customerRepository.save(customer);
+        Customer customer1 = new Customer();
+        customer1.setFullName("Nguyen Van A");
+        customer1.setEmail("customer@email.com");
+        customer1.setPhoneNumber("0909876543");
+        customer1.setAddress("123 Nguyen Hue, District 1, Ho Chi Minh City");
+        customer1.setAccount(customer1Account);
+        customer1.setCreatedBy("SYSTEM");
+        customerRepository.save(customer1);
 
-        log.info("Accounts seeded: 1 admin, 1 customer");
+        // 6. Customer 2
+        Account customer2Account = createAccount("customer2", "customer@123", "customer2@email.com",
+            AccountType.CUSTOMER, AccountStatus.ACTIVE);
+        accountRepository.save(customer2Account);
+
+        Customer customer2 = new Customer();
+        customer2.setFullName("Tran Thi B");
+        customer2.setEmail("customer2@email.com");
+        customer2.setPhoneNumber("0908765432");
+        customer2.setAddress("456 Le Loi, District 3, Ho Chi Minh City");
+        customer2.setAccount(customer2Account);
+        customer2.setCreatedBy("SYSTEM");
+        customerRepository.save(customer2);
+
+        // 7. Customer 3
+        Account customer3Account = createAccount("customer3", "customer@123", "customer3@email.com",
+            AccountType.CUSTOMER, AccountStatus.ACTIVE);
+        accountRepository.save(customer3Account);
+
+        Customer customer3 = new Customer();
+        customer3.setFullName("Le Van C");
+        customer3.setEmail("customer3@email.com");
+        customer3.setPhoneNumber("0907654321");
+        customer3.setAddress("789 Tran Hung Dao, District 5, Ho Chi Minh City");
+        customer3.setAccount(customer3Account);
+        customer3.setCreatedBy("SYSTEM");
+        customerRepository.save(customer3);
+
+        log.info("Accounts seeded: 4 staff (all roles), 3 customers");
     }
 
     /**
@@ -141,11 +256,11 @@ public class DatabaseSeeder implements CommandLineRunner {
     private void seedCategories() {
         log.info("Seeding categories...");
 
-        Category menFashion = createCategory("Men Fashion", "men-fashion", "ACTIVE");
-        Category womenFashion = createCategory("Women Fashion", "women-fashion", "ACTIVE");
-        Category accessories = createCategory("Accessories", "accessories", "ACTIVE");
-        Category shoes = createCategory("Shoes", "shoes", "ACTIVE");
-        Category bags = createCategory("Bags", "bags", "ACTIVE");
+        Category menFashion = createCategory("Men Fashion", "men-fashion", CategoryStatus.ACTIVE);
+        Category womenFashion = createCategory("Women Fashion", "women-fashion", CategoryStatus.ACTIVE);
+        Category accessories = createCategory("Accessories", "accessories", CategoryStatus.ACTIVE);
+        Category shoes = createCategory("Shoes", "shoes", CategoryStatus.ACTIVE);
+        Category bags = createCategory("Bags", "bags", CategoryStatus.ACTIVE);
 
         categoryRepository.save(menFashion);
         categoryRepository.save(womenFashion);
@@ -175,16 +290,16 @@ public class DatabaseSeeder implements CommandLineRunner {
         productRepository.save(tshirt);
 
         // Variants for T-Shirt
+        ProductVariant tshirtSizeXS = createVariant(tshirt, "TSHIRT_WHT_XS", "White", "XS",
+            50, new BigDecimal("199000"), "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400");
         ProductVariant tshirtSizeS = createVariant(tshirt, "TSHIRT_WHT_S", "White", "S",
-            50, new BigDecimal("199000"), "/images/products/tshirt-white-s.jpg");
-        ProductVariant tshirtSizeM = createVariant(tshirt, "TSHIRT_WHT_M", "White", "M",
-            100, new BigDecimal("199000"), "/images/products/tshirt-white-m.jpg");
+            100, new BigDecimal("199000"), "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400");
+        productVariantRepository.save(tshirtSizeXS);
         productVariantRepository.save(tshirtSizeS);
-        productVariantRepository.save(tshirtSizeM);
 
         // Image for T-Shirt
         ProductImage tshirtImage = createProductImage(tshirt,
-            "/images/products/tshirt-white-main.jpg", 1, true);
+            "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500", 1, true);
         productImageRepository.save(tshirtImage);
 
         // Product 2: Slim Fit Denim Jeans
@@ -193,13 +308,423 @@ public class DatabaseSeeder implements CommandLineRunner {
             new BigDecimal("599000"), ProductStatus.ACTIVE);
         productRepository.save(jeans);
 
+        // Variants for Jeans
+        ProductVariant jeansM = createVariant(jeans, "JEANS_BLU_M", "Blue", "M",
+            40, new BigDecimal("599000"), "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400");
+        ProductVariant jeansL = createVariant(jeans, "JEANS_BLU_L", "Blue", "L",
+            60, new BigDecimal("599000"), "https://images.unsplash.com/photo-1542272604-787c3835535d?w=400");
+        productVariantRepository.save(jeansM);
+        productVariantRepository.save(jeansL);
+
+        ProductImage jeansImage = createProductImage(jeans,
+            "https://images.unsplash.com/photo-1542272604-787c3835535d?w=500", 1, true);
+        productImageRepository.save(jeansImage);
+
         // Product 3: Floral Summer Dress
         Product dress = createProduct(womenFashion, "Floral Summer Dress",
             "floral-summer-dress", "Light and breezy dress",
             new BigDecimal("450000"), ProductStatus.ACTIVE);
         productRepository.save(dress);
 
-        log.info("Products seeded: 3 products with variants and images");
+        // Variants for Dress
+        ProductVariant dressXS = createVariant(dress, "DRESS_FLO_XS", "Floral Pink", "XS",
+            30, new BigDecimal("450000"), "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400");
+        ProductVariant dressS = createVariant(dress, "DRESS_FLO_S", "Floral Pink", "S",
+            45, new BigDecimal("450000"), "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=400");
+        productVariantRepository.save(dressXS);
+        productVariantRepository.save(dressS);
+
+        ProductImage dressImage = createProductImage(dress,
+            "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=500", 1, true);
+        productImageRepository.save(dressImage);
+
+        // Product 4: Black Leather Jacket
+        Product jacket = createProduct(menFashion, "Black Leather Jacket",
+            "black-leather-jacket", "Premium genuine leather jacket",
+            new BigDecimal("1299000"), ProductStatus.ACTIVE);
+        productRepository.save(jacket);
+
+        ProductVariant jacketL = createVariant(jacket, "JKT_BLK_L", "Black", "L",
+            20, new BigDecimal("1299000"), "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400");
+        ProductVariant jacketXL = createVariant(jacket, "JKT_BLK_XL", "Black", "XL",
+            25, new BigDecimal("1299000"), "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=400");
+        productVariantRepository.save(jacketL);
+        productVariantRepository.save(jacketXL);
+
+        ProductImage jacketImage = createProductImage(jacket,
+            "https://images.unsplash.com/photo-1551028719-00167b16eac5?w=500", 1, true);
+        productImageRepository.save(jacketImage);
+
+        // Product 5: Cotton Polo Shirt
+        Product polo = createProduct(menFashion, "Cotton Polo Shirt",
+            "cotton-polo-shirt", "Classic fit polo shirt",
+            new BigDecimal("299000"), ProductStatus.ACTIVE);
+        productRepository.save(polo);
+
+        ProductVariant poloM = createVariant(polo, "POLO_NVY_M", "Navy Blue", "M",
+            70, new BigDecimal("299000"), "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=400");
+        ProductVariant poloL = createVariant(polo, "POLO_WHT_L", "White", "L",
+            80, new BigDecimal("299000"), "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=400");
+        productVariantRepository.save(poloM);
+        productVariantRepository.save(poloL);
+
+        ProductImage poloImage = createProductImage(polo,
+            "https://images.unsplash.com/photo-1586790170083-2f9ceadc732d?w=500", 1, true);
+        productImageRepository.save(poloImage);
+
+        // Product 6: Casual Chinos
+        Product chinos = createProduct(menFashion, "Casual Chinos",
+            "casual-chinos", "Comfortable slim fit chinos",
+            new BigDecimal("499000"), ProductStatus.ACTIVE);
+        productRepository.save(chinos);
+
+        ProductVariant chinosM = createVariant(chinos, "CHINO_BEG_M", "Beige", "M",
+            50, new BigDecimal("499000"), "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400");
+        ProductVariant chinosL = createVariant(chinos, "CHINO_BEG_L", "Beige", "L",
+            55, new BigDecimal("499000"), "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=400");
+        productVariantRepository.save(chinosM);
+        productVariantRepository.save(chinosL);
+
+        ProductImage chinosImage = createProductImage(chinos,
+            "https://images.unsplash.com/photo-1473966968600-fa801b869a1a?w=500", 1, true);
+        productImageRepository.save(chinosImage);
+
+        // Product 7: Striped Maxi Dress
+        Product maxiDress = createProduct(womenFashion, "Striped Maxi Dress",
+            "striped-maxi-dress", "Elegant long dress for special occasions",
+            new BigDecimal("650000"), ProductStatus.ACTIVE);
+        productRepository.save(maxiDress);
+
+        ProductVariant maxiS = createVariant(maxiDress, "MAXI_STR_S", "Blue Stripe", "S",
+            25, new BigDecimal("650000"), "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400");
+        ProductVariant maxiM = createVariant(maxiDress, "MAXI_STR_M", "Blue Stripe", "M",
+            35, new BigDecimal("650000"), "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=400");
+        productVariantRepository.save(maxiS);
+        productVariantRepository.save(maxiM);
+
+        ProductImage maxiImage = createProductImage(maxiDress,
+            "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500", 1, true);
+        productImageRepository.save(maxiImage);
+
+        // Product 8: Knit Cardigan
+        Product cardigan = createProduct(womenFashion, "Knit Cardigan",
+            "knit-cardigan", "Cozy knitted cardigan perfect for layering",
+            new BigDecimal("399000"), ProductStatus.ACTIVE);
+        productRepository.save(cardigan);
+
+        ProductVariant cardiganM = createVariant(cardigan, "CARD_GRY_M", "Gray", "M",
+            40, new BigDecimal("399000"), "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400");
+        ProductVariant cardiganL = createVariant(cardigan, "CARD_BEG_L", "Beige", "L",
+            45, new BigDecimal("399000"), "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=400");
+        productVariantRepository.save(cardiganM);
+        productVariantRepository.save(cardiganL);
+
+        ProductImage cardiganImage = createProductImage(cardigan,
+            "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=500", 1, true);
+        productImageRepository.save(cardiganImage);
+
+        // Product 9: Graphic Print T-Shirt
+        Product graphicTee = createProduct(menFashion, "Graphic Print T-Shirt",
+            "graphic-print-t-shirt", "Trendy graphic design t-shirt",
+            new BigDecimal("249000"), ProductStatus.ACTIVE);
+        productRepository.save(graphicTee);
+
+        ProductVariant graphicM = createVariant(graphicTee, "GTEE_BLK_M", "Black", "M",
+            65, new BigDecimal("249000"), "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400");
+        ProductVariant graphicL = createVariant(graphicTee, "GTEE_BLK_L", "Black", "L",
+            70, new BigDecimal("249000"), "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=400");
+        productVariantRepository.save(graphicM);
+        productVariantRepository.save(graphicL);
+
+        ProductImage graphicImage = createProductImage(graphicTee,
+            "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500", 1, true);
+        productImageRepository.save(graphicImage);
+
+        // Product 10: High-Waist Skinny Jeans
+        Product skinnyJeans = createProduct(womenFashion, "High-Waist Skinny Jeans",
+            "high-waist-skinny-jeans", "Flattering high-rise skinny jeans",
+            new BigDecimal("549000"), ProductStatus.ACTIVE);
+        productRepository.save(skinnyJeans);
+
+        ProductVariant skinnyM = createVariant(skinnyJeans, "SKNY_BLK_M", "Black", "M",
+            38, new BigDecimal("549000"), "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400");
+        ProductVariant skinnyL = createVariant(skinnyJeans, "SKNY_BLK_L", "Black", "L",
+            42, new BigDecimal("549000"), "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=400");
+        productVariantRepository.save(skinnyM);
+        productVariantRepository.save(skinnyL);
+
+        ProductImage skinnyImage = createProductImage(skinnyJeans,
+            "https://images.unsplash.com/photo-1541099649105-f69ad21f3246?w=500", 1, true);
+        productImageRepository.save(skinnyImage);
+
+        // Product 11: Hooded Sweatshirt
+        Product hoodie = createProduct(menFashion, "Hooded Sweatshirt",
+            "hooded-sweatshirt", "Warm and comfortable hoodie",
+            new BigDecimal("399000"), ProductStatus.ACTIVE);
+        productRepository.save(hoodie);
+
+        ProductVariant hoodieXL = createVariant(hoodie, "HOOD_GRY_XL", "Gray", "XL",
+            55, new BigDecimal("399000"), "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400");
+        ProductVariant hoodieXXL = createVariant(hoodie, "HOOD_BLK_XXL", "Black", "XXL",
+            60, new BigDecimal("399000"), "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=400");
+        productVariantRepository.save(hoodieXL);
+        productVariantRepository.save(hoodieXXL);
+
+        ProductImage hoodieImage = createProductImage(hoodie,
+            "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=500", 1, true);
+        productImageRepository.save(hoodieImage);
+
+        // Product 12: Casual Blazer
+        Product blazer = createProduct(womenFashion, "Casual Blazer",
+            "casual-blazer", "Professional yet comfortable blazer",
+            new BigDecimal("799000"), ProductStatus.ACTIVE);
+        productRepository.save(blazer);
+
+        ProductVariant blazerS = createVariant(blazer, "BLZR_NVY_S", "Navy", "S",
+            28, new BigDecimal("799000"), "https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=400");
+        ProductVariant blazerM = createVariant(blazer, "BLZR_NVY_M", "Navy", "M",
+            32, new BigDecimal("799000"), "https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=400");
+        productVariantRepository.save(blazerS);
+        productVariantRepository.save(blazerM);
+
+        ProductImage blazerImage = createProductImage(blazer,
+            "https://images.unsplash.com/photo-1591369822096-ffd140ec948f?w=500", 1, true);
+        productImageRepository.save(blazerImage);
+
+        // Product 13: Linen Shorts
+        Product shorts = createProduct(menFashion, "Linen Shorts",
+            "linen-shorts", "Breathable summer shorts",
+            new BigDecimal("349000"), ProductStatus.ACTIVE);
+        productRepository.save(shorts);
+
+        ProductVariant shortsM = createVariant(shorts, "SHRT_KHK_M", "Khaki", "M",
+            48, new BigDecimal("349000"), "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400");
+        ProductVariant shortsL = createVariant(shorts, "SHRT_KHK_L", "Khaki", "L",
+            52, new BigDecimal("349000"), "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400");
+        productVariantRepository.save(shortsM);
+        productVariantRepository.save(shortsL);
+
+        ProductImage shortsImage = createProductImage(shorts,
+            "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=500", 1, true);
+        productImageRepository.save(shortsImage);
+
+        log.info("Products seeded: 13 products with variants and images");
+    }
+
+    /**
+     * 5. Seed Collections (2 Collections with 5 products each)
+     */
+    private void seedCollections() {
+        log.info("Seeding collections...");
+
+        // Get all products for assignment
+        List<Product> allProducts = productRepository.findAll();
+
+        if (allProducts.size() < 10) {
+            log.warn("Not enough products to create collections. Skipping collection seeding.");
+            return;
+        }
+
+        // Collection 1: Summer Collection
+        Collection summerCollection = new Collection();
+        summerCollection.setName("Summer Collection 2024");
+        summerCollection.setSlug("summer-collection-2024"); // Will be updated with ID after save
+        summerCollection.setDescription("Fresh and vibrant styles for the summer season");
+        summerCollection.setCreatedBy("admin");
+        summerCollection = collectionRepository.save(summerCollection);
+
+        // Update slug with Shopee-style ID suffix
+        summerCollection.setSlug("summer-collection-2024-c." + summerCollection.getId());
+        summerCollection = collectionRepository.save(summerCollection);
+
+        // Add 5 products to Summer Collection
+        // Classic White T-Shirt, Floral Summer Dress, Cotton Polo Shirt, Linen Shorts, Graphic Print T-Shirt
+        addProductToCollection(summerCollection, allProducts.get(0), 1); // Classic White T-Shirt
+        addProductToCollection(summerCollection, allProducts.get(2), 2); // Floral Summer Dress
+        addProductToCollection(summerCollection, allProducts.get(4), 3); // Cotton Polo Shirt
+        addProductToCollection(summerCollection, allProducts.get(11), 4); // Linen Shorts
+        addProductToCollection(summerCollection, allProducts.get(8), 5); // Graphic Print T-Shirt
+
+        log.info("Created Summer Collection with 5 products");
+
+        // Collection 2: Winter Essentials
+        Collection winterCollection = new Collection();
+        winterCollection.setName("Winter Essentials 2024");
+        winterCollection.setSlug("winter-essentials-2024"); // Will be updated with ID after save
+        winterCollection.setDescription("Stay warm and stylish with our winter collection");
+        winterCollection.setCreatedBy("admin");
+        winterCollection = collectionRepository.save(winterCollection);
+
+        // Update slug with Shopee-style ID suffix
+        winterCollection.setSlug("winter-essentials-2024-c." + winterCollection.getId());
+        winterCollection = collectionRepository.save(winterCollection);
+
+        // Add 5 products to Winter Collection
+        // Black Leather Jacket, Hooded Sweatshirt, Knit Cardigan, Casual Blazer, Slim Fit Denim Jeans
+        addProductToCollection(winterCollection, allProducts.get(3), 1); // Black Leather Jacket
+        addProductToCollection(winterCollection, allProducts.get(10), 2); // Hooded Sweatshirt
+        addProductToCollection(winterCollection, allProducts.get(7), 3); // Knit Cardigan
+        addProductToCollection(winterCollection, allProducts.get(11), 4); // Casual Blazer
+        addProductToCollection(winterCollection, allProducts.get(1), 5); // Slim Fit Denim Jeans
+
+        log.info("Created Winter Collection with 5 products");
+
+        log.info("Collections seeded: 2 collections with 5 products each");
+    }
+
+    /**
+     * 6. Seed Featured Products (homepage spotlight)
+     */
+    private void seedFeaturedProducts() {
+        log.info("Seeding featured products...");
+        List<Product> products = productRepository.findAll();
+        if (products.isEmpty()) {
+            log.warn("No products found, skipping featured products seeding.");
+            return;
+        }
+
+        // Pick first 5 products as featured with display order
+        int limit = Math.min(5, products.size());
+        for (int i = 0; i < limit; i++) {
+            Product product = products.get(i);
+            FeaturedProduct featured = FeaturedProduct.builder()
+                .product(product)
+                .displayOrder(i + 1)
+                .startDate(LocalDateTime.now().minusDays(1))
+                .endDate(LocalDateTime.now().plusDays(60))
+                .createdBy("marketing")
+                .build();
+            featuredProductRepository.save(featured);
+        }
+
+        log.info("Featured products seeded: {}", limit);
+    }
+
+    /**
+     * 7. Seed Vouchers + Sample Client Orders
+     */
+    private void seedVouchersAndOrders() {
+        log.info("Seeding vouchers and client orders...");
+
+        List<Customer> customers = customerRepository.findAll();
+        List<ProductVariant> variants = productVariantRepository.findAll();
+
+        if (customers.isEmpty() || variants.size() < 3) {
+            log.warn("Not enough customers or variants to seed orders. Skipping order seeding.");
+            return;
+        }
+
+        Voucher percentVoucher = voucherRepository.findByCode("WELCOME10").orElseGet(() -> createVoucher(
+            "WELCOME10",
+            DiscountType.PERCENTAGE,
+            new BigDecimal("10"),
+            new BigDecimal("300000"),
+            new BigDecimal("120000"),
+            50,
+            LocalDateTime.now().minusDays(5),
+            LocalDateTime.now().plusDays(30),
+            VoucherStatus.ACTIVE.name()
+        ));
+
+        Voucher fixedVoucher = voucherRepository.findByCode("SAVE50K").orElseGet(() -> createVoucher(
+            "SAVE50K",
+            DiscountType.FIXED_AMOUNT,
+            new BigDecimal("50000"),
+            new BigDecimal("250000"),
+            null,
+            100,
+            LocalDateTime.now().minusDays(2),
+            LocalDateTime.now().plusDays(45),
+            VoucherStatus.ACTIVE.name()
+        ));
+
+        Voucher expiredVoucher = voucherRepository.findByCode("FLASH15").orElseGet(() -> createVoucher(
+            "FLASH15",
+            DiscountType.PERCENTAGE,
+            new BigDecimal("15"),
+            new BigDecimal("200000"),
+            new BigDecimal("150000"),
+            20,
+            LocalDateTime.now().minusDays(40),
+            LocalDateTime.now().minusDays(5),
+            VoucherStatus.EXPIRED.name()
+        ));
+
+        // Orders for single customer with different statuses
+        Customer customer = customers.get(0);
+
+        createOrderWithVoucherIfMissing(
+            "INV-1001",
+            customer,
+            PaymentMethod.COD,
+            OrderStatus.PENDING,
+            List.of(new ItemSpec(variants.get(0), 1), new ItemSpec(variants.get(1), 2)),
+            percentVoucher,
+            "Pending confirmation"
+        );
+
+        createOrderWithVoucherIfMissing(
+            "INV-1002",
+            customer,
+            PaymentMethod.MOMO,
+            OrderStatus.CONFIRMED,
+            List.of(new ItemSpec(variants.get(2), 1), new ItemSpec(variants.get(3), 1)),
+            fixedVoucher,
+            "Confirmed by system"
+        );
+
+        createOrderWithVoucherIfMissing(
+            "INV-1003",
+            customer,
+            PaymentMethod.VNPAY,
+            OrderStatus.SHIPPING,
+            List.of(new ItemSpec(variants.get(4), 2)),
+            percentVoucher,
+            "Shipping to customer"
+        );
+
+        createOrderWithVoucherIfMissing(
+            "INV-1004",
+            customer,
+            PaymentMethod.BANK_TRANSFER,
+            OrderStatus.DELIVERED,
+            List.of(new ItemSpec(variants.get(5), 1), new ItemSpec(variants.get(6), 1)),
+            fixedVoucher,
+            "Delivered successfully"
+        );
+
+        createOrderWithVoucherIfMissing(
+            "INV-1005",
+            customer,
+            PaymentMethod.COD,
+            OrderStatus.CANCELLED,
+            List.of(new ItemSpec(variants.get(7), 1)),
+            expiredVoucher,
+            "Cancelled by customer"
+        );
+
+        log.info("Vouchers and orders seeded: 3 vouchers, 5 client orders for single customer");
+    }
+
+    private void createOrderWithVoucherIfMissing(String invoice, Customer customer, PaymentMethod paymentMethod,
+                                                 OrderStatus status, List<ItemSpec> items, Voucher voucher, String note) {
+        if (orderRepository.findByOrderInvoice(invoice).isPresent()) {
+            log.info("Order {} already exists. Skipping seed for this invoice.", invoice);
+            return;
+        }
+        createOrderWithVoucher(invoice, customer, paymentMethod, status, items, voucher, note);
+    }
+
+    /**
+     * Helper method to add a product to a collection
+     */
+    private void addProductToCollection(Collection collection, Product product, int displayOrder) {
+        CollectionItem item = new CollectionItem();
+        item.setCollection(collection);
+        item.setProduct(product);
+        item.setDisplayOrder(displayOrder);
+        item.setCreatedBy("admin");
+        collectionItemRepository.save(item);
     }
 
     // ==================== Helper Methods ====================
@@ -225,11 +750,13 @@ public class DatabaseSeeder implements CommandLineRunner {
         return account;
     }
 
-    private Category createCategory(String name, String slug, String status) {
+    private Category createCategory(String name, String slug, CategoryStatus status) {
+
         Category category = new Category();
         category.setCategoryName(name);
         category.setCategorySlug(slug);
         category.setCatStatus(status);
+        category.setIsActive(true);
         category.setCreatedBy("admin");
         return category;
     }
@@ -271,5 +798,315 @@ public class DatabaseSeeder implements CommandLineRunner {
         image.setCreatedBy("admin");
         return image;
     }
-}
 
+    private Voucher createVoucher(String code, DiscountType discountType, BigDecimal discountValue,
+                                  BigDecimal minOrderValue, BigDecimal maxDiscount, Integer usageLimit,
+                                  LocalDateTime validFrom, LocalDateTime validTo, String status) {
+        Voucher voucher = new Voucher();
+        voucher.setCode(code);
+        voucher.setDiscountType(discountType);
+        voucher.setDiscountValue(discountValue);
+        voucher.setMinOrderValue(minOrderValue);
+        voucher.setMaxDiscount(maxDiscount);
+        voucher.setUsageLimit(usageLimit);
+        voucher.setCurrentUsage(0);
+        voucher.setValidFrom(validFrom);
+        voucher.setValidTo(validTo);
+        voucher.setStatus(status);
+        voucher.setCreatedBy("marketing");
+        return voucherRepository.save(voucher);
+    }
+
+    private void createOrderWithVoucher(String invoice, Customer customer, PaymentMethod paymentMethod,
+                                        OrderStatus status, List<ItemSpec> items, Voucher voucher, String note) {
+        BigDecimal totalAmount = BigDecimal.ZERO;
+        int totalQty = 0;
+
+        for (ItemSpec item : items) {
+            BigDecimal line = item.variant().getRetailPrice().multiply(BigDecimal.valueOf(item.quantity()));
+            totalAmount = totalAmount.add(line);
+            totalQty += item.quantity();
+        }
+
+        BigDecimal discount = voucher != null ? calculateDiscount(totalAmount, voucher) : BigDecimal.ZERO;
+        BigDecimal finalPrice = totalAmount.subtract(discount);
+        if (finalPrice.compareTo(BigDecimal.ZERO) < 0) {
+            finalPrice = BigDecimal.ZERO;
+        }
+
+        Order order = Order.builder()
+            .orderInvoice(invoice)
+            .customer(customer)
+            .totalQuantity(totalQty)
+            .totalAmount(totalAmount.setScale(2, RoundingMode.HALF_UP))
+            .discount(discount.setScale(2, RoundingMode.HALF_UP))
+            .totalPrice(finalPrice.setScale(2, RoundingMode.HALF_UP))
+            .paymentMethod(paymentMethod)
+            .status(status)
+            .createdBy("SYSTEM")
+            .build();
+
+        List<OrderItem> orderItems = items.stream()
+            .map(item -> OrderItem.builder()
+                .order(order)
+                .variant(item.variant())
+                .quantity(item.quantity())
+                .unitPrice(item.variant().getRetailPrice())
+                .createdBy("SYSTEM")
+                .build())
+            .collect(java.util.stream.Collectors.toList());
+        order.setOrderItems(orderItems);
+
+        OrderStatusHistory history = OrderStatusHistory.builder()
+                .order(order)
+                .oldStatus(null) // Đơn mới nên status cũ là null
+                .newStatus(status)
+                .note(note)
+                .changedAt(LocalDateTime.now()) // Thêm trường changedAt nếu Entity yêu cầu
+                .createdBy("SYSTEM")
+                .build();
+        order.setStatusHistory(List.of(history));
+
+        PaymentStatus paymentStatus = status == OrderStatus.PENDING || status == OrderStatus.CANCELLED
+            ? PaymentStatus.PENDING
+            : PaymentStatus.PAID;
+
+        Payment payment = Payment.builder()
+                .order(order)
+                .paymentMethod(paymentMethod.name())
+                .amount(finalPrice.setScale(2, RoundingMode.HALF_UP))
+                .status(paymentStatus)
+                .verifiedBy(null) // Dùng verifiedBy thay vì processedBy theo ERD
+                .verifiedAt(paymentStatus == PaymentStatus.PAID ? LocalDateTime.now() : null)
+                .createdBy("SYSTEM")
+                .build();
+        order.setPayment(payment);
+
+        Order savedOrder = orderRepository.save(order);
+        orderItemRepository.saveAll(orderItems);
+        orderStatusHistoryRepository.save(history);
+        paymentRepository.save(payment);
+
+        if (voucher != null) {
+            voucher.setCurrentUsage((voucher.getCurrentUsage() == null ? 0 : voucher.getCurrentUsage()) + 1);
+            voucherRepository.save(voucher);
+
+            VoucherRedemption redemption = VoucherRedemption.builder()
+                .voucher(voucher)
+                .customer(customer)
+                .order(savedOrder)
+                .discountAmount(discount.setScale(2, RoundingMode.HALF_UP))
+                .createdBy("SYSTEM")
+                .build();
+            voucherRedemptionRepository.save(redemption);
+        }
+    }
+
+    private BigDecimal calculateDiscount(BigDecimal totalAmount, Voucher voucher) {
+        if (voucher == null) {
+            return BigDecimal.ZERO;
+        }
+
+        if (voucher.getMinOrderValue() != null && totalAmount.compareTo(voucher.getMinOrderValue()) < 0) {
+            return BigDecimal.ZERO;
+        }
+
+        BigDecimal discount;
+        if (voucher.getDiscountType() == DiscountType.PERCENTAGE) {
+            discount = totalAmount.multiply(voucher.getDiscountValue()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+        } else {
+            discount = voucher.getDiscountValue();
+        }
+
+        if (voucher.getMaxDiscount() != null && discount.compareTo(voucher.getMaxDiscount()) > 0) {
+            discount = voucher.getMaxDiscount();
+        }
+
+        return discount;
+    }
+
+    private void seedBanners() {
+        log.info("Seeding banners...");
+
+        Map<String, Banner> existingByTitle = bannerRepository.findAll().stream()
+            .collect(Collectors.toMap(Banner::getTitle, b -> b, (left, right) -> left));
+
+        upsertBanner(existingByTitle,
+            "Summer Essentials 2024",
+            "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=1200",
+            "/collections/summer-collection-2024-c.1",
+            1,
+            LocalDate.now().minusDays(30),
+            LocalDate.now().plusDays(60));
+
+        upsertBanner(existingByTitle,
+            "New Arrivals: Accessories",
+            "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=1200",
+            "/categories/accessories",
+            2,
+            LocalDate.now().minusDays(10),
+            LocalDate.now().plusDays(20));
+        
+        log.info("Banners seeded: 2 banners");
+    }
+
+    private void upsertBanner(Map<String, Banner> existingByTitle, String title, String imageUrl,
+                              String linkUrl, int displayOrder, LocalDate startDate, LocalDate endDate) {
+        Banner banner = existingByTitle.getOrDefault(title, Banner.builder().title(title).build());
+        banner.setImageUrl(imageUrl);
+        banner.setLinkUrl(linkUrl);
+        banner.setDisplayOrder(displayOrder);
+        banner.setStatus("ACTIVE");
+        banner.setStartDate(startDate);
+        banner.setEndDate(endDate);
+        if (banner.getCreatedBy() == null) {
+            banner.setCreatedBy("SYSTEM");
+        }
+        bannerRepository.save(banner);
+    }
+
+    private void seedFlashSales() {
+        log.info("Seeding flash sales...");
+        
+        List<Product> products = productRepository.findAll();
+        if (products.isEmpty()) return;
+
+        FlashSale summerFlash = FlashSale.builder()
+            .name("6.6 Summer Blast")
+            .startAt(LocalDateTime.now().minusHours(2))
+            .endAt(LocalDateTime.now().plusHours(22))
+            .status("ONGOING")
+            .createdBy("SYSTEM")
+            .build();
+        
+        flashSaleRepository.save(summerFlash);
+
+        // Flash sale items
+        for (int i = 0; i < Math.min(3, products.size()); i++) {
+            Product p = products.get(i);
+            BigDecimal discountValue = new BigDecimal("20"); // 20%
+            BigDecimal salePrice = p.getBasePrice().multiply(new BigDecimal("0.8"));
+            
+            FlashSaleItem item = FlashSaleItem.builder()
+                .flashSale(summerFlash)
+                .product(p)
+                .discountType(DiscountType.PERCENTAGE)
+                .discountValue(discountValue)
+                .salePrice(salePrice)
+                .createdBy("SYSTEM")
+                .build();
+            flashSaleItemRepository.save(item);
+        }
+
+        log.info("Flash sales seeded: 1 flash sale with {} items", Math.min(3, products.size()));
+    }
+
+    /**
+     * 10. Seed RMA Requests (Yeu cau doi tra mau)
+     */
+    private void seedRmaRequests() {
+        log.info("Seeding RMA requests...");
+
+        cleanupDuplicateRmaRequests();
+
+        // Lay cac don hang da giao thanh cong va loai bo trung lap theo orderId
+        List<Order> deliveredOrders = orderRepository.findAll().stream()
+                .filter(o -> o.getStatus() == OrderStatus.DELIVERED)
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toMap(Order::getId, o -> o, (left, right) -> left, java.util.LinkedHashMap::new),
+                        m -> List.copyOf(m.values())));
+
+        if (deliveredOrders.isEmpty()) {
+            log.warn("Khong tim thay don hang DELIVERED de tao RMA. Skipping...");
+            return;
+        }
+
+        // Chi tao RMA cho cac don khac nhau, khong reuse cung mot order
+        int seeded = 0;
+
+        if (!deliveredOrders.isEmpty() && seedRmaIfMissing(deliveredOrders.get(0), RmaType.RETURN, RmaStatus.PENDING,
+                "Tay ao bi bung chi, toi muon tra hang.",
+                null,
+                null,
+                "https://images.unsplash.com/photo-1582552938357-32b906df40cb?w=400,https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400")) {
+            seeded++;
+        }
+
+        if (deliveredOrders.size() >= 2 && seedRmaIfMissing(deliveredOrders.get(1), RmaType.EXCHANGE, RmaStatus.APPROVED,
+                "Size L hoi rong, shop cho toi doi sang size M nhe.",
+                "Da dong y cho khach doi size. Vui long gui hang ve kho.",
+                null,
+                "https://images.unsplash.com/photo-1591195853828-11db59a44f6b?w=400")) {
+            seeded++;
+        }
+
+        if (deliveredOrders.size() >= 3 && seedRmaIfMissing(deliveredOrders.get(2), RmaType.RETURN, RmaStatus.COMPLETED,
+                "Giao sai mau san pham, toi dat den nhung lai giao trang.",
+                "Da xac nhan loi. Da hoan lai 100% cho khach qua vi Momo.",
+                deliveredOrders.get(2).getTotalPrice(),
+                "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=400")) {
+            seeded++;
+        }
+
+        if (seeded < 3) {
+            log.warn("Chi co {} don DELIVERED khac nhau de seed RMA. De co 3 mau RMA, can it nhat 3 don DELIVERED distinct.", seeded);
+        }
+
+        log.info("RMA requests seeded: {} sample requests", seeded);
+    }
+
+    private void cleanupDuplicateRmaRequests() {
+        List<RmaRequest> activeRmas = rmaRequestRepository.findAll();
+        Map<Long, List<RmaRequest>> byOrderId = activeRmas.stream()
+                .filter(r -> r.getOrder() != null && r.getOrder().getId() != null)
+                .collect(Collectors.groupingBy(r -> r.getOrder().getId()));
+
+        byOrderId.values().stream()
+                .filter(list -> list.size() > 1)
+                .forEach(list -> {
+                    list.sort(Comparator.comparing(RmaRequest::getCreatedAt,
+                            Comparator.nullsLast(Comparator.naturalOrder()))
+                            .thenComparing(RmaRequest::getId, Comparator.nullsLast(Comparator.naturalOrder())));
+
+                    List<RmaRequest> duplicates = list.subList(1, list.size());
+                    rmaRequestRepository.deleteAll(duplicates);
+
+                    log.warn("Removed {} duplicate RMA rows for orderId={}", duplicates.size(), list.get(0).getOrder().getId());
+                });
+    }
+
+    private boolean seedRmaIfMissing(Order order, RmaType type, RmaStatus status, String reason,
+                                     String adminNote, BigDecimal refundAmount, String evidenceImages) {
+        boolean exists = rmaRequestRepository.findAll().stream()
+                .anyMatch(r -> r.getOrder() != null && r.getOrder().getId() != null && r.getOrder().getId().equals(order.getId()));
+
+        if (exists) {
+            log.info("RMA for order {} already exists. Skipping seed.", order.getOrderInvoice());
+            return false;
+        }
+
+        RmaRequest.RmaRequestBuilder<?, ?> builder = RmaRequest.builder()
+                .order(order)
+                .customer(order.getCustomer())
+                .rmaType(type)
+                .status(status)
+                .reason(reason)
+                .evidenceImages(evidenceImages)
+                .createdBy(order.getCustomer().getFullName());
+
+        if (adminNote != null) {
+            builder.adminNote(adminNote);
+        }
+        if (refundAmount != null) {
+            builder.refundAmount(refundAmount);
+        }
+        if (status == RmaStatus.COMPLETED) {
+            builder.processedAt(LocalDateTime.now());
+        }
+
+        rmaRequestRepository.save(builder.build());
+        return true;
+    }
+
+    private record ItemSpec(ProductVariant variant, int quantity) { }
+}

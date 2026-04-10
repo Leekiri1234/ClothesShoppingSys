@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<!-- ============================================================
+     PAGINATION FRAGMENT
+     Usage: th:replace="~{fragments/pagination :: pagination(page=${pageData})}"
+     Parameters:
+       - page: a PageResponse or Spring Page object with pageNumber (or number), totalPages
+     ============================================================ -->
+<div th:fragment="pagination(page)" class="pagination-container" th:if="${page.totalPages > 1}" style="margin-top: 30px; display: flex; justify-content: center; gap: 5px;">
+
+    <!-- Using javascript to update the page parameter in URL to support both normal and ajax filtering -->
+    <button class="page-btn filter-btn"
+            th:disabled="${page.number == 0}"
+            style="width: 40px; padding: 5px;"
+            th:onclick="'changePage(' + ${page.number - 1} + ')'">
+        ‹
+    </button>
+
+    <th:block th:each="i : ${#numbers.sequence(0, page.totalPages - 1)}">
+        <button class="page-btn filter-btn"
+                th:style="${i == page.number} ? 'width: 40px; padding: 5px; background-color: #333;' : 'width: 40px; padding: 5px; background-color: #fff; color: #000; border: 1px solid #ddd;'"
+                th:text="${i + 1}"
+                th:onclick="'changePage(' + ${i} + ')'">
+            1
+        </button>
+    </th:block>
+
+    <button class="page-btn filter-btn"
+            th:disabled="${page.number == page.totalPages - 1}"
+            style="width: 40px; padding: 5px;"
+            th:onclick="'changePage(' + ${page.number + 1} + ')'">
+        ›
+    </button>
+
+    <script th:inline="javascript">
+        function changePage(pageNum) {
+            const url = new URL(window.location.href);
+            url.searchParams.set('page', pageNum);
+
+            // If we are on the ajax enabled page, we trigger the ajax load.
+            // But since this button is outside the form, let's just do a proper reload or trigger a custom event.
+            // For robust behavior, we can perform a full page navigation because SEO prefers distinct URLs for pagination.
+            window.location.href = url.toString();
+        }
+    </script>
+</div>
+
+</html>

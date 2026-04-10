@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/layout}">
+
+<head>
+    <title th:text="'Yêu cầu đổi trả cho đơn hàng ' + ${order.orderInvoice} + ' — MINIMAL'"></title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/rma/form.css}">
+    </th:block>
+</head>
+
+<body>
+    <main layout:fragment="content" class="container" style="padding-top: 120px; padding-bottom: 80px;">
+        <div class="rma-container">
+            <a th:href="@{/orders/{inv}(inv=${order.orderInvoice})}" style="font-size: 12px; color: #999; text-decoration: none;">← QUAY LẠI CHI TIẾT ĐƠN HÀNG</a>
+            
+            <h2 style="margin-top: 24px; font-weight: 300; margin-bottom: 40px;">Yêu cầu đổi trả</h2>
+
+            <div class="order-brief">
+                <h4 style="margin-bottom: 12px; font-weight: 400;">Thông tin đơn hàng</h4>
+                <p style="font-size: 14px; color: #666;">Mã đơn hàng: <strong th:text="${order.orderInvoice}"></strong></p>
+                <p style="font-size: 14px; color: #666;">Ngày đặt: <span th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy')}"></span></p>
+                <p style="font-size: 14px; color: #666; margin-top: 8px;">Tổng tiền: <strong th:text="${#numbers.formatDecimal(order.totalPrice, 0, 'COMMA', 0, 'POINT') + '₫'}"></strong></p>
+            </div>
+
+            <form th:action="@{/orders/{inv}/rma(inv=${order.orderInvoice})}" th:object="${rmaRequest}" method="post">
+                <div class="form-group">
+                    <label class="form-label">Loại yêu cầu</label>
+                    <select th:field="*{type}" class="form-select" required>
+                        <option value="">-- Chọn loại yêu cầu --</option>
+                        <option value="RETURN">Trả hàng</option>
+                        <option value="EXCHANGE">Đổi hàng</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Lý do đổi trả</label>
+                    <textarea th:field="*{reason}" class="form-textarea" rows="6" placeholder="Vui lòng mô tả chi tiết lý do bạn muốn đổi/trả sản phẩm..." required></textarea>
+                </div>
+
+                <div style="margin-top: 40px; display: flex; gap: 16px;">
+                    <button type="submit" class="btn btn--primary" style="padding: 16px 40px;">Gửi yêu cầu</button>
+                    <a th:href="@{/orders/{inv}(inv=${order.orderInvoice})}" class="btn btn--outline" style="padding: 16px 40px; text-decoration: none; text-align: center;">Hủy bỏ</a>
+                </div>
+            </form>
+        </div>
+    </main>
+</body>
+
+</html>

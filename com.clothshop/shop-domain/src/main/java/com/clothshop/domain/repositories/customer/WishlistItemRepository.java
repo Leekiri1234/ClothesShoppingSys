@@ -1,6 +1,6 @@
 package com.clothshop.domain.repositories.customer;
 
-import com.clothshop.domain.entities.customer.WishlistItem;
+import com.clothshop.domain.models.customer.WishlistItem;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 public interface WishlistItemRepository extends JpaRepository<WishlistItem, Long> {
     boolean existsByWishlistIdAndProductId(Long wishlistId, Long productId);
     void deleteByWishlistIdAndProductId(Long wishlistId, Long productId);
+    WishlistItem findByWishlistIdAndProductId(Long wishlistId, Long ProductId);
 }

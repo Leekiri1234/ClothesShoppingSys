@@ -1,77 +1,79 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
-      layout:decorate="~{layouts/layout}">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/layout}">
+
 <head>
-    <title th:text="${pageTitle}">Product Detail</title>
-    <meta name="description" th:content="${pageDescription}">
+    <title th:text="${product.productName} + ' — MINIMAL'"></title>
+    <style>
+        .product-detail {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 80px;
+            margin-bottom: 80px;
+        }
+        .review-item {
+            padding: 24px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .stars {
+            color: #f1c40f;
+            margin-bottom: 8px;
+        }
+    </style>
 </head>
+
 <body>
-    <div layout:fragment="content">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a th:href="@{/}">Home</a></li>
-                <li class="breadcrumb-item"><a th:href="@{/products}">Products</a></li>
-                <li class="breadcrumb-item active" th:text="${product.productName}">Product</li>
-            </ol>
-        </nav>
+    <main layout:fragment="content" class="container" style="padding-top: 120px; padding-bottom: 80px;">
+        <div th:if="${successMessage}" class="alert alert--success" th:text="${successMessage}" style="margin-bottom: 20px; color: green;"></div>
+        <div th:if="${errorMessage}" class="alert alert--error" th:text="${errorMessage}" style="margin-bottom: 20px; color: red;"></div>
 
-        <div class="row">
-            <div class="col-md-6">
-                <img th:if="${product.imageUrl}"
-                     th:src="${product.imageUrl}"
-                     class="img-fluid rounded"
-                     th:alt="${product.productName}">
-                <div th:unless="${product.imageUrl}"
-                     class="bg-light d-flex align-items-center justify-content-center rounded"
-                     style="height: 500px;">
-                    <i class="fas fa-image fa-5x text-muted"></i>
+        <div class="product-detail">
+            <!-- Product Images -->
+            <div class="product-images">
+                <div style="background: #f5f5f5; width: 100%; aspect-ratio: 3/4;">
+                    <img th:src="${product.imageUrl}" style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
             </div>
 
-            <div class="col-md-6">
-                <h1 th:text="${product.productName}">Product Name</h1>
-                <p class="text-muted" th:text="${product.categoryName}">Category</p>
+            <!-- Product Info -->
+            <div class="product-info">
+                <p style="font-size: 13px; color: #999; margin-bottom: 8px;" th:text="${product.categoryName}"></p>
+                <h1 style="font-weight: 300; font-size: 32px; margin-bottom: 16px;" th:text="${product.productName}"></h1>
+                <p style="font-size: 20px; font-weight: 500; margin-bottom: 32px;" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT') + '₫'}"></p>
 
-                <h2 class="text-primary mb-3">
-                    <span th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VND'">100,000 VND</span>
-                </h2>
-
-                <div class="mb-3">
-                    <span th:if="${product.available}" class="badge bg-success">
-                        <i class="fas fa-check"></i> In Stock
-                    </span>
-                    <span th:unless="${product.available}" class="badge bg-danger">
-                        <i class="fas fa-times"></i> Out of Stock
-                    </span>
+                <div style="margin-bottom: 40px;">
+                    <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 12px;">Mô tả</h4>
+                    <p style="font-size: 14px; color: #666; line-height: 1.6;" th:text="${product.description}"></p>
                 </div>
 
-                <div class="mb-4">
-                    <h5>Description:</h5>
-                    <p th:text="${product.description}">Product description goes here...</p>
-                </div>
-
-                <div th:if="${product.available}" class="d-grid gap-2">
-                    <button class="btn btn-primary btn-lg">
-                        <i class="fas fa-cart-plus"></i> Add to Cart
-                    </button>
-                    <button class="btn btn-outline-secondary">
-                        <i class="fas fa-heart"></i> Add to Wishlist
-                    </button>
-                </div>
-
-                <div th:unless="${product.available}" class="alert alert-warning">
-                    <i class="fas fa-exclamation-triangle"></i> This product is currently out of stock
+                <!-- canReview button -->
+                <div th:if="${canReview}" style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 32px;">
+                    <p style="font-size: 14px; margin-bottom: 16px;">Bạn đã mua bộ sản phẩm này? Hãy chia sẻ cảm nhận của bạn!</p>
+                    <a th:href="@{/products/{id}/reviews/form(id=${product.productId})}" class="btn btn--outline" style="text-decoration: none;">Viết đánh giá</a>
                 </div>
             </div>
         </div>
 
-        <div class="row mt-5">
-            <div class="col-12">
-                <h3>Related Products</h3>
-                <p class="text-muted">Coming soon...</p>
+        <!-- Reviews Section -->
+        <section id="reviews" style="margin-top: 80px; border-top: 1px solid #eee; padding-top: 60px;">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 40px;">
+                <h2 style="font-weight: 300;">Đánh giá từ khách hàng</h2>
             </div>
-        </div>
-    </div>
+            
+            <div th:if="${reviews.content.empty}" style="padding: 40px; text-align: center; background: #fafafa; color: #999;">
+                Chưa có đánh giá nào cho sản phẩm này.
+            </div>
+
+            <div th:each="review : ${reviews.content}" class="review-item">
+                <div class="stars" th:text="${'★'.repeat(review.rating) + '☆'.repeat(5 - review.rating)}"></div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                    <strong th:text="${review.customerName}" style="font-weight: 500;"></strong>
+                    <span th:text="${#temporals.format(review.reviewDate, 'dd [MM] yyyy')}" style="font-size: 12px; color: #999;"></span>
+                </div>
+                <p style="font-size: 14px; color: #444; line-height: 1.6;" th:text="${review.comment}"></p>
+            </div>
+        </section>
+    </main>
 </body>
+
 </html>

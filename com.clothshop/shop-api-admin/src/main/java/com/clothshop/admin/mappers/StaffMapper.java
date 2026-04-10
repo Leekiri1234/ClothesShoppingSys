@@ -3,7 +3,7 @@ package com.clothshop.admin.mappers;
 import com.clothshop.admin.dtos.request.staff.StaffCreateRequest;
 import com.clothshop.admin.dtos.request.staff.StaffUpdateRequest;
 import com.clothshop.admin.dtos.response.staff.StaffResponse;
-import com.clothshop.domain.entities.auth.Staff;
+import com.clothshop.domain.models.auth.Staff;
 import org.mapstruct.*;
 
 @Mapper(

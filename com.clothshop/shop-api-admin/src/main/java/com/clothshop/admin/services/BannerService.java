@@ -1,0 +1,149 @@
+package com.clothshop.admin.services;
+
+import com.clothshop.admin.dtos.request.banner.BannerRequest;
+import com.clothshop.admin.dtos.response.banner.BannerResponse;
+import com.clothshop.admin.mappers.BannerMapper;
+import com.clothshop.common.exceptions.BusinessException;
+import com.clothshop.common.exceptions.ErrorCode;
+import com.clothshop.common.utils.FileUploadUtil;
+import com.clothshop.domain.models.cms.Banner;
+import com.clothshop.domain.repositories.cms.BannerRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class BannerService {
+
+    private final BannerRepository bannerRepository;
+    private final BannerMapper bannerMapper;
+    private final FileUploadUtil fileUploadUtil;
+
+    // =========================
+    // 📌 GET ALL
+    // =========================
+    @Transactional(readOnly = true)
+    public List<BannerResponse> getAll() {
+        return bannerMapper.toResponseList(
+                bannerRepository.findAll(Sort.by("displayOrder"))
+        );
+    }
+
+    // =========================
+    // 📌 GET BY ID
+    // =========================
+    @Transactional(readOnly = true)
+    public BannerResponse getById(Long id) {
+        Banner banner = bannerRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy banner"));
+
+        return bannerMapper.toResponse(banner);
+    }
+
+    // =========================
+    // 📌 CREATE
+    // =========================
+    @Transactional
+    public BannerResponse create(BannerRequest request, MultipartFile file) {
+
+        Banner banner = bannerMapper.toEntity(request);
+
+        // mặc định active
+        banner.setIsActive(true);
+
+        // default status
+        if (banner.getStatus() == null) {
+            banner.setStatus("ACTIVE");
+        }
+
+        // upload image (bắt buộc)
+        if (file != null && !file.isEmpty()) {
+            String fileName = fileUploadUtil.upload(file, "banners");
+            banner.setImageUrl("/uploads/banners/" + fileName);
+        } else {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Ảnh banner là bắt buộc");
+        }
+
+        bannerRepository.save(banner);
+        log.info("Banner created: {}", banner.getTitle());
+        return bannerMapper.toResponse(banner);
+    }
+
+    // =========================
+    // 📌 UPDATE
+    // =========================
+    @Transactional
+    public BannerResponse update(Long id, BannerRequest request, MultipartFile file) {
+
+        Banner banner = bannerRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy banner"));
+
+        banner.setTitle(request.getTitle());
+        banner.setLinkUrl(request.getLinkUrl());
+        banner.setDisplayOrder(request.getDisplayOrder());
+        banner.setStatus(request.getStatus());
+        banner.setStartDate(request.getStartDate());
+        banner.setEndDate(request.getEndDate());
+
+        // update image nếu có
+        if (file != null && !file.isEmpty()) {
+            String fileName = fileUploadUtil.upload(file, "banners");
+            banner.setImageUrl("/uploads/banners/" + fileName);
+        }
+
+        bannerRepository.save(banner);
+        log.info("Banner updated: {}", banner.getId());
+        return bannerMapper.toResponse(banner);
+    }
+
+
+    // =========================
+    // 📌 TOGGLE STATUS
+    // =========================
+    @Transactional
+    public void toggleStatus(Long id) {
+        Banner banner = bannerRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
+
+        if ("ACTIVE".equals(banner.getStatus())) {
+            banner.setStatus("INACTIVE");
+        } else {
+            banner.setStatus("ACTIVE");
+        }
+        bannerRepository.save(banner);
+        log.info("Banner {} changed status to {}", id, banner.getStatus());
+    }
+
+    // =========================
+    // 📌 UPDATE DISPLAY ORDER (REORDER CHUẨN)
+    // =========================
+    @Transactional
+    public void updateOrder(Long id, int newOrder) {
+
+        Banner current = bannerRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND));
+
+        List<Banner> banners = bannerRepository.findAll(Sort.by("displayOrder"));
+
+        for (Banner b : banners) {
+            if (b.getId().equals(id)) continue;
+
+            if (b.getDisplayOrder() != null && b.getDisplayOrder() >= newOrder) {
+                b.setDisplayOrder(b.getDisplayOrder() + 1);
+            }
+        }
+
+        current.setDisplayOrder(newOrder);
+
+        bannerRepository.saveAll(banners);
+
+        log.info("Banner {} updated order to {}", id, newOrder);
+    }
+}

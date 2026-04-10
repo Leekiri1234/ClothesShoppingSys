@@ -1,183 +1,131 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layouts/layout}">
 <head>
-    <title>Create Product</title>
+    <title>Thêm sản phẩm mới</title>
 </head>
 <body>
-    <div layout:fragment="page-title">
-        <h1 class="h2">Create New Product</h1>
-    </div>
 
-    <div layout:fragment="content">
-        <div class="row">
-            <div class="col-md-8">
-                <div class="card">
-                    <div class="card-header">
-                        <h5 class="card-title mb-0">Product Information</h5>
+<h1 layout:fragment="page-title">Thêm sản phẩm mới</h1>
+
+<div layout:fragment="page-actions">
+    <a th:href="@{/admin/products}" class="btn btn-outline">
+        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+            <line x1="19" y1="12" x2="5" y2="12"/>
+            <polyline points="12 19 5 12 12 5"/>
+        </svg>
+        Quay lại
+    </a>
+</div>
+
+<div layout:fragment="content">
+    <form th:action="@{/admin/products/create}"
+          th:object="${product}"
+          method="post"
+          data-validate>
+
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+        <div class="product-form-layout">
+            <!-- LEFT COLUMN -->
+            <div class="product-form-left">
+
+                <!-- THÔNG TIN CƠ BẢN -->
+                <div class="form-card">
+                    <h3>Thông tin cơ bản</h3>
+
+                    <div class="form-group">
+                        <label>Tên sản phẩm <span style="color: var(--danger);">*</span></label>
+                        <input type="text"
+                               th:field="*{productName}"
+                               placeholder="VD: Áo thun cotton nam basic"
+                               required>
+                        <span class="text-danger" th:if="${#fields.hasErrors('productName')}" th:errors="*{productName}"></span>
                     </div>
-                    <div class="card-body">
-                        <form th:action="@{/admin/products/create}"
-                              th:object="${product}"
-                              method="post">
 
-                            <!-- Product Name -->
-                            <div class="mb-3">
-                                <label for="productName" class="form-label">
-                                    Product Name <span class="text-danger">*</span>
-                                </label>
-                                <input type="text"
-                                       class="form-control"
-                                       id="productName"
-                                       th:field="*{productName}"
-                                       th:classappend="${#fields.hasErrors('productName')} ? 'is-invalid'"
-                                       placeholder="e.g., Áo Thun Nam Cotton">
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('productName')}"
-                                     th:errors="*{productName}">Error</div>
-                                <small class="form-text text-muted">
-                                    Slug will be auto-generated from product name
-                                </small>
-                            </div>
+                    <div class="form-group">
+                        <label>Mô tả sản phẩm <span style="color: var(--danger);">*</span></label>
+                        <textarea th:field="*{description}"
+                                  rows="5"
+                                  placeholder="Mô tả chi tiết về sản phẩm..."
+                                  required></textarea>
+                        <span class="text-danger" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
+                    </div>
 
-                            <!-- Category -->
-                            <div class="mb-3">
-                                <label for="categoryId" class="form-label">
-                                    Category <span class="text-danger">*</span>
-                                </label>
-                                <select class="form-select"
-                                        id="categoryId"
-                                        th:field="*{categoryId}"
-                                        th:classappend="${#fields.hasErrors('categoryId')} ? 'is-invalid'">
-                                    <option value="">-- Select Category --</option>
-                                    <option th:each="category : ${categories}"
-                                            th:value="${category.categoryId}"
-                                            th:text="${category.categoryName}">Category</option>
-                                </select>
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('categoryId')}"
-                                     th:errors="*{categoryId}">Error</div>
-                            </div>
+                    <div class="form-group">
+                        <label>Giá gốc <span style="color: var(--danger);">*</span></label>
+                        <input type="number"
+                               th:field="*{price}"
+                               placeholder="0"
+                               min="0"
+                               step="1000"
+                               required>
+                        <span class="text-danger" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></span>
+                        <small style="font-size: 11px; color: var(--muted);">
+                            Tồn kho sẽ được quản lý ở từng variant (màu sắc + size)
+                        </small>
+                    </div>
 
-                            <!-- Description -->
-                            <div class="mb-3">
-                                <label for="description" class="form-label">
-                                    Description <span class="text-danger">*</span>
-                                </label>
-                                <textarea class="form-control"
-                                          id="description"
-                                          th:field="*{description}"
-                                          th:classappend="${#fields.hasErrors('description')} ? 'is-invalid'"
-                                          rows="4"
-                                          placeholder="Detailed product description"></textarea>
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}"
-                                     th:errors="*{description}">Error</div>
-                            </div>
-
-                            <!-- Price & Stock -->
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="price" class="form-label">
-                                            Price (VND) <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="number"
-                                               class="form-control"
-                                               id="price"
-                                               th:field="*{price}"
-                                               th:classappend="${#fields.hasErrors('price')} ? 'is-invalid'"
-                                               placeholder="199000"
-                                               min="0"
-                                               step="1000">
-                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('price')}"
-                                             th:errors="*{price}">Error</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="mb-3">
-                                        <label for="stock" class="form-label">
-                                            Stock Quantity <span class="text-danger">*</span>
-                                        </label>
-                                        <input type="number"
-                                               class="form-control"
-                                               id="stock"
-                                               th:field="*{stock}"
-                                               th:classappend="${#fields.hasErrors('stock')} ? 'is-invalid'"
-                                               placeholder="100"
-                                               min="0">
-                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('stock')}"
-                                             th:errors="*{stock}">Error</div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Image URL -->
-                            <div class="mb-3">
-                                <label for="imageUrl" class="form-label">Image URL</label>
-                                <input type="text"
-                                       class="form-control"
-                                       id="imageUrl"
-                                       th:field="*{imageUrl}"
-                                       placeholder="https://example.com/image.jpg">
-                                <small class="form-text text-muted">
-                                    <i class="fas fa-info-circle"></i>
-                                    Optional: Enter direct image URL or upload feature coming soon
-                                </small>
-                            </div>
-
-                            <!-- Active Status -->
-                            <div class="mb-3 form-check">
-                                <input type="checkbox"
-                                       class="form-check-input"
-                                       id="isActive"
-                                       th:field="*{isActive}"
-                                       checked>
-                                <label class="form-check-label" for="isActive">
-                                    Active (visible to customers)
-                                </label>
-                            </div>
-
-                            <!-- Action Buttons -->
-                            <div class="d-flex gap-2">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Create Product
-                                </button>
-                                <a th:href="@{/admin/products}" class="btn btn-secondary">
-                                    <i class="fas fa-times"></i> Cancel
-                                </a>
-                            </div>
-                        </form>
+                    <div class="form-group">
+                        <label>URL hình ảnh</label>
+                        <input type="text"
+                               th:field="*{imageUrl}"
+                               placeholder="https://example.com/image.jpg">
+                        <span class="text-danger" th:if="${#fields.hasErrors('imageUrl')}" th:errors="*{imageUrl}"></span>
                     </div>
                 </div>
+
             </div>
 
-            <!-- Help Card -->
-            <div class="col-md-4">
-                <div class="card">
-                    <div class="card-header bg-info text-white">
-                        <i class="fas fa-info-circle"></i> Help
-                    </div>
-                    <div class="card-body">
-                        <h6>Product Slug</h6>
-                        <p class="small">Slug is automatically generated from product name for SEO-friendly URLs.</p>
+            <!-- RIGHT COLUMN -->
+            <div class="product-form-right">
 
-                        <h6>Required Fields</h6>
-                        <ul class="small">
-                            <li>Product Name</li>
-                            <li>Category</li>
-                            <li>Description</li>
-                            <li>Price (must be > 0)</li>
-                            <li>Stock (must be >= 0)</li>
-                        </ul>
+                <!-- DANH MỤC -->
+                <div class="form-card">
+                    <h3>Danh mục</h3>
 
-                        <h6>Tips</h6>
-                        <p class="small">
-                            <i class="fas fa-lightbulb"></i>
-                            Use descriptive product names for better SEO.
-                        </p>
+                    <div class="form-group">
+                        <label>Chọn danh mục <span style="color: var(--danger);">*</span></label>
+                        <select th:field="*{categoryId}" required>
+                            <option value="">-- Chọn danh mục --</option>
+                            <option th:each="cat : ${categories}" th:value="${cat.id}" th:text="${cat.categoryName}">Category</option>
+                        </select>
+                        <span class="text-danger" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}"></span>
                     </div>
                 </div>
+
+                <!-- TRẠNG THÁI -->
+                <div class="form-card">
+                    <h3>Trạng thái</h3>
+
+                    <label class="toggle-switch">
+                        <input type="checkbox" th:field="*{isActive}" checked>
+                        <span class="toggle-slider"></span>
+                        <span class="toggle-label">Hiển thị sản phẩm</span>
+                    </label>
+
+                    <small style="font-size: 11px; color: var(--muted); display: block; margin-top: 8px;">
+                        Bật để sản phẩm hiển thị trên website
+                    </small>
+                </div>
+
             </div>
         </div>
-    </div>
+
+        <!-- FORM ACTIONS -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Tạo sản phẩm
+            </button>
+            <a th:href="@{/admin/products}" class="btn btn-outline">Hủy</a>
+        </div>
+
+    </form>
+</div>
+
 </body>
 </html>

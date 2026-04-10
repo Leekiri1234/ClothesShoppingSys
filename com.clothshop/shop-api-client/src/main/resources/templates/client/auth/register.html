@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Đăng ký - MINIMAL</title>
+    <link rel="stylesheet" th:href="@{/css/auth/register.css}">
+</head>
+<body>
+<div layout:fragment="content">
+    <div class="auth-page">
+      <div class="auth-box">
+        <div class="auth-logo">MINIMAL</div>
+        <div class="auth-tabs">
+          <a class="auth-tab" th:href="@{/login}" style="text-decoration: none; color: inherit;">Đăng nhập</a>
+          <div class="auth-tab active">Đăng ký</div>
+        </div>
+        
+        <div th:if="${error}" class="alert alert-danger" style="color: #c0392b; background: #fdf2f2; padding: 10px; border-radius: 4px; border: 1px solid #f5c6cb; margin-bottom: 16px; font-size: 14px;" role="alert">
+            <span th:text="${error}"></span>
+        </div>
+
+        <!-- Register Form -->
+        <form id="register-form" class="auth-form" th:action="@{/register}" th:object="${registerRequest}" method="post">
+          <div class="form-group">
+            <label class="form-label" for="username">Tên đăng nhập <span style="color:red">*</span></label>
+            <input type="text" class="form-input" id="username" th:field="*{username}" placeholder="Nhập tên đăng nhập" required>
+            <div th:if="${#fields.hasErrors('username')}" th:errors="*{username}" style="color: #c0392b; font-size: 12px; margin-top: 4px;"></div>
+          </div>
+          
+          <div style="display:flex; gap: 12px; margin-bottom: 16px;">
+              <div class="form-group" style="flex:1; margin-bottom: 0;">
+                <label class="form-label" for="firstName">Họ <span style="color:red">*</span></label>
+                <input type="text" class="form-input" id="firstName" th:field="*{firstName}" placeholder="Họ" required>
+                <div th:if="${#fields.hasErrors('firstName')}" th:errors="*{firstName}" style="color: #c0392b; font-size: 12px; margin-top: 4px;"></div>
+              </div>
+              <div class="form-group" style="flex:1; margin-bottom: 0;">
+                <label class="form-label" for="lastName">Tên <span style="color:red">*</span></label>
+                <input type="text" class="form-input" id="lastName" th:field="*{lastName}" placeholder="Tên" required>
+                <div th:if="${#fields.hasErrors('lastName')}" th:errors="*{lastName}" style="color: #c0392b; font-size: 12px; margin-top: 4px;"></div>
+              </div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="email">Email <span style="color:red">*</span></label>
+            <input type="email" class="form-input" id="email" th:field="*{email}" placeholder="email@example.com" required>
+            <div th:if="${#fields.hasErrors('email')}" th:errors="*{email}" style="color: #c0392b; font-size: 12px; margin-top: 4px;"></div>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label" for="phoneNumber">Số điện thoại</label>
+            <input type="tel" class="form-input" id="phoneNumber" th:field="*{phoneNumber}" placeholder="+84901234567">
+            <div th:if="${#fields.hasErrors('phoneNumber')}" th:errors="*{phoneNumber}" style="color: #c0392b; font-size: 12px; margin-top: 4px;"></div>
+          </div>
+          
+          <div class="form-group" style="position:relative">
+            <label class="form-label" for="reg-pass">Mật khẩu <span style="color:red">*</span></label>
+            <input type="password" class="form-input" id="reg-pass" th:field="*{password}" placeholder="Ít nhất 8 ký tự" required>
+            <span onclick="togglePasswordVisibility('reg-pass', this)" style="position:absolute;right:12px;top:38px;cursor:pointer;color:#999;font-size:12px">hiện</span>
+            <div th:if="${#fields.hasErrors('password')}" th:errors="*{password}" style="color: #c0392b; font-size: 12px; margin-top: 4px;"></div>
+          </div>
+          
+          <div class="form-group" style="position:relative">
+            <label class="form-label" for="reg-pass2">Xác nhận mật khẩu <span style="color:red">*</span></label>
+            <input type="password" class="form-input" id="reg-pass2" th:field="*{confirmPassword}" placeholder="Nhập lại mật khẩu" required>
+            <span onclick="togglePasswordVisibility('reg-pass2', this)" style="position:absolute;right:12px;top:38px;cursor:pointer;color:#999;font-size:12px">hiện</span>
+            <div th:if="${#fields.hasErrors('confirmPassword')}" th:errors="*{confirmPassword}" style="color: #c0392b; font-size: 12px; margin-top: 4px;"></div>
+          </div>
+          
+          <button type="submit" class="btn btn--primary btn--full" style="margin-top:12px;">Tạo tài khoản</button>
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+        </form>
+      </div>
+    </div>
+    
+    <th:block layout:fragment="scripts">
+        <script th:src="@{/js/auth/register.js}"></script>
+    </th:block>
+</div>
+</body>
+</html>

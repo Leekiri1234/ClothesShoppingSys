@@ -1,242 +1,348 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
+<html lang="vi" xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layouts/layout}">
 <head>
-    <title>Quản lý nhân viên</title>
+    <title>Quản lý nhân sự</title>
 </head>
 <body>
-<div layout:fragment="page-title">
-    <h1 class="h2">
-        <i class="fas fa-user-shield"></i> Quản lý nhân viên
-    </h1>
+
+<h1 layout:fragment="page-title">Quản lý nhân sự</h1>
+
+<div layout:fragment="page-actions">
+    <a th:href="@{/admin/staff/create}" class="btn btn-primary" sec:authorize="hasRole('SUPER_ADMIN')">
+        <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+        </svg>
+        Thêm nhân viên
+    </a>
 </div>
 
 <div layout:fragment="content">
-    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
-    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>
 
-    <div class="card mb-4">
-        <div class="card-header bg-light">
-            <i class="fas fa-filter"></i> Bộ lọc tìm kiếm
+    <!-- FILTER BAR -->
+    <div class="filter-bar">
+        <div class="filter-search">
+            <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+            </svg>
+            <label for="searchInput" style="display: none;">Tìm kiếm</label>
+            <input type="text"
+                   id="searchInput"
+                   th:value="${filter.keyword}"
+                   placeholder="Tìm theo tên, email, username..."
+                   onkeyup="debounceFilter()">
         </div>
-        <div class="card-body">
-            <form th:action="@{/admin/staff}" th:object="${filter}" method="get" class="row g-3">
-                <div class="col-md-3">
-                    <label class="form-label">Vai trò</label>
-                    <select class="form-select" th:field="*{roleId}">
-                        <option value="">-- Tất cả chức vụ --</option>
-                        <option th:each="role : ${roles}"
-                                th:value="${role.id}"
-                                th:text="${role.staffRole}"></option>
-                    </select>
-                </div>
 
-                <div class="col-md-3">
-                    <label class="form-label">Trạng thái</label>
-                    <select class="form-select" th:field="*{status}">
-                        <option value="">-- Tất cả trạng thái --</option> <option th:each="st : ${allStatus}"
-                                                                                  th:value="${st}"
-                                                                                  th:text="${st.displayName}"></option>
-                    </select>
-                </div>
+        <select class="filter-select" id="roleFilter" onchange="filterStaff()">
+            <option value="">Tất cả vai trò</option>
+            <option th:each="role : ${roles}"
+                    th:value="${role.id}"
+                    th:text="${role.description}"
+                    th:selected="${filter.roleId != null && filter.roleId == role.id}">Role</option>
+        </select>
 
-                <div class="col-md-4">
-                    <label class="form-label">Từ khóa</label>
-                    <input type="text" class="form-control" th:field="*{keyword}"
-                           placeholder="Tìm theo tên, email, username...">
-                </div>
+        <select class="filter-select" id="statusFilter" onchange="filterStaff()">
+            <option value="" th:selected="${filter.status == null}">Tất cả trạng thái</option>
+            <option value="ACTIVE" th:selected="${filter.status?.name() == 'ACTIVE'}">Đang hoạt động</option>
+            <option value="LOCKED" th:selected="${filter.status?.name() == 'LOCKED'}">Đã khóa</option>
+        </select>
 
-                <div class="col-md-2 d-flex align-items-end">
-                    <button type="submit" class="btn btn-primary me-2">
-                        <i class="fas fa-search"></i> Lọc
-                    </button>
-                    <a th:href="@{/admin/staff}" class="btn btn-outline-secondary">
-                        <i class="fas fa-redo"></i> Reset
-                    </a>
-                </div>
-            </form>
-        </div>
+        <button class="btn btn-outline" onclick="resetFilters()">
+            <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
+                <polyline points="1 4 1 10 7 10"/>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+            </svg>
+            Reset
+        </button>
     </div>
 
-    <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center bg-white py-3">
-            <h5 class="mb-0"><i class="fas fa-list"></i> Danh sách nhân viên</h5>
-            <a th:href="@{/admin/staff/create}" class="btn btn-success btn-sm">
-                <i class="fas fa-plus"></i> Thêm nhân viên
-            </a>
+    <!-- STATS CARDS -->
+    <div class="stat-cards" style="margin-bottom: 24px;">
+        <div class="stat-card">
+            <div class="stat-label">Tổng nhân viên</div>
+            <div class="stat-value" th:text="${totalAllStaff}">0</div>
+            <svg class="stat-icon" viewBox="0 0 24 24">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
         </div>
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Họ Tên</th>
-                        <th>Tài khoản</th>
-                        <th>Liên hệ</th>
-                        <th>Vai trò</th>
-                        <th>Trạng thái</th>
-                        <th>Ngày tạo</th>
-                        <th class="text-center">Thao tác</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <tr th:if="${staffPage.content.empty}">
-                        <td colspan="8" class="text-center py-4 text-muted">
-                            Không tìm thấy nhân viên nào phù hợp.
-                        </td>
-                    </tr>
-                    <tr th:each="staff : ${staffPage.content}">
-                        <td th:text="${staff.id}"></td>
-                        <td>
-                            <div class="fw-bold" th:text="${staff.fullName}"></div>
-                            <small class="text-muted" th:text="${staff.email}"></small>
-                        </td>
-                        <td th:text="${staff.username}"></td>
-                        <td th:text="${staff.phone}"></td>
-                        <td>
-                            <span class="badge bg-soft-info text-info border border-info"
-                                  th:text="${staff.roleName}"></span>
-                        </td>
-                        <td>
-                            <span th:class="${staff.accountStatus.name() == 'ACTIVE' ? 'badge bg-success' :
-                                              staff.accountStatus.name() == 'LOCKED' ? 'badge bg-danger' : 'badge bg-secondary'}"
-                                  th:text="${staff.accountStatus.displayName}"></span>
-                        </td>
-                        <td th:text="${#temporals.format(staff.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
-                        <td class="text-center">
-                            <!-- Nút Edit: Chỉ hiển thị nếu:
-                                 1. Staff role khác (không phải SUPER_ADMIN)
-                                 2. HOẶC là chính mình (username khớp với currentUsername) -->
-                            <th:block th:if="${staff.staffRole?.name() != 'SUPER_ADMIN' || staff.username == currentUsername}">
-                                <a th:href="@{/admin/staff/edit/{id}(id=${staff.id})}"
-                                   class="btn btn-sm btn-outline-primary" title="Chỉnh sửa">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                            </th:block>
 
-                            <!-- Icon bảo vệ nếu là SUPER_ADMIN khác (không phải mình) -->
-                            <span th:if="${staff.staffRole?.name() == 'SUPER_ADMIN' && staff.username != currentUsername}"
-                                  class="text-muted"
-                                  title="Chỉ có thể chỉnh sửa thông tin của chính mình">
-                                <i class="fas fa-user-shield"></i>
-                            </span>
+        <div class="stat-card stat-card-success">
+            <div class="stat-label">Đang hoạt động</div>
+            <div class="stat-value" th:text="${activeStaff}">0</div>
+            <svg class="stat-icon" viewBox="0 0 24 24">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
+        </div>
 
-                            <!-- Chỉ hiển thị nút toggle nếu KHÔNG phải SUPER_ADMIN -->
-                            <th:block th:if="${staff.staffRole?.name() != 'SUPER_ADMIN'}">
-                                <button th:if="${staff.accountStatus.name() == 'ACTIVE'}"
-                                        type="button" class="btn btn-sm btn-outline-danger"
-                                        th:data-id="${staff.id}"
-                                        th:data-name="${staff.fullName}"
-                                        th:data-action-text="'khóa'"
-                                        onclick="openToggleModal(this)">
-                                    <i class="fas fa-user-slash"></i>
-                                </button>
+        <div class="stat-card stat-card-warning">
+            <div class="stat-label">Super Admin</div>
+            <div class="stat-value" th:text="${superAdminCount}">0</div>
+            <svg class="stat-icon" viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+            </svg>
+        </div>
 
-                                <button th:if="${staff.accountStatus.name() == 'LOCKED'}"
-                                        type="button" class="btn btn-sm btn-outline-success"
-                                        th:data-id="${staff.id}"
-                                        th:data-name="${staff.fullName}"
-                                        th:data-action-text="'mở khóa'"
-                                        onclick="openToggleModal(this)">
-                                    <i class="fas fa-user-check"></i>
-                                </button>
-                            </th:block>
-
-                            <!-- Hiển thị icon shield nếu là SUPER_ADMIN (không thể toggle) -->
-                            <span th:if="${staff.staffRole?.name() == 'SUPER_ADMIN'}"
-                                  class="text-muted ms-1"
-                                  title="SUPER_ADMIN không thể bị khóa">
-                                <i class="fas fa-shield-alt"></i>
-                            </span>
-                        </td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <nav th:if="${staffPage.totalPages > 1}" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item" th:classappend="${staffPage.first} ? 'disabled'">
-                        <a class="page-link"
-                           th:href="@{/admin/staff(page=${staffPage.pageNumber - 1}, roleId=${filter.roleId}, status=${filter.status}, keyword=${filter.keyword})}">
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                    </li>
-                    <li class="page-item"
-                        th:each="i : ${#numbers.sequence(0, staffPage.totalPages - 1)}"
-                        th:classappend="${i == staffPage.pageNumber} ? 'active'">
-                        <a class="page-link"
-                           th:href="@{/admin/staff(page=${i}, roleId=${filter.roleId}, status=${filter.status}, keyword=${filter.keyword})}"
-                           th:text="${i + 1}"></a>
-                    </li>
-                    <li class="page-item" th:classappend="${staffPage.last} ? 'disabled'">
-                        <a class="page-link"
-                           th:href="@{/admin/staff(page=${staffPage.pageNumber + 1}, roleId=${filter.roleId}, status=${filter.status}, keyword=${filter.keyword})}">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
+        <div class="stat-card stat-card-info">
+            <div class="stat-label">Nhân viên khác</div>
+            <div class="stat-value" th:text="${totalAllStaff - superAdminCount}">0</div>
+            <svg class="stat-icon" viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+            </svg>
         </div>
     </div>
 
-    <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header border-0">
-                    <h5 class="modal-title" id="modalTitle">Xác nhận thay đổi trạng thái</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body text-start">
-                    Bạn có chắc chắn muốn <strong id="actionText"></strong> tài khoản của <strong id="displayStaffName"></strong>?
-                    <p class="small text-muted mt-2" id="actionNote">Hành động này sẽ thay đổi quyền truy cập của nhân viên.</p>
-                </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
-                    <form id="toggleActionForm" method="post">
-                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-                        <button type="submit" id="submitBtn" class="btn">Xác nhận</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+    <!-- STAFF TABLE -->
+    <div class="dashboard-card">
+        <table class="admin-table">
+            <thead>
+                <tr>
+                    <th style="width: 70px;">Avatar</th>
+                    <th>Họ tên</th>
+                    <th>Tài khoản</th>
+                    <th>Email</th>
+                    <th>Vai trò</th>
+                    <th>Trạng thái</th>
+                    <th style="width: 180px;">Hành động</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:if="${staffPage.content.empty}">
+                    <td colspan="8">
+                        <div class="empty-state">
+                            <svg style="width: 48px; height: 48px; margin-bottom: 12px; color: var(--muted);" viewBox="0 0 24 24">
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                                <circle cx="9" cy="7" r="4"/>
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                            </svg>
+                            <p>Chưa có nhân viên nào</p>
+                            <a th:href="@{/admin/staff/create}" class="btn btn-primary" style="margin-top: 12px;" sec:authorize="hasRole('SUPER_ADMIN')">
+                                Thêm nhân viên đầu tiên
+                            </a>
+                        </div>
+                    </td>
+                </tr>
+
+                <tr th:each="staff : ${staffPage.content}">
+
+                    <td>
+                        <div class="table-avatar" th:text="${staff.fullName != null ? staff.fullName.substring(0,1).toUpperCase() : 'S'}">A</div>
+                    </td>
+                    <td>
+                        <div style="font-weight: 500;" th:text="${staff.fullName}">Nguyễn Văn A</div>
+                        <div style="font-size: 11px; color: var(--muted);">
+                            ID: <span th:text="${staff.id}">1</span>
+                        </div>
+                    </td>
+                    <td>
+                        <span style="font-family: monospace; font-size: 12px;" th:text="${staff.username}">admin</span>
+                    </td>
+                    <td>
+                        <a th:href="'mailto:' + ${staff.email}"
+                           style="color: var(--info); text-decoration: none;"
+                           th:text="${staff.email}">email@example.com</a>
+                    </td>
+                    <td>
+                        <span th:if="${staff.roleName == 'SUPER_ADMIN'}" class="badge badge-purple">Super Admin</span>
+                        <span th:if="${staff.roleName == 'MARKETING_STAFF'}" class="badge badge-info">Marketing</span>
+                        <span th:if="${staff.roleName == 'SALE_PRODUCT_STAFF'}" class="badge badge-primary">Sale & Product</span>
+                        <span th:if="${staff.roleName == 'CUSTOMER_SERVICE'}" class="badge badge-success">Customer Service</span>
+                        <span th:if="${staff.roleName != 'SUPER_ADMIN' && staff.roleName != 'MARKETING_STAFF' && staff.roleName != 'SALE_PRODUCT_STAFF' && staff.roleName != 'CUSTOMER_SERVICE'}"
+                              class="badge badge-muted"
+                              th:text="${staff.roleName}">Other</span>
+                    </td>
+                    <td>
+                        <span th:if="${staff.accountStatus?.name() == 'ACTIVE'}" class="badge badge-success">Hoạt động</span>
+                        <span th:if="${staff.accountStatus?.name() == 'LOCKED'}" class="badge badge-danger">Đã khóa</span>
+                        <span th:if="${staff.accountStatus?.name() != 'ACTIVE' and staff.accountStatus?.name() != 'LOCKED'}" class="badge badge-muted" th:text="${staff.accountStatus?.name()}">Khác</span>
+                    </td>
+                    <td>
+                        <div class="actions-cell">
+                            <a th:href="@{/admin/staff/edit/{id}(id=${staff.id})}"
+                               class="btn btn-xs btn-outline"
+                               title="Chỉnh sửa"
+                               sec:authorize="hasRole('SUPER_ADMIN')">
+                                <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                                </svg>
+                            </a>
+                            <!-- Deactivate: chỉ hiện khi ACTIVE và không phải SUPER_ADMIN -->
+                            <button th:if="${staff.accountStatus?.name() == 'ACTIVE' and staff.roleName != 'SUPER_ADMIN'}"
+                                    type="button"
+                                    class="btn btn-xs"
+                                    style="color: var(--danger); border-color: var(--danger);"
+                                    title="Khóa tài khoản"
+                                    th:onclick="'deactivateStaff(' + ${staff.id} + ')'"
+                                    sec:authorize="hasRole('SUPER_ADMIN')">
+                                <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24">
+                                    <circle cx="12" cy="12" r="10"/>
+                                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
+                                </svg>
+                            </button>
+                            <!-- Reactivate: chỉ hiện khi LOCKED -->
+                            <button th:if="${staff.accountStatus?.name() == 'LOCKED'}"
+                                    type="button"
+                                    class="btn btn-xs"
+                                    style="color: #2e7d32; border-color: #2e7d32;"
+                                    title="Kích hoạt tài khoản"
+                                    th:onclick="'reactivateStaff(' + ${staff.id} + ')'"
+                                    sec:authorize="hasRole('SUPER_ADMIN')">
+                                <svg style="width: 12px; height: 12px;" viewBox="0 0 24 24">
+                                    <polyline points="9 11 12 14 22 4"/>
+                                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </div>
 
-    <script th:inline="javascript">
-        function openToggleModal(button) {
-            const id = button.getAttribute('data-id');
-            const name = button.getAttribute('data-name');
-            const action = button.getAttribute('data-action-text'); // Lấy chữ 'khóa' hoặc 'mở khóa'
+    <!-- PAGINATION -->
+    <div class="pagination" th:if="${staffPage.totalPages > 1}">
+        <button class="page-btn"
+                th:disabled="${staffPage.pageNumber == 0}"
+                onclick="goToPage([[${staffPage.pageNumber - 1}]])">
+            ‹
+        </button>
 
-            // Cập nhật text trong Modal
-            document.getElementById('displayStaffName').innerText = name;
-            document.getElementById('actionText').innerText = action;
+        <button th:each="i : ${#numbers.sequence(0, staffPage.totalPages - 1)}"
+                class="page-btn"
+                th:classappend="${i == staffPage.pageNumber} ? 'active' : ''"
+                th:text="${i + 1}"
+                onclick="goToPage([[${i}]])">
+            1
+        </button>
 
-            // Cập nhật Action URL (Đổi từ /delete thành /toggle)
-            document.getElementById('toggleActionForm').action = '/admin/staff/toggle/' + id;
+        <button class="page-btn"
+                th:disabled="${staffPage.pageNumber == staffPage.totalPages - 1}"
+                onclick="goToPage([[${staffPage.pageNumber + 1}]])">
+            ›
+        </button>
+    </div>
 
-            // Cập nhật màu sắc nút bấm trong Modal cho khớp với hành động
-            const submitBtn = document.getElementById('submitBtn');
-            if (action === 'khóa') {
-                submitBtn.className = 'btn btn-danger';
-                submitBtn.innerText = 'Xác nhận khóa';
-            } else {
-                submitBtn.className = 'btn btn-success';
-                submitBtn.innerText = 'Xác nhận mở khóa';
-            }
-
-            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
-            modal.show();
-        }
-    </script>
 </div>
+
+<div layout:fragment="scripts">
+<script>
+// Helper function to read cookie value
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+}
+
+// Debounce timer for search
+let searchDebounceTimer;
+
+function debounceFilter() {
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+        filterStaff();
+    }, 500); // Wait 500ms after user stops typing
+}
+
+// Filter staff
+function filterStaff() {
+    const search = document.getElementById('searchInput').value.trim();
+    const roleSelect = document.getElementById('roleFilter');
+    const role = roleSelect ? roleSelect.value : '';
+    const status = document.getElementById('statusFilter').value;
+
+    // Build URL with params
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', '0'); // Reset to first page
+
+    if (search) {
+        url.searchParams.set('keyword', search);
+    } else {
+        url.searchParams.delete('keyword');
+    }
+
+    if (role) {
+        url.searchParams.set('roleId', role);
+    } else {
+        url.searchParams.delete('roleId');
+    }
+
+    if (status) {
+        url.searchParams.set('status', status);
+    } else {
+        url.searchParams.delete('status');
+    }
+
+    url.searchParams.set('filtered', 'true');
+
+    window.location.href = url.toString();
+}
+
+// Reset filters
+function resetFilters() {
+    window.location.href = '/admin/staff';
+}
+
+// Pagination
+function goToPage(page) {
+    const url = new URL(window.location.href);
+    url.searchParams.set('page', page);
+    window.location.href = url.toString();
+}
+
+// Toggle staff status via API (shared by deactivate & reactivate)
+function callToggleStatus(staffId, successMsg, errorMsg) {
+    const csrfToken = getCookie('XSRF-TOKEN')
+        || document.querySelector('meta[name="_csrf"]')?.content;
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-XSRF-TOKEN';
+
+    if (!csrfToken) {
+        if (window.AdminUI) AdminUI.showToast('Lỗi: Không tìm thấy CSRF token!', 'error');
+        return;
+    }
+
+    const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+    headers[csrfHeader] = csrfToken;
+
+    fetch(`/admin/staff/toggle/${staffId}`, { method: 'POST', headers })
+        .then(res => {
+            if (res.ok) {
+                if (window.AdminUI) AdminUI.showToast(successMsg, 'success');
+                setTimeout(() => location.reload(), 800);
+            } else {
+                if (window.AdminUI) AdminUI.showToast(errorMsg, 'error');
+            }
+        })
+        .catch(() => {
+            if (window.AdminUI) AdminUI.showToast(errorMsg, 'error');
+        });
+}
+
+function deactivateStaff(staffId) {
+    if (!confirm('Bạn có chắc muốn KHÓA tài khoản này không?')) return;
+    callToggleStatus(staffId, 'Đã khóa tài khoản nhân viên', 'Không thể khóa tài khoản!');
+}
+
+function reactivateStaff(staffId) {
+    if (!confirm('Bạn có chắc muốn KÍCH HOẠT lại tài khoản này không?')) return;
+    callToggleStatus(staffId, 'Đã kích hoạt tài khoản nhân viên', 'Không thể kích hoạt tài khoản!');
+}
+
+
+</script>
+</div>
+
 </body>
 </html>
+

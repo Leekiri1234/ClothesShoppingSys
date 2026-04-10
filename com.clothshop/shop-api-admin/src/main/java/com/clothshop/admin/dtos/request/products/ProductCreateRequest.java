@@ -3,9 +3,12 @@ package com.clothshop.admin.dtos.request.products;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 /**
  * Request DTO for creating a new product (Admin side).
- * Contains all administrative fields including stock and is_active.
+ * Note: Stock is NOT included here as it's managed at the variant level.
+ * After creating a product, you should add variants with their own stock quantities.
  * Follows Bean Validation pattern.
  */
 @Getter
@@ -28,12 +31,9 @@ public class ProductCreateRequest {
 
     @NotNull(message = "Price is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")
-    private Double price;
+    private BigDecimal price;
 
-    @NotNull(message = "Stock is required")
-    @Min(value = 0, message = "Stock cannot be negative")
-    private Integer stock;
-
+    @Size(max = 500, message = "URL must not exceed 500 characters.")
     private String imageUrl;
 
     @Builder.Default

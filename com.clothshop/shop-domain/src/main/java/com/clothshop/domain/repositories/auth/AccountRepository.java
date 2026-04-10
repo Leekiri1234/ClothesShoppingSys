@@ -1,6 +1,6 @@
 package com.clothshop.domain.repositories.auth;
 
-import com.clothshop.domain.entities.auth.Account;
+import com.clothshop.domain.models.auth.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;

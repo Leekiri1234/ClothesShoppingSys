@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+    <title>Giỏ hàng</title>
+    <link rel="stylesheet" th:href="@{/css/cart.css}">
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="cart-page">
+        <h1 class="cart-page__title">Giỏ hàng</h1>
+        <hr class="cart-page__divider"/>
+
+        <div class="cart-layout">
+            <div>
+                <div class="cart-table">
+                    <div class="cart-table__head"
+                         th:if="${cart != null and cart.items != null and !#lists.isEmpty(cart.items)}">
+                        <div>Sản phẩm</div>
+                        <div>Giá</div>
+                        <div>Số lượng</div>
+                        <div>Thành tiền</div>
+                        <div></div>
+                    </div>
+
+                    <div th:if="${cart != null and cart.items != null and !#lists.isEmpty(cart.items)}">
+                        <div class="cart-table__row" th:each="item : ${cart.items}" th:attr="data-item-id=${item.cartItemId}">
+                            <div class="cart-product">
+                                <div class="cart-product__thumb"
+                                     th:style="${item.imageUrl != null} ? 'background-image:url(' + ${item.imageUrl} + ');' : ''">
+                                </div>
+
+                                <div class="cart-product__info">
+                                    <a th:href="@{/products/{slug}(slug=${item.productSlug})}"
+                                       class="cart-product__name"
+                                       th:text="${item.productName}">
+                                        Tên sản phẩm
+                                    </a>
+
+                                    <div class="cart-product__meta">
+                                        <div th:if="${item.colorName != null}">
+                                            Màu: <span th:text="${item.colorName}">Đen</span>
+                                        </div>
+                                        <div th:if="${item.sizeName != null}">
+                                            Size: <span th:text="${item.sizeName}">M</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="cart-price money"
+                                 th:text="${item.price != null ? #numbers.formatDecimal(item.price, 0, 'POINT', 0, 'COMMA') + 'đ' : '0đ'}">
+                                0đ
+                            </div>
+
+                            <div>
+                                <form class="qty-form"
+                                      th:action="@{/cart/update/{itemId}(itemId=${item.cartItemId})}"
+                                      method="post">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                                    <div class="qty-box">
+                                        <button type="button" onclick="changeQty(this,-1)">−</button>
+                                        <input type="number"
+                                               name="quantity"
+                                               min="1"
+                                               th:attr="max=${item.maxStock}"
+                                               th:value="${item.quantity}"
+                                               onchange="submitCartFormAjax(this.form)">
+                                        <button type="button" onclick="changeQty(this,1)">+</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <div class="cart-line-total money"
+                                 th:text="${item.subtotal != null ? #numbers.formatDecimal(item.subtotal, 0, 'POINT', 0, 'COMMA') + 'đ' : '0đ'}">
+                                0đ
+                            </div>
+
+                            <div>
+                                <form th:action="@{/cart/remove/{itemId}(itemId=${item.cartItemId})}" method="post" onsubmit="event.preventDefault(); submitCartFormAjax(this);">
+                                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                                    <button type="submit" class="cart-remove" title="Xóa">×</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="empty-cart"
+                         th:if="${cart == null or cart.items == null or #lists.isEmpty(cart.items)}">
+                        <p class="empty-cart__text">Giỏ hàng của bạn đang trống</p>
+                        <a class="empty-cart__btn" th:href="@{/products}">Tiếp tục mua sắm</a>
+                    </div>
+                </div>
+
+                <a class="btn-outline-back" th:href="@{/products}">← Tiếp tục mua sắm</a>
+            </div>
+
+            <aside class="cart-summary">
+                <h2 class="cart-summary__title">Tóm tắt đơn hàng</h2>
+
+                <span class="voucher-label">Mã giảm giá</span>
+                <div class="voucher-box">
+                    <input type="text" id="voucher-input" placeholder="Nhập mã voucher">
+                    <button type="button" onclick="applyVoucher()">Áp dụng</button>
+                </div>
+                <div id="voucher-msg" style="font-size:12px; margin:-10px 0 18px; min-height:18px;"></div>
+
+                <div class="summary-line">
+                    <span>Tạm tính</span>
+                    <span class="value money" id="sum-subtotal"
+                          th:text="${cart != null and cart.totalAmount != null ? #numbers.formatDecimal(cart.totalAmount, 0, 'POINT', 0, 'COMMA') + 'đ' : '0đ'}">
+                        0đ
+                    </span>
+                </div>
+
+                <div class="summary-line discount">
+                    <span>Giảm giá</span>
+                    <span class="value money" id="sum-discount">-0đ</span>
+                </div>
+
+                <div class="summary-line">
+                    <span>Phí vận chuyển</span>
+                    <span class="value money" id="sum-shipping">30.000đ</span>
+                </div>
+
+                <div class="summary-total">
+                    <span>Tổng cộng</span>
+                    <span class="money" id="sum-total"
+                          th:text="${cart != null and cart.totalAmount != null ? #numbers.formatDecimal(cart.totalAmount, 0, 'POINT', 0, 'COMMA') + 'đ' : '0đ'}">
+                        0đ
+                    </span>
+                </div>
+
+                <button class="btn-black" type="button"
+                        th:onclick="'window.location.href=\'' + @{/checkout} + '\''">
+                    Tiến hành thanh toán
+                </button>
+            </aside>
+        </div>
+    </div>
+</section>
+
+<th:block layout:fragment="scripts">
+    <script th:src="@{/js/cart.js}"></script>
+</th:block>
+</body>
+</html>

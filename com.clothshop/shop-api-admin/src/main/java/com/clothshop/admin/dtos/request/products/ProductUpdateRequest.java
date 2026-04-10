@@ -3,9 +3,12 @@ package com.clothshop.admin.dtos.request.products;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 /**
  * Request DTO for updating an existing product (Admin side).
  * All fields are optional to support partial updates.
+ * Note: Stock is NOT included here as it's managed at the variant level.
  */
 @Getter
 @Setter
@@ -23,10 +26,7 @@ public class ProductUpdateRequest {
     private String description;
 
     @DecimalMin(value = "0.0", inclusive = false, message = "Price must be greater than 0")
-    private Double price;
-
-    @Min(value = 0, message = "Stock cannot be negative")
-    private Integer stock;
+    private BigDecimal price;
 
     private String imageUrl;
 

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+  <title>Cấu hình Sản phẩm nổi bật</title>
+  <style>
+    .product-list-container {
+      min-height: 500px;
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      background: #f9f9f9;
+      position: relative;
+    }
+    .sortable-item {
+      background: #fff;
+      border: 1px solid #dee2e6;
+      margin-bottom: 10px;
+      padding: 10px 15px; /* Tinh chỉnh lại padding cho cân đối */
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+      /* Cho phép kéo toàn bộ thẻ */
+      cursor: grab !important;
+      touch-action: none;
+      user-select: none;
+      position: relative;
+    }
+    .sortable-item:active {
+      cursor: grabbing !important;
+    }
+
+    /* FIX LỖI ẢNH TO: Ép ảnh về kích thước cố định */
+    .item-img {
+      width: 50px !important;
+      height: 50px !important;
+      min-width: 50px; /* Chống bị co lại khi text quá dài */
+      object-fit: cover;
+      border-radius: 6px;
+      margin-right: 15px;
+      border: 1px solid #eee;
+      pointer-events: none;
+    }
+
+    .flex-grow-1 {
+      min-width: 0; /* Quan trọng để text-truncate hoạt động trong flex */
+      pointer-events: none;
+    }
+
+    .remove-item {
+      pointer-events: auto !important;
+      cursor: pointer !important;
+      padding: 5px 10px;
+      margin-left: 10px;
+      color: #ccc;
+      transition: color 0.2s;
+    }
+    .remove-item:hover { color: #dc3545 !important; }
+
+    /* Hiệu ứng khi đang kéo */
+    .sortable-drag {
+      opacity: 0.95 !important;
+      z-index: 9999 !important;
+      background: #fff !important;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.2) !important;
+      border: 1px solid #007bff !important;
+    }
+    .sortable-ghost {
+      opacity: 0.2;
+      background: #007bff !important;
+    }
+    .sortable-chosen {
+      background-color: #f0f7ff !important;
+    }
+
+    .drag-handle {
+      color: #ddd;
+      margin-right: 10px;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+
+<h1 layout:fragment="page-title">Quản lý Sản phẩm Nổi bật</h1>
+
+<div layout:fragment="content">
+  <div class="row">
+    <div class="col-md-5 mb-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-header bg-light py-3">
+          <h6 class="mb-0 fw-bold"><i class="fas fa-boxes me-2"></i>Kho sản phẩm</h6>
+        </div>
+        <div class="card-body p-2">
+          <div class="px-2 mb-3 mt-2">
+            <input type="text" id="searchProduct" class="form-control form-control-sm" placeholder="Tìm nhanh sản phẩm...">
+          </div>
+          <div id="availableGroup" class="product-list-container">
+            <div class="sortable-item" th:each="product : ${availableProducts}"
+                 th:attr="data-id=${product.id}, data-name=${product.productName}">
+              <i class="fas fa-grip-vertical drag-handle"></i>
+              <img th:src="${product.images != null && !product.images.isEmpty() ? product.images[0].imageUrl : '/images/no-image.png'}" class="item-img">
+              <div class="flex-grow-1">
+                <div class="text-truncate fw-bold" style="font-size: 0.85rem;" th:text="${product.productName}">Name</div>
+                <div class="text-muted small" style="font-size: 0.75rem;" th:text="${'SKU: ' + product.productSlug}">Slug</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-1 d-none d-md-flex align-items-center justify-content-center">
+      <i class="fas fa-angle-double-right fa-2x text-muted"></i>
+    </div>
+
+    <div class="col-md-6 mb-4">
+      <form th:action="@{/admin/settings/featured}" method="post" id="featuredForm">
+        <div class="card shadow-sm border-primary h-100">
+          <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold"><i class="fas fa-star text-warning me-2"></i>Sản phẩm hiển thị ghim</h6>
+            <button type="submit" class="btn btn-light btn-sm fw-bold">LƯU CẤU HÌNH</button>
+          </div>
+          <div class="card-body p-2">
+            <div id="featuredGroup" class="product-list-container border-primary">
+              <div class="sortable-item border-primary-subtle" th:each="fp : ${featuredProducts}"
+                   th:attr="data-id=${fp.product.id}">
+                <i class="fas fa-grip-vertical drag-handle text-primary"></i>
+                <img th:src="${fp.product.images != null && !fp.product.images.isEmpty() ? fp.product.images[0].imageUrl : '/images/no-image.png'}" class="item-img">
+                <div class="flex-grow-1">
+                  <div class="text-truncate fw-bold text-primary" style="font-size: 0.85rem;" th:text="${fp.product.productName}">Name</div>
+                  <div class="badge bg-primary-subtle text-primary" style="font-size: 0.65rem;">Đang hiển thị</div>
+                </div>
+                <button type="button" class="btn btn-link text-danger remove-item p-0" onclick="removeItem(this)">
+                  <i class="fas fa-trash-alt"></i>
+                </button>
+              </div>
+            </div>
+            <div id="hiddenInputsContainer"></div>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div layout:fragment="scripts">
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      setTimeout(initFeaturedSortable, 100);
+
+      function initFeaturedSortable() {
+        const availableEl = document.getElementById('availableGroup');
+        const featuredEl = document.getElementById('featuredGroup');
+
+        if (!availableEl || !featuredEl) return;
+
+        const commonOptions = {
+          group: 'shared',
+          animation: 150,
+          forceFallback: true,
+          fallbackClass: "sortable-drag",
+          filter: '.remove-item, button, input',
+          preventOnFilter: false
+        };
+
+        Sortable.create(availableEl, {
+          ...commonOptions,
+          group: { name: 'shared', pull: 'clone', put: false },
+          sort: false
+        });
+
+        Sortable.create(featuredEl, {
+          ...commonOptions,
+          sort: true,
+          ghostClass: 'sortable-ghost',
+          chosenClass: 'sortable-chosen',
+          onAdd: function (evt) {
+            const item = evt.item;
+            const productId = item.getAttribute('data-id');
+            const duplicates = featuredEl.querySelectorAll(`[data-id="${productId}"]`);
+            if (duplicates.length > 1) {
+              alert('Sản phẩm này đã có trong danh sách!');
+              item.remove();
+              return;
+            }
+            if (!item.querySelector('.remove-item')) {
+              const btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'btn btn-link text-danger remove-item p-0';
+              btn.innerHTML = '<i class="fas fa-trash-alt"></i>';
+              btn.onclick = function() { item.remove(); };
+              item.appendChild(btn);
+            }
+            // Fix lại class và text cho item mới kéo sang
+            item.classList.add('border-primary-subtle');
+          }
+        });
+
+        // Search & Submit logic (Giữ nguyên)
+        document.getElementById('searchProduct').addEventListener('input', function(e) {
+          const val = e.target.value.toLowerCase();
+          availableEl.querySelectorAll('.sortable-item').forEach(item => {
+            const name = item.getAttribute('data-name').toLowerCase();
+            item.style.display = name.includes(val) ? 'flex' : 'none';
+          });
+        });
+
+        document.getElementById('featuredForm').addEventListener('submit', function(e) {
+          const container = document.getElementById('hiddenInputsContainer');
+          container.innerHTML = '';
+          featuredEl.querySelectorAll('.sortable-item').forEach((item, index) => {
+            const id = item.getAttribute('data-id');
+            container.insertAdjacentHTML('beforeend', `
+              <input type="hidden" name="featuredProducts[${index}].productId" value="${id}">
+              <input type="hidden" name="featuredProducts[${index}].displayOrder" value="${index + 1}">
+            `);
+          });
+        });
+      }
+    });
+
+    function removeItem(btn) {
+      if (confirm('Xóa sản phẩm khỏi danh sách nổi bật?')) {
+        btn.closest('.sortable-item').remove();
+      }
+    }
+  </script>
+</div>
+</body>
+</html>
