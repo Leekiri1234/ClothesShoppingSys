@@ -6,7 +6,7 @@ import com.clothshop.client.services.CartClientService;
 import com.clothshop.client.services.CheckoutClientService;
 import com.clothshop.client.services.ClientVoucherService;
 import com.clothshop.common.exceptions.BusinessException;
-import com.clothshop.domain.entities.auth.Account;
+import com.clothshop.domain.models.auth.Account;
 import com.clothshop.domain.enums.PaymentMethod;
 import com.clothshop.domain.repositories.auth.AccountRepository;
 import jakarta.validation.Valid;
@@ -37,9 +37,9 @@ public class CheckoutController {
     public String showCheckoutForm(Principal principal, Model model) {
         if (principal == null) return "redirect:/login";
 
-       if (cartService.getCartItemCount(principal.getName()) == 0) {
-            return "redirect:/cart";
-        }
+      // if (cartService.getCartItemCount(principal.getName()) == 0) {
+       //     return "redirect:/cart";
+       // }
 
         Account account = accountRepository.findByUsernameWithCustomer(principal.getName()).orElse(null);
         OrderCreateRequest request = new OrderCreateRequest();

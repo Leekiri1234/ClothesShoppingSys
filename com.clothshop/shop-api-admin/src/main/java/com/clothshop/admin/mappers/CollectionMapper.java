@@ -2,7 +2,7 @@ package com.clothshop.admin.mappers;
 
 import com.clothshop.admin.dtos.request.marketing.CollectionSaveRequest;
 import com.clothshop.admin.dtos.response.marketing.CollectionResponse;
-import com.clothshop.domain.entities.marketing.Collection;
+import com.clothshop.domain.models.marketing.Collection;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

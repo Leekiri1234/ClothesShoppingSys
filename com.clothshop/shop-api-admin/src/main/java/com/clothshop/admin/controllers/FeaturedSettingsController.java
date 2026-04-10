@@ -2,8 +2,8 @@ package com.clothshop.admin.controllers;
 
 import com.clothshop.admin.dtos.request.marketing.FeaturedProductListRequest;
 import com.clothshop.admin.services.FeaturedProductService;
-import com.clothshop.domain.entities.marketing.FeaturedProduct;
-import com.clothshop.domain.entities.product.Product;
+import com.clothshop.domain.models.marketing.FeaturedProduct;
+import com.clothshop.domain.models.product.Product;
 import com.clothshop.domain.repositories.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;

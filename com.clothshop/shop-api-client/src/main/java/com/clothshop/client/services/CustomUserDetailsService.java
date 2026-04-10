@@ -1,6 +1,6 @@
 package com.clothshop.client.services;
 
-import com.clothshop.domain.entities.auth.Account;
+import com.clothshop.domain.models.auth.Account;
 import com.clothshop.domain.enums.AccountType;
 import com.clothshop.domain.repositories.auth.AccountRepository;
 import lombok.RequiredArgsConstructor;

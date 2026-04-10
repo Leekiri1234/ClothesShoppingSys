@@ -3,7 +3,7 @@ package com.clothshop.admin.mappers;
 import com.clothshop.admin.dtos.request.products.CategoryCreateRequest;
 import com.clothshop.admin.dtos.request.products.CategoryUpdateRequest;
 import com.clothshop.admin.dtos.response.products.CategoryAdminResponse;
-import com.clothshop.domain.entities.product.Category;
+import com.clothshop.domain.models.product.Category;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)

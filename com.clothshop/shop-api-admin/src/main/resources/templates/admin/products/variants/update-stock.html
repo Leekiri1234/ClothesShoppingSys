@@ -10,7 +10,7 @@
 <h1 layout:fragment="page-title">Cập nhật tồn kho variant</h1>
 
 <div layout:fragment="page-actions">
-    <a th:href="@{/admin/products/{id}/edit(id=${productId})}" class="btn btn-outline">
+    <a th:href="@{/admin/products/{id}(id=${variant.productId})}" class="btn btn-outline">
         <svg style="width: 14px; height: 14px;" viewBox="0 0 24 24">
             <line x1="19" y1="12" x2="5" y2="12"/>
             <polyline points="12 19 5 12 12 5"/>
@@ -22,7 +22,8 @@
 <div layout:fragment="content">
 
     <div style="max-width: 500px; margin: 0 auto;">
-        <form th:action="@{/admin/products/{pid}/variants/{vid}/edit-stock(pid=${productId}, vid=${variantId})}"
+        <form th:action="@{/admin/variants/{id}/update-stock(id=${variant.variantId})}"
+              th:object="${stockRequest}"
               method="post"
               data-validate>
 
@@ -32,14 +33,18 @@
                 <h3>Thông tin variant</h3>
 
                 <div style="background: var(--bg); padding: 16px; border-radius: var(--radius); margin-bottom: 20px;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 13px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; font-size: 13px;">
+                        <div>
+                            <div style="color: var(--muted); margin-bottom: 4px;">SKU</div>
+                            <div style="font-weight: 600; font-family: monospace;" th:text="${variant.sku}">SKU001</div>
+                        </div>
                         <div>
                             <div style="color: var(--muted); margin-bottom: 4px;">Màu sắc</div>
                             <div style="font-weight: 600;" th:text="${variant.color}">Đỏ</div>
                         </div>
                         <div>
                             <div style="color: var(--muted); margin-bottom: 4px;">Kích thước</div>
-                            <div style="font-weight: 600;" th:text="${variant.size}">M</div>
+                            <div style="font-weight: 600;" th:text="${variant.sizeValue}">M</div>
                         </div>
                     </div>
                 </div>
@@ -47,53 +52,39 @@
                 <div class="form-group">
                     <label>Tồn kho hiện tại</label>
                     <div style="font-size: 24px; font-weight: 700; margin-bottom: 16px;"
-                         th:classappend="${variant.stock < 10} ? 'text-warning' : (${variant.stock == 0} ? 'text-danger' : '')"
-                         th:text="${variant.stock}">
+                         th:text="${variant.stockQuantity}">
                         120
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Loại cập nhật <span style="color: var(--danger);">*</span></label>
-                        <select id="updateType" name="updateType" required>
-                            <option value="">-- Chọn --</option>
-                            <option value="ADD">Nhập kho (+)</option>
-                            <option value="SUBTRACT">Xuất kho (-)</option>
-                            <option value="SET">Đặt lại số lượng</option>
-                        </select>
-                    </div>
-
-                    <div class="form-group">
-                        <label>Số lượng <span style="color: var(--danger);">*</span></label>
-                        <input type="number"
-                               name="quantity"
-                               placeholder="0"
-                               min="1"
-                               required>
-                    </div>
+                <div class="form-group">
+                    <label>Số lượng mới <span style="color: var(--danger);">*</span></label>
+                    <input type="number"
+                           th:field="*{newStock}"
+                           placeholder="0"
+                           min="0"
+                           required
+                           autofocus>
+                    <span class="text-danger" th:if="${#fields.hasErrors('newStock')}" th:errors="*{newStock}"></span>
+                    <small style="font-size: 11px; color: var(--muted);">
+                        Nhập số lượng tồn kho thực tế hiện tại
+                    </small>
                 </div>
 
                 <div class="form-group">
                     <label>Lý do <span style="color: var(--danger);">*</span></label>
-                    <textarea name="reason"
-                              rows="3"
-                              placeholder="VD: Nhập hàng mới, Trả hàng từ khách, Kiểm kê kho..."
-                              required></textarea>
-                    <small style="font-size: 11px; color: var(--muted);">
-                        Lý do cập nhật sẽ được ghi vào lịch sử kho
-                    </small>
+                    <input type="text"
+                           th:field="*{reason}"
+                           placeholder="VD: RESTOCK, MANUAL_ADJUSTMENT, RETURN..."
+                           required>
+                    <span class="text-danger" th:if="${#fields.hasErrors('reason')}" th:errors="*{reason}"></span>
                 </div>
 
-                <div id="previewResult" style="display: none; padding: 12px; background: #f0f7ff; border: 1px solid #d0e7ff; border-radius: var(--radius); margin-top: 16px;">
-                    <div style="font-size: 12px; color: #1565c0;">
-                        <strong>Kết quả dự kiến:</strong>
-                        <div style="margin-top: 8px; font-size: 14px;">
-                            <span id="currentStock" th:text="${variant.stock}">120</span>
-                            <span id="operation">→</span>
-                            <strong id="newStock">-</strong>
-                        </div>
-                    </div>
+                <div class="form-group">
+                    <label>Ghi chú (Optional)</label>
+                    <textarea th:field="*{note}"
+                              rows="3"
+                              placeholder="VD: Nhập hàng mới, Kiểm kê kho..."></textarea>
                 </div>
 
                 <div style="padding: 12px; background: #e8f5e9; border: 1px solid #c3e6cb; border-radius: var(--radius); margin-top: 16px;">
@@ -104,12 +95,7 @@
                             <line x1="12" y1="8" x2="12.01" y2="8"/>
                         </svg>
                         <div style="font-size: 12px; color: #2e7d32; line-height: 1.5;">
-                            <strong>Lưu ý:</strong>
-                            <ul style="margin: 4px 0 0 0; padding-left: 16px;">
-                                <li><strong>Nhập kho:</strong> Tăng số lượng tồn kho</li>
-                                <li><strong>Xuất kho:</strong> Giảm số lượng tồn kho</li>
-                                <li><strong>Đặt lại:</strong> Đặt tồn kho về một giá trị cố định</li>
-                            </ul>
+                            <strong>Lưu ý:</strong> Nhập số lượng tồn kho thực tế. Hệ thống sẽ tự tính độ lệch và ghi log.
                         </div>
                     </div>
                 </div>
@@ -122,7 +108,7 @@
                     </svg>
                     Cập nhật tồn kho
                 </button>
-                <a th:href="@{/admin/products/{id}/edit(id=${productId})}" class="btn btn-outline">Hủy</a>
+                <a th:href="@{/admin/products/{id}(id=${variant.productId})}" class="btn btn-outline">Hủy</a>
             </div>
 
         </form>
@@ -130,63 +116,5 @@
 
 </div>
 
-<div layout:fragment="scripts">
-<script>
-const currentStockValue = parseInt(document.getElementById('currentStock').textContent);
-const updateTypeSelect = document.getElementById('updateType');
-const quantityInput = document.querySelector('input[name="quantity"]');
-const previewResult = document.getElementById('previewResult');
-const operationSpan = document.getElementById('operation');
-const newStockSpan = document.getElementById('newStock');
-
-function updatePreview() {
-    const updateType = updateTypeSelect.value;
-    const quantity = parseInt(quantityInput.value) || 0;
-
-    if (!updateType || quantity === 0) {
-        previewResult.style.display = 'none';
-        return;
-    }
-
-    previewResult.style.display = 'block';
-    let newStock = currentStockValue;
-
-    switch(updateType) {
-        case 'ADD':
-            newStock = currentStockValue + quantity;
-            operationSpan.textContent = '+' + quantity + ' →';
-            break;
-        case 'SUBTRACT':
-            newStock = Math.max(0, currentStockValue - quantity);
-            operationSpan.textContent = '-' + quantity + ' →';
-            if (currentStockValue - quantity < 0) {
-                newStockSpan.style.color = 'var(--danger)';
-            } else {
-                newStockSpan.style.color = 'inherit';
-            }
-            break;
-        case 'SET':
-            newStock = quantity;
-            operationSpan.textContent = '→';
-            break;
-    }
-
-    newStockSpan.textContent = newStock;
-
-    if (newStock < 10) {
-        newStockSpan.style.color = 'var(--warning)';
-    } else if (newStock === 0) {
-        newStockSpan.style.color = 'var(--danger)';
-    } else {
-        newStockSpan.style.color = 'var(--success)';
-    }
-}
-
-updateTypeSelect.addEventListener('change', updatePreview);
-quantityInput.addEventListener('input', updatePreview);
-</script>
-</div>
-
 </body>
 </html>
-

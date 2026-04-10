@@ -1,0 +1,129 @@
+/* ===== RMA / FORM PAGE CSS ===== */
+
+.rma-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 40px 20px;
+}
+
+.form-group {
+    margin-bottom: 24px;
+}
+
+.form-label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-select,
+.form-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+    transition: border-color 0.3s;
+    font-family: inherit;
+}
+
+.form-select:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: #000;
+}
+
+.order-brief {
+    background: #f9f9f9;
+    padding: 24px;
+    border-radius: 8px;
+    margin-bottom: 32px;
+}
+
+.order-brief h4 {
+    margin-bottom: 12px;
+    font-weight: 400;
+}
+
+.order-brief p {
+    font-size: 14px;
+    color: #666;
+}
+
+.order-brief p + p {
+    margin-top: 8px;
+}
+
+/* ===== FILE UPLOAD AREA ===== */
+
+.file-upload-area {
+    border: 2px dashed #ccc;
+    border-radius: 8px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.3s, background-color 0.3s;
+    background: #fafafa;
+}
+
+.file-upload-area:hover,
+.file-upload-area.dragover {
+    border-color: #000;
+    background: #f5f5f5;
+}
+
+.file-upload-area.has-files {
+    border-color: #4caf50;
+    background: #f0fdf4;
+}
+
+.upload-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.upload-text {
+    font-size: 14px;
+    color: #555;
+    margin: 0 0 4px;
+}
+
+.upload-hint {
+    font-size: 12px;
+    color: #999;
+    margin: 0;
+}
+
+/* ===== IMAGE PREVIEW ===== */
+
+.image-preview-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.preview-item {
+    width: 100px;
+    text-align: center;
+}
+
+.preview-item img {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #eee;
+}
+
+.preview-name {
+    display: block;
+    font-size: 11px;
+    color: #888;
+    margin-top: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

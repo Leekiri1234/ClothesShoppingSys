@@ -5,7 +5,7 @@ import com.clothshop.client.dtos.response.ProductListResponse;
 import com.clothshop.client.services.BannerClientService;
 import com.clothshop.client.services.CollectionClientService;
 import com.clothshop.client.services.ProductClientService;
-import com.clothshop.domain.entities.cms.Banner;
+import com.clothshop.domain.models.cms.Banner;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

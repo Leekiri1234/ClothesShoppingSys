@@ -7,9 +7,9 @@ import com.clothshop.admin.mappers.CollectionMapper;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
 import com.clothshop.common.utils.SlugUtils;
-import com.clothshop.domain.entities.marketing.Collection;
-import com.clothshop.domain.entities.marketing.CollectionItem;
-import com.clothshop.domain.entities.product.Product;
+import com.clothshop.domain.models.marketing.Collection;
+import com.clothshop.domain.models.marketing.CollectionItem;
+import com.clothshop.domain.models.product.Product;
 import com.clothshop.domain.repositories.marketing.CollectionItemRepository;
 import com.clothshop.domain.repositories.marketing.CollectionRepository;
 import com.clothshop.domain.repositories.product.ProductRepository;
@@ -97,7 +97,7 @@ public class FeaturedCollectionService {
     @Transactional
     public void deleteCollection(Long id, String username) {
         log.info("Soft deleting collection ID: {}", id);
-        Collection collection = collectionRepository.findById(id)
+        Collection collection = collectionRepository.findByIdIncludeDeleted(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy bộ sưu tập"));
 
         collection.setIsActive(false);
@@ -105,6 +105,21 @@ public class FeaturedCollectionService {
 
         // Tắt toàn bộ sản phẩm bên trong để tránh hiển thị rác
         collectionItemRepository.deactivateAllItemsByCollectionId(id);
+    }
+
+    /**
+     * Chuyển đổi trạng thái bộ sưu tập
+     */
+    @Transactional
+    public void toggleStatus(Long id, String username) {
+        Collection collection = collectionRepository.findByIdIncludeDeleted(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy bộ sưu tập"));
+
+        boolean newStatus = !collection.getIsActive();
+        log.info("Toggling collection ID: {} to status: {}", id, newStatus);
+
+        collection.setIsActive(newStatus);
+        collectionRepository.save(collection);
     }
 
     /**
@@ -209,6 +224,18 @@ public class FeaturedCollectionService {
     @Transactional(readOnly = true)
     public Page<CollectionResponse> searchCollectionsByName(String keyword, Pageable pageable) {
         return collectionRepository.searchByName(keyword, pageable).map(this::mapToResponse);
+    }
+
+    /**
+     * Tìm kiếm Collection bằng filter
+     */
+    @Transactional(readOnly = true)
+    public Page<CollectionResponse> getCollectionsWithFilter(com.clothshop.admin.dtos.request.marketing.CollectionFilterRequest filter, Pageable pageable) {
+        return collectionRepository.findWithFilter(
+                filter.getKeyword() != null && !filter.getKeyword().trim().isEmpty() ? filter.getKeyword().trim() : null,
+                filter.getStatus(),
+                pageable
+        ).map(this::mapToResponse);
     }
 
     /**

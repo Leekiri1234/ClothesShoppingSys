@@ -1,6 +1,6 @@
 package com.clothshop.domain.repositories.marketing;
 
-import com.clothshop.domain.entities.marketing.Voucher;
+import com.clothshop.domain.models.marketing.Voucher;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

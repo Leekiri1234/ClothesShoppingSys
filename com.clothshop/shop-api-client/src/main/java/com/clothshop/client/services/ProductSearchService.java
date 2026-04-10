@@ -3,15 +3,21 @@ package com.clothshop.client.services;
 import com.clothshop.client.dtos.request.ProductSearchRequest;
 import com.clothshop.client.dtos.response.ProductListResponse;
 import com.clothshop.client.mappers.ProductClientMapper;
-import com.clothshop.domain.entities.product.Product;
+import com.clothshop.domain.enums.AvailabilityStatus;
+import com.clothshop.domain.models.product.Product;
 import com.clothshop.domain.repositories.product.ProductRepository;
+import com.clothshop.domain.specifications.ProductSpecification;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
 
 @Service
 @RequiredArgsConstructor
@@ -22,25 +28,39 @@ public class ProductSearchService {
 
     @Transactional(readOnly = true)
     public Page<ProductListResponse> search(ProductSearchRequest request) {
-        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
-        Page<Product> productPage;
 
-        // 1. Nếu có keyword -> Tìm theo Tên SP + Danh mục + Bộ sưu tập
-        if (request.getKeyword() != null && !request.getKeyword().isBlank()) {
-            productPage = productRepository.searchFullText(request.getKeyword().trim(), pageable);
+        Sort sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        if ("price_asc".equals(request.getSort())) {
+            sort = Sort.by(Sort.Direction.ASC, "basePrice");
+        } else if ("price_desc".equals(request.getSort())) {
+            sort = Sort.by(Sort.Direction.DESC, "basePrice");
         }
-        // 2. Nếu không có keyword nhưng có CategoryId -> Lọc theo danh mục
-        else if (request.getCategoryId() != null) {
-            productPage = productRepository.findByCategory_IdAndIsActiveTrue(request.getCategoryId(), pageable);
+
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), sort);
+
+        BigDecimal minPrice = request.getMinPrice() != null ? BigDecimal.valueOf(request.getMinPrice()) : null;
+        BigDecimal maxPrice = request.getMaxPrice() != null ? BigDecimal.valueOf(request.getMaxPrice()) : null;
+
+        Specification<Product> spec = ProductSpecification.filterProducts(
+                request.getKeyword(),
+                request.getCategoryIds(),
+                minPrice,
+                maxPrice,
+                request.getSizes(),
+                request.getAvailabilityStatus() != null ? request.getAvailabilityStatus() : AvailabilityStatus.ALL
+        );
+
+        // Also add collection logic if needed, but since it's just dynamic filter we can combine:
+        if (request.getCollectionSlug() != null && !request.getCollectionSlug().isBlank()) {
+            Specification<Product> collSpec = (root, query, cb) -> {
+                jakarta.persistence.criteria.Join<Object, Object> collItems = root.join("collectionItems");
+                return cb.equal(collItems.get("collection").get("slug"), request.getCollectionSlug());
+            };
+            spec = spec.and(collSpec);
         }
-        // 3. Nếu lọc theo Collection Slug
-        else if (request.getCollectionSlug() != null) {
-            productPage = productRepository.findByCollectionSlug(request.getCollectionSlug(), pageable);
-        }
-        // 4. Mặc định lấy tất cả SP đang hoạt động
-        else {
-            productPage = productRepository.findAllByIsActiveTrue(pageable);
-        }
+
+        Page<Product> productPage = productRepository.findAll(spec, pageable);
+
         return productPage.map(productMapper::toListResponse);
     }
 }

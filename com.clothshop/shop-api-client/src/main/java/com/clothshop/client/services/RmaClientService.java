@@ -3,20 +3,25 @@ package com.clothshop.client.services;
 import com.clothshop.client.dtos.request.RmaCreateRequest;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
-import com.clothshop.domain.entities.auth.Account;
-import com.clothshop.domain.entities.auth.Customer;
-import com.clothshop.domain.entities.order.Order;
-import com.clothshop.domain.entities.order.RmaRequest;
+import com.clothshop.common.utils.FileUploadUtil;
+import com.clothshop.domain.models.auth.Account;
+import com.clothshop.domain.models.auth.Customer;
+import com.clothshop.domain.models.order.Order;
+import com.clothshop.domain.models.order.RmaRequest;
 import com.clothshop.domain.enums.OrderStatus;
 import com.clothshop.domain.enums.RmaStatus;
+import com.clothshop.domain.enums.RmaType;
 import com.clothshop.domain.repositories.auth.AccountRepository;
 import com.clothshop.domain.repositories.order.OrderRepository;
 import com.clothshop.domain.repositories.order.RmaRequestRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -25,11 +30,21 @@ public class RmaClientService {
     private final RmaRequestRepository rmaRequestRepository;
     private final OrderRepository orderRepository;
     private final AccountRepository accountRepository;
+    private final FileUploadUtil fileUploadUtil;
 
     private Customer getCustomer(String username) {
         Account account = accountRepository.findByUsernameWithCustomer(username)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_EXISTED));
         return account.getCustomer();
+    }
+
+    @Transactional
+    public boolean hasRmaRequest(String orderInvoice, String username) {
+        Order order = orderRepository.findByOrderInvoice(orderInvoice)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy đơn hàng"));
+
+        Customer customer = getCustomer(username);
+        return rmaRequestRepository.existsByOrderIdAndCustomerId(order.getId(), customer.getId());
     }
 
     @Transactional
@@ -44,27 +59,46 @@ public class RmaClientService {
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "Bạn không có quyền thực hiện yêu cầu này");
         }
 
-        // 2. Validate order status = COMPLETED
-        if (!OrderStatus.COMPLETED.equals(order.getStatus())) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Chỉ có thể đổi trả cho đơn hàng đã hoàn thành");
+        // 2. Validate order status (Thường là DELIVERED hoặc COMPLETED tùy logic shop bạn)
+        if (!OrderStatus.DELIVERED.equals(order.getStatus()) && !OrderStatus.COMPLETED.equals(order.getStatus())) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Chỉ có thể đổi trả cho đơn hàng đã giao thành công");
         }
 
         // 3. Validate createdAt within 7 days
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
         if (order.getCreatedAt().isBefore(sevenDaysAgo)) {
-            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "RMA period expired");
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Đã quá thời hạn 7 ngày để thực hiện đổi trả");
         }
 
         // 4. Create RmaRequest
-        RmaRequest rmaRequest = RmaRequest.builder()
-                .order(order)
-                .customer(customer)
-                .rmaType(request.getType())
-                .reason(request.getReason())
-                .rmaStatus(RmaStatus.PENDING)
-                .build();
+        try {
+            RmaRequest rmaRequest = RmaRequest.builder()
+                    .order(order)
+                    .customer(customer)
+                    .rmaType(RmaType.valueOf(request.getType().toUpperCase()))
+                    .reason(request.getReason())
+                    .status(RmaStatus.PENDING)
+                    .build();
 
-        // 5. Save
-        rmaRequestRepository.save(rmaRequest);
+            // 5. Upload evidence images (if any)
+            if (request.getEvidenceImages() != null && !request.getEvidenceImages().isEmpty()) {
+                List<String> paths = new ArrayList<>();
+                for (MultipartFile file : request.getEvidenceImages()) {
+                    if (!file.isEmpty()) {
+                        // ✅ FileUploadUtil now returns complete path like /uploads/rma/filename.webp
+                        String savedPath = fileUploadUtil.upload(file, "rma");
+                        paths.add(savedPath);  // No need to add /uploads/ anymore
+                    }
+                }
+                if (!paths.isEmpty()) {
+                    rmaRequest.setEvidenceImages(String.join(",", paths));
+                }
+            }
+
+            // 6. Save
+            rmaRequestRepository.save(rmaRequest);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Loại yêu cầu không hợp lệ");
+        }
     }
 }

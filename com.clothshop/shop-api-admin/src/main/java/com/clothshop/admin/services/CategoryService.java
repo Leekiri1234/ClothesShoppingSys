@@ -6,7 +6,7 @@ import com.clothshop.admin.mappers.CategoryAdminMapper;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
 import com.clothshop.common.utils.SlugUtils;
-import com.clothshop.domain.entities.product.Category;
+import com.clothshop.domain.models.product.Category;
 import com.clothshop.domain.enums.CategoryStatus;
 import com.clothshop.domain.repositories.product.CategoryRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,12 +14,33 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryAdminMapper categoryMapper;
+
+    @Transactional(readOnly = true)
+    public List<CategoryAdminResponse> getCategoryTree() {
+        List<CategoryAdminResponse> allCategories = getAllCategories();
+
+        // Group by parentId
+        Map<Long, List<CategoryAdminResponse>> childrenMap = allCategories.stream()
+                .filter(c -> c.getParentId() != null)
+                .collect(Collectors.groupingBy(CategoryAdminResponse::getParentId));
+
+        // Assign children to parents and return only roots
+        return allCategories.stream()
+                .peek(c -> {
+                    List<CategoryAdminResponse> children = childrenMap.getOrDefault(c.getId(), new ArrayList<>());
+                    c.setChildren(children);
+                })
+                .filter(c -> c.getParentId() == null)
+                .collect(Collectors.toList());
+    }
 
     @Transactional(readOnly = true)
     public List<CategoryAdminResponse> getAllCategories() {

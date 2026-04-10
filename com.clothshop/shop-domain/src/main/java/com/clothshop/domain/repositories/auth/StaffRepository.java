@@ -1,15 +1,13 @@
 package com.clothshop.domain.repositories.auth;
 
-import com.clothshop.domain.entities.auth.Staff;
+import com.clothshop.domain.models.auth.Staff;
 import com.clothshop.domain.enums.AccountStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,5 +47,17 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
                                   @Param("roleId") Long roleId,
                                   @Param("status") AccountStatus status,
                                   Pageable pageable);
+
+    /**
+     * Count staff by account status (for dashboard stats)
+     */
+    @Query("SELECT COUNT(s) FROM Staff s JOIN s.account a WHERE a.accountStatus = :status")
+    long countByAccountStatus(@Param("status") AccountStatus status);
+
+    /**
+     * Count staff by role name (for Super Admin count stat)
+     */
+    @Query("SELECT COUNT(s) FROM Staff s JOIN s.role r WHERE r.staffRole = com.clothshop.domain.enums.StaffRole.SUPER_ADMIN")
+    long countSuperAdmins();
 
 }

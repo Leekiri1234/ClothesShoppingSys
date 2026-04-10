@@ -4,7 +4,7 @@ import com.clothshop.admin.dtos.request.products.CategoryCreateRequest;
 import com.clothshop.admin.dtos.request.products.CategoryUpdateRequest;
 import com.clothshop.admin.dtos.response.products.CategoryAdminResponse;
 import com.clothshop.admin.services.CategoryService;
-import jakarta.validation.Valid;
+import com.clothshop.domain.enums.CategoryStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
@@ -12,6 +12,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -27,8 +28,8 @@ public class CategoryAdminController {
     public String listCategories(Model model) {
         List<CategoryAdminResponse> categories = categoryService.getAllCategoriesIncludingInactive();
 
-        long countActive   = categories.stream().filter(c -> Boolean.TRUE.equals(c.getIsActive()) && "ACTIVE".equals(c.getCatStatus())).count();
-        long countInactive = categories.stream().filter(c -> Boolean.TRUE.equals(c.getIsActive()) && "INACTIVE".equals(c.getCatStatus())).count();
+        long countActive   = categories.stream().filter(c -> Boolean.TRUE.equals(c.getIsActive()) && CategoryStatus.ACTIVE.equals(c.getStatus())).count();
+        long countInactive = categories.stream().filter(c -> Boolean.TRUE.equals(c.getIsActive()) && CategoryStatus.INACTIVE.equals(c.getStatus())).count();
         long countDeleted  = categories.stream().filter(c -> !Boolean.TRUE.equals(c.getIsActive())).count();
         long countRoot     = categories.stream().filter(c -> c.getParentId() == null).count();
         long countChild    = categories.stream().filter(c -> c.getParentId() != null).count();

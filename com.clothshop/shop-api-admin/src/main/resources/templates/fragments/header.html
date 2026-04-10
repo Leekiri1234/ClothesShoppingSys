@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+
+<!-- ============================================================
+     HEADER FRAGMENT
+     Usage: th:replace="~{fragments/header :: header}"
+     ============================================================ -->
+<header th:fragment="header" class="admin-header">
+    <button class="hamburger-btn" onclick="AdminUI.toggleSidebar()">
+        <svg style="width: 20px; height: 20px;" viewBox="0 0 24 24">
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+    </button>
+
+    <h1 layout:fragment="page-title" class="page-title">
+        Dashboard
+    </h1>
+
+    <div class="header-right">
+        <div class="admin-user">
+            <div class="admin-avatar" th:text="${#authentication.name.substring(0,1).toUpperCase()}">A</div>
+            <span class="admin-name" sec:authentication="name">Admin</span>
+        </div>
+
+        <div layout:fragment="page-actions">
+        </div>
+    </div>
+</header>
+
+</html>

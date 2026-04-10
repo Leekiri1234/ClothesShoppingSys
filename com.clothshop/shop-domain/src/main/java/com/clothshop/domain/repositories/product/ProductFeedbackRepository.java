@@ -1,8 +1,8 @@
 package com.clothshop.domain.repositories.product;
 
-import com.clothshop.domain.entities.auth.Customer;
-import com.clothshop.domain.entities.product.ProductFeedback;
-import com.clothshop.domain.entities.product.Product;
+import com.clothshop.domain.models.auth.Customer;
+import com.clothshop.domain.models.product.ProductFeedback;
+import com.clothshop.domain.models.product.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

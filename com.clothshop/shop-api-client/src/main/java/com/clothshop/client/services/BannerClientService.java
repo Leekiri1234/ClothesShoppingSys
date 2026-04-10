@@ -1,6 +1,6 @@
 package com.clothshop.client.services;
 
-import com.clothshop.domain.entities.cms.Banner;
+import com.clothshop.domain.models.cms.Banner;
 import com.clothshop.domain.repositories.cms.BannerRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

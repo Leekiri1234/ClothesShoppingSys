@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/layout}">
+
+<head>
+    <title>Danh sách yêu thích</title>
+    <th:block layout:fragment="styles">
+        <link rel="stylesheet" th:href="@{/css/home/home.css}">
+        <link rel="stylesheet" th:href="@{/css/wishlist/wishlist.css}">
+    </th:block>
+</head>
+
+<body>
+    <section layout:fragment="content">
+        <div class="container" style="padding: 40px 0;">
+            <div class="section-header">
+                <p class="eyebrow">Sưu tập của bạn</p>
+                <h2>Danh sách yêu thích (<span th:text="${wishlist.totalItems}">0</span> sản phẩm)</h2>
+            </div>
+
+            <!-- Empty Wishlist State -->
+            <div th:if="${wishlist.totalItems == 0}" style="text-align: center; padding: 80px 0;">
+                <div style="font-size: 48px; margin-bottom: 16px;">♡</div>
+                <h4 style="font-size: 20px; margin-bottom: 8px;">Danh sách yêu thích trống</h4>
+                <p style="color: #666; margin-bottom: 24px;">Thêm các sản phẩm yêu thích của bạn để tìm chúng dễ dàng hơn</p>
+                <a class="btn btn--primary" th:href="@{/products}">Khám phá sản phẩm</a>
+            </div>
+
+            <!-- Wishlist Grid -->
+            <div class="product-grid" th:if="${wishlist.totalItems > 0}">
+                <article class="product-card wishlist-card" th:each="item : ${wishlist.items}" 
+                    th:data-product-id="${item.productId}" th:data-item-id="${item.itemId}">
+                    <a th:href="@{/products/{slug}(slug=${item.productSlug})}">
+                        <div class="product-card-image">
+                            <div class="product-card-actions">
+                                <!-- Wishlist Remove Button -->
+                                <button class="product-card-action-btn wishlist-btn active" 
+                                    th:data-product-id="${item.productId}" 
+                                    onclick="event.stopPropagation(); wishlistToggle(this, event); removeWishlistCard(this);" 
+                                    title="Bỏ yêu thích">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                                    </svg>
+                                </button>
+                                <!-- Quick View Button -->
+                                <button class="product-card-action-btn quick-view-btn" 
+                                    th:data-product-slug="${item.productSlug}" 
+                                    onclick="event.stopPropagation(); openQuickViewModal(this, event)" 
+                                    title="Xem nhanh">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </button>
+                                <!-- Quick Cart Button -->
+                                <button class="product-card-action-btn cart-btn" 
+                                    th:data-product-id="${item.productId}" 
+                                    onclick="event.stopPropagation(); quickAddToCart(this, event)" 
+                                    title="Thêm vào giỏ">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/>
+                                    </svg>
+                                </button>
+                            </div>
+                            <img th:if="${item.thumbnail != null}" 
+                                th:src="${item.thumbnail}" 
+                                th:alt="${item.productName}" 
+                                loading="lazy"
+                                style="width: 100%; height: 100%; object-fit: cover;">
+                            <div class="img-placeholder" th:if="${item.thumbnail == null}">NO IMAGE</div>
+                        </div>
+                        <div class="product-card-info">
+                            <div class="product-card-brand" th:text="${item.categoryName != null ? item.categoryName : 'MINIMAL'}">MINIMAL</div>
+                            <div class="product-card-name" th:text="${item.productName}">Tên sản phẩm</div>
+                            <div class="product-card-price">
+                                <span class="product-price-current" 
+                                    th:text="${#numbers.formatDecimal(item.price, 0, 'POINT', 0, 'COMMA')} + '₫'">0₫</span>
+                            </div>
+                        </div>
+                    </a>
+                </article>
+            </div>
+        </div>
+
+        <!-- Quick View Modal -->
+        <div id="quick-view-modal" class="quick-view-modal" style="display: none;">
+            <div class="modal-overlay" onclick="closeQuickViewModal()"></div>
+            <div class="modal-content">
+                <button class="modal-close" onclick="closeQuickViewModal()">✕</button>
+                
+                <div class="modal-inner">
+                    <!-- Product Image -->
+                    <div class="modal-image-section" id="modal-image-section">
+                        <div id="modal-image" class="modal-image img-placeholder">Loading...</div>
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="modal-info-section">
+                        <h2 id="modal-name">Product Name</h2>
+                        <div id="modal-price" style="font-size: 20px; font-weight: 600; margin-bottom: 16px; color: #1C1C1A;">0₫</div>
+                        
+                        <!-- Variants Section -->
+                        <div class="variants-section" style="margin-bottom: 20px;">
+                            <div style="margin-bottom: 12px;">
+                                <label style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #999;">Màu sắc</label>
+                                <div id="modal-colors" style="display: flex; gap: 8px; margin-top: 8px;"></div>
+                            </div>
+                            
+                            <div style="margin-bottom: 12px;">
+                                <label style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #999;">Kích cỡ</label>
+                                <div id="modal-sizes" style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;"></div>
+                            </div>
+
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <label style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #999; flex: 0 0 50px;">Số lượng</label>
+                                <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #e8e8e8; border-radius: 4px; padding: 0 8px;">
+                                    <button onclick="decreaseModalQty()" style="background: none; border: none; cursor: pointer; padding: 6px;">−</button>
+                                    <input id="modal-qty" type="number" value="1" min="1" max="10" style="width: 40px; text-align: center; border: none; outline: none;">
+                                    <button onclick="increaseModalQty()" style="background: none; border: none; cursor: pointer; padding: 6px;">+</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="modal-action-buttons">
+                            <button class="btn btn--primary" onclick="addModalToCart()">Thêm vào giỏ</button>
+                            <button class="btn btn--outline" onclick="closeQuickViewModal()">Xem chi tiết</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <th:block layout:fragment="scripts">
+            <script th:src="@{/js/wishlist/wishlist.js}"></script>
+        </th:block>
+    </section>
+</body>
+
+</html>

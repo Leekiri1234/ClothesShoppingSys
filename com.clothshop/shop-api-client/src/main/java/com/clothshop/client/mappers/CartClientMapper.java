@@ -1,7 +1,7 @@
 package com.clothshop.client.mappers;
 
 import com.clothshop.client.dtos.response.CartItemResponse;
-import com.clothshop.domain.entities.customer.CartItem;
+import com.clothshop.domain.models.customer.CartItem;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;

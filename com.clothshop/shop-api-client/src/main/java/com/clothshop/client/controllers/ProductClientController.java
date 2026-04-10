@@ -12,12 +12,14 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Collections;
 
 @Controller
 @RequestMapping("/products")
@@ -32,39 +34,45 @@ public class ProductClientController {
 
     @ModelAttribute("allCategories")
     public List<CategoryResponse> populateCategories() {
-        return categoryClientService.getAllActiveCategories();
+        return categoryClientService.getCategoryTree();
     }
 
     @GetMapping
     public String listProducts(
-            @RequestParam(required = false) String q,
-            @RequestParam(required = false) Long categoryId,
-            @RequestParam(required = false) String collection,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "12") int size,
+            @ModelAttribute ProductSearchRequest searchRequest,
+            @RequestParam(required = false, name = "categoryId") Long categoryId,
             Model model) {
 
-        ProductSearchRequest searchRequest = ProductSearchRequest.builder()
-                .keyword(q != null && !q.isBlank() ? q.trim() : null)
-                .categoryId(categoryId)
-                .collectionSlug(collection)
-                .page(page)
-                .size(size)
-                .build();
+        // Backward compatibility for single categoryId
+        if (categoryId != null && (searchRequest.getCategoryIds() == null || searchRequest.getCategoryIds().isEmpty())) {
+            searchRequest.setCategoryIds(Collections.singletonList(categoryId));
+        }
 
         Page<ProductListResponse> productPage = productSearchService.search(searchRequest);
 
         model.addAttribute("products", productPage);
-        model.addAttribute("keyword", q);
-        model.addAttribute("currentCategoryId", categoryId);
-        model.addAttribute("pageTitle", resolvePageTitle(q, categoryId));
+        model.addAttribute("keyword", searchRequest.getKeyword());
+        model.addAttribute("currentCategoryIds", searchRequest.getCategoryIds());
+        model.addAttribute("searchRequest", searchRequest);
+        model.addAttribute("pageTitle", resolvePageTitle(searchRequest.getKeyword(), categoryId));
 
         return "client/products/list";
     }
 
+    @GetMapping("/filter-ajax")
+    public String listProductsAjax(
+            @ModelAttribute ProductSearchRequest searchRequest,
+            Model model) {
+
+        Page<ProductListResponse> productPage = productSearchService.search(searchRequest);
+
+        model.addAttribute("products", productPage);
+        return "client/products/list :: product-grid-fragment";
+    }
+
     @GetMapping("/category/{id}")
     public String productsByCategoryId(@PathVariable Long id) {
-        return "redirect:/products?categoryId=" + id;
+        return "redirect:/products?categoryIds=" + id;
     }
 
     // Trang chi tiết sản phẩm (Giữ nguyên vì đã chuẩn)
@@ -87,8 +95,16 @@ public class ProductClientController {
         return "client/products/detail";
     }
 
-    private String resolvePageTitle(String q, Long categoryId) {
-        if (q != null && !q.isBlank()) return "Kết quả tìm kiếm: " + q;
+    // Quick View Modal Endpoint (AJAX) - Returns JSON for modal popup
+    @GetMapping("/{slug}/quick-view")
+    @ResponseBody
+    public ResponseEntity<?> quickView(@PathVariable String slug) {
+        ProductDetailResponse product = productClientService.getProductBySlug(slug);
+        return ResponseEntity.ok(product);
+    }
+
+    private String resolvePageTitle(String keyword, Long categoryId) {
+        if (keyword != null && !keyword.isBlank()) return "Kết quả tìm kiếm: " + keyword;
         if (categoryId != null) return "Danh mục sản phẩm";
         return "Tất cả sản phẩm";
     }

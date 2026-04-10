@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Thanh toán — MINIMAL</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <link rel="stylesheet" th:href="@{/css/checkout/checkout.css}">
+</head>
+<body>
+<header th:replace="~{fragments/header :: header}"></header>
+
+<main class="container">
+    <form th:action="@{/checkout/confirm}" th:object="${orderRequest}" method="post" class="checkout-grid">
+
+        <div>
+            <h2 class="checkout-title">Thông tin đơn hàng</h2>
+
+            <div th:if="${error}" class="error" th:text="${error}"></div>
+
+            <div class="form-group">
+                <div>
+                    <label class="label">Địa chỉ giao hàng</label>
+                    <input type="text" th:field="*{shippingAddress}" class="form-input" required placeholder="Số nhà, tên đường, quận/huyện...">
+                    <p th:if="${#fields.hasErrors('shippingAddress')}" th:errors="*{shippingAddress}" class="error-text"></p>
+                </div>
+                <div>
+                    <label class="label">Số điện thoại</label>
+                    <input type="tel" th:field="*{phoneNumber}" class="form-input" required placeholder="0xxx xxx xxx">
+                </div>
+                <div>
+                    <label class="label">Ghi chú (nếu có)</label>
+                    <textarea th:field="*{note}" class="form-input" rows="3" placeholder="Lời nhắn cho cửa hàng..."></textarea>
+                </div>
+            </div>
+
+            <h3 class="section-title">Phương thức thanh toán</h3>
+            <div class="payment-list">
+                <label th:each="method : ${paymentMethods}" class="payment-card">
+                    <input type="radio" th:field="*{paymentMethod}" th:value="${method}" required>
+                    <span th:text="${method}">COD</span>
+                </label>
+            </div>
+        </div>
+
+        <aside>
+            <div class="checkout-summary">
+                <h4 class="summary-title">Giỏ hàng của bạn</h4>
+
+                <div th:each="item : ${cart.items}" class="cart-item">
+                    <div class="img-placeholder">
+                        <img th:src="${item.thumbnail}">
+                    </div>
+                    <div class="item-info">
+                        <p th:text="${item.productName}"></p>
+                        <p th:text="'x' + ${item.quantity}"></p>
+                    </div>
+                    <span class="item-price"
+                          th:text="${#numbers.formatDecimal(item.totalPrice, 0, 'COMMA', 0, 'POINT') + '₫'}"></span>
+                </div>
+
+                <div class="price-section">
+                    <div class="flex-between">
+                        <span>Tạm tính</span>
+                        <span th:text="${#numbers.formatDecimal(cart.subTotal, 0, 'COMMA', 0, 'POINT') + '₫'}"></span>
+                    </div>
+
+                    <div class="voucher-box">
+                        <input type="text" th:field="*{voucherCode}" id="voucherInput" class="form-input" placeholder="Mã giảm giá">
+                        <button type="button" onclick="applyVoucher()" class="btn btn--outline btn--sm">Áp dụng</button>
+                    </div>
+
+                    <div class="flex-between total">
+                        <span>Tổng cộng</span>
+                        <span id="finalTotal"
+                              th:text="${#numbers.formatDecimal(cart.totalAmount, 0, 'COMMA', 0, 'POINT') + '₫'}"></span>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn--primary btn--full">XÁC NHẬN ĐẶT HÀNG</button>
+            </div>
+        </aside>
+    </form>
+</main>
+
+<script th:src="@{/js/checkout/checkout.js}"></script>
+
+<footer th:replace="~{fragments/footer :: footer}"></footer>
+</body>
+</html>

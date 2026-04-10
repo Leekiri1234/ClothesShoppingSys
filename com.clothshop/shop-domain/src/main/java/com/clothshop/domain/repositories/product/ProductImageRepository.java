@@ -1,6 +1,6 @@
 package com.clothshop.domain.repositories.product;
 
-import com.clothshop.domain.entities.product.ProductImage;
+import com.clothshop.domain.models.product.ProductImage;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

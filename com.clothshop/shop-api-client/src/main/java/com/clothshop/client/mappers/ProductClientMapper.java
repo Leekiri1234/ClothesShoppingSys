@@ -3,10 +3,10 @@ package com.clothshop.client.mappers;
 import com.clothshop.client.dtos.response.ProductDetailResponse;
 import com.clothshop.client.dtos.response.ProductListResponse;
 import com.clothshop.client.dtos.response.VariantDetailResponse;
-import com.clothshop.domain.entities.product.Category;
-import com.clothshop.domain.entities.product.Product;
-import com.clothshop.domain.entities.product.ProductImage;
-import com.clothshop.domain.entities.product.ProductVariant;
+import com.clothshop.domain.models.product.Category;
+import com.clothshop.domain.models.product.Product;
+import com.clothshop.domain.models.product.ProductImage;
+import com.clothshop.domain.models.product.ProductVariant;
 import jakarta.persistence.EntityNotFoundException;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -44,6 +44,7 @@ public interface ProductClientMapper {
     @Mapping(source = ".", target = "price", qualifiedByName = "mapPrice")
     @Mapping(source = ".", target = "imageUrl", qualifiedByName = "getFirstImage")
     @Mapping(target = "available", source = ".", qualifiedByName = "calculateAvailability")
+    @Mapping(target = "defaultVariantId", source = ".", qualifiedByName = "getDefaultVariantId")
     ProductListResponse toListResponse(Product product);
 
     @Named("mapSafeCategoryName")
@@ -59,7 +60,6 @@ public interface ProductClientMapper {
     @Named("mapPrice")
     default Double mapPrice(Product product) {
         if (product == null) return 0.0;
-        // variants giờ là Set nên dùng .isEmpty() vẫn OK
         if (product.getVariants() != null && !product.getVariants().isEmpty()) {
             return product.getVariants().stream()
                     .map(v -> v.getRetailPrice() != null ? v.getRetailPrice().doubleValue() : Double.MAX_VALUE)
@@ -71,7 +71,6 @@ public interface ProductClientMapper {
 
     @Named("getFirstImage")
     default String getFirstImage(Product product) {
-        // FIX: Set không có .get(0), dùng stream().findFirst() để lấy ảnh đầu tiên
         if (product == null || product.getImages() == null || product.getImages().isEmpty()) {
             return "https://via.placeholder.com/300x300?text=No+Image";
         }
@@ -91,11 +90,27 @@ public interface ProductClientMapper {
     }
 
     @Named("mapImages")
-    // FIX: Đổi List thành Set ở đây
     default List<String> mapImages(Set<ProductImage> images) {
         if (images == null) return null;
         return images.stream()
                 .map(ProductImage::getImageUrl)
                 .collect(Collectors.toList());
+    }
+    @Named("getDefaultVariantId")
+    default Long getDefaultVariantId(Product product) {
+        if (product == null || product.getVariants() == null || product.getVariants().isEmpty()) {
+            return null;
+        }
+
+        return product.getVariants().stream()
+                .filter(v -> v.getStockQuantity() != null && v.getStockQuantity() > 0)
+                .findFirst()
+                .map(ProductVariant::getId)
+                .orElse(
+                        product.getVariants().stream()
+                                .findFirst()
+                                .map(ProductVariant::getId)
+                                .orElse(null)
+                );
     }
 }

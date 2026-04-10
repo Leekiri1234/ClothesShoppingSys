@@ -5,10 +5,10 @@ import com.clothshop.client.dtos.response.ReviewResponse;
 import com.clothshop.common.dtos.response.PageResponse;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
-import com.clothshop.domain.entities.auth.Account;
-import com.clothshop.domain.entities.auth.Customer;
-import com.clothshop.domain.entities.product.Product;
-import com.clothshop.domain.entities.product.ProductFeedback;
+import com.clothshop.domain.models.auth.Account;
+import com.clothshop.domain.models.auth.Customer;
+import com.clothshop.domain.models.product.Product;
+import com.clothshop.domain.models.product.ProductFeedback;
 import com.clothshop.domain.repositories.auth.AccountRepository;
 import com.clothshop.domain.repositories.order.OrderItemRepository;
 import com.clothshop.domain.repositories.product.ProductFeedbackRepository;
@@ -61,7 +61,7 @@ public class ReviewClientService {
                 .customer(customer)
                 .rating(request.getRating())
                 .comment(request.getComment())
-                .feedbackStatus("APPROVED") // Tự động duyệt hoặc để PENDING tùy logic
+                .feedbackStatus("PENDING") // Tự động duyệt hoặc để PENDING tùy logic
                 .build();
 
         // 4. Save

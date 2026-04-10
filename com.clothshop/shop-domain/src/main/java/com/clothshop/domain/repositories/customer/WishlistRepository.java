@@ -1,7 +1,6 @@
 package com.clothshop.domain.repositories.customer;
 
-import com.clothshop.domain.entities.customer.Wishlist;
-import com.clothshop.domain.entities.auth.Customer;
+import com.clothshop.domain.models.customer.Wishlist;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

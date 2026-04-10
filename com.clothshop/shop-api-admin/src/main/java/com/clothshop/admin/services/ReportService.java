@@ -4,9 +4,8 @@ import com.clothshop.admin.dtos.response.dashboard.RecentOrderDTO;
 import com.clothshop.admin.dtos.response.dashboard.RevenueDTO;
 import com.clothshop.admin.dtos.response.dashboard.TopProductDTO;
 import com.clothshop.admin.dtos.response.SalesReportResponse;
-import com.clothshop.admin.services.FeaturedProductService;
-import com.clothshop.domain.entities.order.Order;
-import com.clothshop.domain.entities.product.Product;
+import com.clothshop.domain.models.order.Order;
+import com.clothshop.domain.models.product.Product;
 import com.clothshop.domain.enums.OrderStatus;
 import com.clothshop.domain.repositories.order.OrderRepository;
 import com.clothshop.domain.projections.DailyRevenueSummary;
@@ -357,6 +356,7 @@ public class ReportService {
 
         return recent.stream()
                 .map(order -> RecentOrderDTO.builder()
+                        .orderId(order.getId())
                         .orderInvoice(order.getOrderInvoice())
                         .customerName(order.getCustomer() != null ? order.getCustomer().getFullName() : "Khách ẩn danh")
                         .totalPrice(order.getTotalPrice())

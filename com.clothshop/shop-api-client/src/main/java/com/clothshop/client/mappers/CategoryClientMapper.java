@@ -1,7 +1,7 @@
 package com.clothshop.client.mappers;
 
 import com.clothshop.client.dtos.response.CategoryResponse;
-import com.clothshop.domain.entities.product.Category;
+import com.clothshop.domain.models.product.Category;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
@@ -22,6 +22,8 @@ public interface CategoryClientMapper {
      */
     @Mapping(source = "categoryName", target = "name")
     @Mapping(source = "categorySlug", target = "slug")
+    @Mapping(source = "parent.id", target = "parentId")
+    @Mapping(target = "children", ignore = true)
     CategoryResponse toCategoryResponse(Category category);
 
     /**
@@ -32,4 +34,3 @@ public interface CategoryClientMapper {
      */
     List<CategoryResponse> toCategoryResponseList(List<Category> categories);
 }
-

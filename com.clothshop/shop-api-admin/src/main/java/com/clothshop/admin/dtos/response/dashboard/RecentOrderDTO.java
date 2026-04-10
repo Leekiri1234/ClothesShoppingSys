@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RecentOrderDTO implements Serializable {
+    private Long orderId;
     private String orderInvoice;
     private String customerName;
     private BigDecimal totalPrice;

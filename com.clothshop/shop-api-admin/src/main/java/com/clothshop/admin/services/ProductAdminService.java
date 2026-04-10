@@ -9,8 +9,8 @@ import com.clothshop.common.dtos.response.PageResponse;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
 import com.clothshop.common.utils.SlugUtils;
-import com.clothshop.domain.entities.product.Category;
-import com.clothshop.domain.entities.product.Product;
+import com.clothshop.domain.models.product.Category;
+import com.clothshop.domain.models.product.Product;
 import com.clothshop.domain.enums.ProductStatus;
 import com.clothshop.domain.repositories.product.CategoryRepository;
 import com.clothshop.domain.repositories.product.ProductRepository;
@@ -134,7 +134,12 @@ public class ProductAdminService {
      * Memory-optimized with paging to avoid loading all records.
      */
     @Transactional(readOnly = true)
-    public PageResponse<ProductAdminResponse> getAllProducts(PagingRequest pagingRequest) {
+    public PageResponse<ProductAdminResponse> getAllProducts(
+            String keyword,
+            Long categoryId,
+            ProductStatus prodStatus,
+            PagingRequest pagingRequest) {
+
         pagingRequest.validate();
 
         // Create pageable with sorting
@@ -142,8 +147,8 @@ public class ProductAdminService {
                 pagingRequest.getSortBy() != null ? pagingRequest.getSortBy() : "createdAt");
         Pageable pageable = PageRequest.of(pagingRequest.getPageNumber(), pagingRequest.getPageSize(), sort);
 
-        // Fetch from database with pagination
-        Page<Product> productPage = productRepository.findAll(pageable);
+        // Fetch from database with pagination and filter
+        Page<Product> productPage = productRepository.filterProductsForAdmin(keyword, categoryId, prodStatus, pageable);
 
         // Lấy tổng tồn kho cho tất cả sản phẩm trong trang bằng một truy vấn duy nhất (tránh N+1)
         List<Long> productIds = productPage.getContent().stream()
