@@ -349,48 +349,91 @@
             return new Intl.NumberFormat('vi-VN').format(Math.round(safeValue)) + '₫';
         }
 
-        function renderCartSidebar(summary) {
-            const body = document.getElementById('cart-sidebar-body');
-            const badge = document.getElementById('cart-count');
-            const sidebarCount = document.getElementById('cart-sidebar-count');
-            const totalEl = document.getElementById('cart-sidebar-total');
+       function renderCartSidebar(summary) {
+    const body = document.getElementById('cart-sidebar-body');
+    const badge = document.getElementById('cart-count');
+    const sidebarCount = document.getElementById('cart-sidebar-count');
+    const totalEl = document.getElementById('cart-sidebar-total');
 
-            if (!body) return;
+    if (!body) return;
 
-            const items = summary?.items || [];
-            const totalItems = summary?.totalItems || 0;
-            const totalAmount = summary?.totalAmount || 0;
+    const items = summary?.items || [];
+    const totalItems = summary?.totalItems || 0;
+    const totalAmount = summary?.totalAmount || 0;
 
-            if (badge) badge.textContent = totalItems;
-            if (sidebarCount) sidebarCount.textContent = totalItems;
-            if (totalEl) totalEl.textContent = formatSidebarCurrency(totalAmount);
+    if (badge) badge.textContent = totalItems;
+    if (sidebarCount) sidebarCount.textContent = totalItems;
+    if (totalEl) totalEl.textContent = formatSidebarCurrency(totalAmount);
 
-            if (!items.length) {
-                body.innerHTML = '<div style="text-align:center;padding:60px 0;color:#999;font-size:14px">Giỏ hàng trống</div>';
-                return;
-            }
+    if (!items.length) {
+        body.innerHTML = '<div style="text-align:center;padding:60px 0;color:#999;font-size:14px">Giỏ hàng trống</div>';
+        return;
+    }
 
-            body.innerHTML = items.map(item => `
-                <div class="cart-sidebar-item" style="display:flex;gap:12px;padding:16px 0;border-bottom:1px solid #f0f0f0;align-items:flex-start;">
-                    <a href="/products/${item.productSlug || ''}" style="flex-shrink:0;">
-                        <img src="${item.imageUrl || '/images/no-image.png'}" alt="${item.productName || ''}" style="width:72px;height:90px;object-fit:cover;background:#f5f5f5;">
-                    </a>
-                    <div style="flex:1;min-width:0;">
-                        <a href="/products/${item.productSlug || ''}" style="font-size:13px;font-weight:400;color:#1C1C1A;text-decoration:none;display:block;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                            ${item.productName || ''}
-                        </a>
-                        <div style="font-size:12px;color:#888;margin-bottom:8px;">
-                            ${(item.colorName || '') + ((item.colorName && item.sizeName) ? ' / ' : '') + (item.sizeName || '')}
-                        </div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                            <span style="font-size:12px;color:#666;">SL: ${item.quantity || 0}</span>
-                            <span style="font-size:13px;font-weight:500;color:#1C1C1A;">${formatSidebarCurrency(item.subtotal || 0)}</span>
-                        </div>
-                    </div>
+    body.innerHTML = items.map(item => `
+        <div class="cart-sidebar-item"
+             style="display:flex;gap:12px;padding:16px 0;border-bottom:1px solid #f0f0f0;align-items:flex-start;position:relative;">
+
+            <a href="/products/${item.productSlug || ''}" style="flex-shrink:0;">
+                <img src="${item.imageUrl || '/images/no-image.png'}"
+                     alt="${item.productName || ''}"
+                     style="width:72px;height:90px;object-fit:cover;background:#f5f5f5;">
+            </a>
+
+            <div style="flex:1;min-width:0;padding-right:20px;">
+                <a href="/products/${item.productSlug || ''}"
+                   style="font-size:13px;font-weight:400;color:#1C1C1A;text-decoration:none;display:block;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    ${item.productName || ''}
+                </a>
+
+                <div style="font-size:12px;color:#888;margin-bottom:8px;">
+                    ${(item.colorName || '') + ((item.colorName && item.sizeName) ? ' / ' : '') + (item.sizeName || '')}
                 </div>
-            `).join('');
-        }
 
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                    <span style="font-size:12px;color:#666;">SL: ${item.quantity || 0}</span>
+                    <span style="font-size:13px;font-weight:500;color:#1C1C1A;">
+                        ${formatSidebarCurrency(item.subtotal || 0)}
+                    </span>
+                </div>
+            </div>
+
+            <button type="button"
+                    onclick="removeCartSidebarItem(${item.cartItemId})"
+                    title="Xóa sản phẩm"
+                    style="position:absolute;top:14px;right:0;border:none;background:none;color:#999;font-size:18px;line-height:1;cursor:pointer;padding:4px 6px;">
+                ×
+            </button>
+        </div>
+    `).join('');
+}
+function getLayoutCsrfHeaders() {
+    const token = document.querySelector('meta[name="_csrf"]')?.content;
+    const headerName = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-XSRF-TOKEN';
+
+    if (!token) return {};
+    return { [headerName]: token };
+}
+
+async function removeCartSidebarItem(itemId) {
+    try {
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '';
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+
+        await fetch(`/cart/remove/${itemId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                [csrfHeader]: csrfToken
+            }
+        });
+
+        await loadCartSidebar();
+        loadCartCount();
+    } catch (err) {
+        console.error('Remove item error:', err);
+    }
+}
         async function loadCartSidebar() {
             try {
                 const response = await fetch('/cart/summary');
