@@ -1559,7 +1559,7 @@ tr.stock-out td { background: #fdecea !important; }
   display: flex;
 }
 
-.modal {
+.modal-overlay .modal {
   background: var(--white);
   border-radius: var(--radius);
   width: 100%;
@@ -1569,7 +1569,7 @@ tr.stock-out td { background: #fdecea !important; }
   animation: modalIn 0.15s ease;
 }
 
-.modal-lg {
+.modal-overlay .modal-lg {
   max-width: 760px;
 }
 
@@ -1578,7 +1578,7 @@ tr.stock-out td { background: #fdecea !important; }
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-.modal-header {
+.modal-overlay .modal-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1586,12 +1586,12 @@ tr.stock-out td { background: #fdecea !important; }
   border-bottom: 1px solid var(--border);
 }
 
-.modal-header h3 {
+.modal-overlay .modal-header h3 {
   font-size: 15px;
   font-weight: 600;
 }
 
-.modal-close {
+.modal-overlay .modal-close {
   background: none;
   border: none;
   font-size: 22px;
@@ -1602,9 +1602,9 @@ tr.stock-out td { background: #fdecea !important; }
   border-radius: 2px;
 }
 
-.modal-close:hover { background: var(--bg); color: var(--primary); }
+.modal-overlay .modal-close:hover { background: var(--bg); color: var(--primary); }
 
-.modal-body {
+.modal-overlay .modal-body {
   padding: 20px;
 }
 
