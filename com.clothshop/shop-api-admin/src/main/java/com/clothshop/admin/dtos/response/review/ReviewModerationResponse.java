@@ -1,21 +1,22 @@
-package com.clothshop.client.dtos.response;
+package com.clothshop.admin.dtos.response.review;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Data;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.time.LocalDateTime;
-
-@Data
-@Builder
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ReviewResponse {
+@Builder
+public class ReviewModerationResponse {
     private Long reviewId;
+    private String productName;
     private String customerName;
     private Integer rating;
     private String comment;
-    private LocalDateTime reviewDate;
-    private boolean hidden;
+    private String status;
+    private String hideReason;
 }

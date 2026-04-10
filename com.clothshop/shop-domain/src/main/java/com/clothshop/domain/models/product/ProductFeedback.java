@@ -44,6 +44,9 @@ public class ProductFeedback extends BaseEntity {
     @Column(name = "feedback_status", length = 20)
     private String feedbackStatus; // PENDING, APPROVED, REJECTED (kiểm duyệt)
 
+    @Column(name = "hide_reason", length = 255)
+    private String hideReason;
+
     @Column(name = "moderated_at")
     private LocalDateTime moderatedAt;
 

@@ -8,6 +8,8 @@ import com.clothshop.admin.services.CategoryService;
 import com.clothshop.admin.services.ProductAdminService;
 import com.clothshop.admin.services.FeaturedCollectionService;
 import com.clothshop.admin.services.ProductVariantService;
+import com.clothshop.admin.services.ReviewModerationService;
+import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.dtos.request.PagingRequest;
 import com.clothshop.common.dtos.response.PageResponse;
 import com.clothshop.domain.enums.ProductStatus;
@@ -36,6 +38,7 @@ public class ProductAdminController {
     private final CategoryService categoryService;
     private final FeaturedCollectionService featuredCollectionService;
     private final ProductVariantService variantService;
+    private final ReviewModerationService reviewModerationService;
 
     @GetMapping
     public String listProducts(
@@ -138,6 +141,7 @@ public class ProductAdminController {
         List<VariantResponse> variants = variantService.getVariantsByProductId(id);
         model.addAttribute("product", product);
         model.addAttribute("variants", variants);
+        model.addAttribute("reviews", reviewModerationService.getReviewsByProductId(id));
         return "admin/products/detail";
     }
 
@@ -152,6 +156,37 @@ public class ProductAdminController {
 
         redirectAttributes.addFlashAttribute("successMessage", "Sản phẩm đã được thêm vào bộ sưu tập thành công");
         return "redirect:/admin/products/" + productId;
+    }
+
+    @PostMapping("/{productId}/reviews/{reviewId}/hide")
+    public String hideReviewFromProduct(
+            @PathVariable Long productId,
+            @PathVariable Long reviewId,
+            @RequestParam String reason,
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
+        try {
+            reviewModerationService.hideReviewForProduct(productId, reviewId, reason, principal.getName());
+            redirectAttributes.addFlashAttribute("successMessage", "Đã ẩn đánh giá");
+        } catch (BusinessException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/products/" + productId + "#reviews";
+    }
+
+    @PostMapping("/{productId}/reviews/{reviewId}/show")
+    public String showReviewFromProduct(
+            @PathVariable Long productId,
+            @PathVariable Long reviewId,
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
+        try {
+            reviewModerationService.approveReviewForProduct(productId, reviewId, principal.getName());
+            redirectAttributes.addFlashAttribute("successMessage", "Đã hiển thị lại đánh giá");
+        } catch (BusinessException ex) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.getMessage());
+        }
+        return "redirect:/admin/products/" + productId + "#reviews";
     }
 
 }
