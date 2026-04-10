@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Wishlist Product Detail</title>
+</head>
+<body>
+<h1 layout:fragment="page-title">Chi tiết Wishlist sản phẩm</h1>
+
+<div layout:fragment="content">
+    <div style="margin-bottom: 16px;">
+        <a th:href="@{/admin/marketing/wishlist-insights(startDate=${detail.startDate},endDate=${detail.endDate})}">
+            ← Quay lại Wishlist Insights
+        </a>
+    </div>
+
+    <div class="dashboard-card" style="margin-bottom: 16px;">
+        <div class="card-header">
+            <h3 th:text="${detail.productName}">Tên sản phẩm</h3>
+        </div>
+        <div style="display: flex; gap: 24px; padding: 16px;">
+            <div>
+                <div style="color: #6b7280;">Tổng lượt wishlist</div>
+                <div style="font-size: 24px; font-weight: 600;" th:text="${detail.totalWishlists}">0</div>
+            </div>
+            <div>
+                <div style="color: #6b7280;">Số khách hàng</div>
+                <div style="font-size: 24px; font-weight: 600;" th:text="${detail.totalCustomers}">0</div>
+            </div>
+            <div>
+                <div style="color: #6b7280;">Khoảng thời gian</div>
+                <div th:text="${#temporals.format(detail.startDate, 'dd/MM/yyyy')} + ' - ' + ${#temporals.format(detail.endDate, 'dd/MM/yyyy')}"></div>
+            </div>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h3>Xu hướng theo ngày</h3>
+            </div>
+            <table class="admin-table">
+                <thead>
+                <tr>
+                    <th>Ngày</th>
+                    <th>Lượt wishlist</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="point : ${detail.trend}">
+                    <td th:text="${#temporals.format(point.date, 'dd/MM/yyyy')}">01/01/2026</td>
+                    <td th:text="${point.wishlistCount}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h3>Danh sách khách hàng đã wishlist</h3>
+            </div>
+            <table class="admin-table">
+                <thead>
+                <tr>
+                    <th>Khách hàng</th>
+                    <th>Email</th>
+                    <th>Thời điểm thêm</th>
+                </tr>
+                </thead>
+                <tbody th:if="${detail.customers != null and !#lists.isEmpty(detail.customers)}">
+                <tr th:each="row : ${detail.customers}">
+                    <td th:text="${row.customerName}">Khách hàng</td>
+                    <td th:text="${row.customerEmail != null ? row.customerEmail : '-'}">email@example.com</td>
+                    <td th:text="${#temporals.format(row.wishlistedAt, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</td>
+                </tr>
+                </tbody>
+                <tbody th:if="${detail.customers == null or #lists.isEmpty(detail.customers)}">
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #6b7280;">
+                        Không có khách hàng nào trong khoảng thời gian đã chọn.
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
