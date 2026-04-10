@@ -304,8 +304,8 @@
         function toggleSearch() {
             const overlay = document.getElementById('search-overlay');
             if (overlay) {
-                overlay.classList.toggle('active');
-                if (overlay.classList.contains('active')) {
+                overlay.classList.toggle('open');
+                if (overlay.classList.contains('open')) {
                     document.getElementById('search-input').focus();
                 }
             }

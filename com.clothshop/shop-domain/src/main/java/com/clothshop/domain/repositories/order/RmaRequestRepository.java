@@ -37,6 +37,17 @@ public interface RmaRequestRepository extends JpaRepository<RmaRequest, Long>, J
     Page<RmaRequest> findByOrder_OrderInvoiceContainingIgnoreCase(String orderInvoice, Pageable pageable);
 
     /**
+     * Kiểm tra xem yêu cầu RMA có tồn tại cho Order và Customer này không.
+     */
+    boolean existsByOrderIdAndCustomerId(Long orderId, Long customerId);
+
+    /**
+     * Tìm yêu cầu RMA dựa trên ID của đơn hàng và ID của khách hàng.
+     */
+    @EntityGraph(attributePaths = {"order", "customer"})
+    Optional<RmaRequest> findByOrderIdAndCustomerId(Long orderId, Long customerId);
+
+    /**
      * Đếm số lượng yêu cầu theo trạng thái (để làm thông báo số yêu cầu mới).
      */
     long countByStatus(RmaStatus status);

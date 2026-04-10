@@ -589,7 +589,7 @@ transition: all 0.3s ease;
   right: 0;
   background: var(--color-white);
   border-bottom: 1px solid var(--color-border);
-  z-index: 998;
+  z-index: 1001;
   padding: 32px 24px;
   transform: translateY(-100%);
   opacity: 0;
