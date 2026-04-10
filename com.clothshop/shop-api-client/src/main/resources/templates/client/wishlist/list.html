@@ -82,11 +82,11 @@
         </div>
 
         <!-- Quick View Modal -->
-        <div id="quick-view-modal" class="quick-view-modal" style="display: none;">
-            <div class="modal-overlay" onclick="closeQuickViewModal()"></div>
-            <div class="modal-content">
-                <button class="modal-close" onclick="closeQuickViewModal()">✕</button>
-                
+<!--        <div id="quick-view-modal" class="quick-view-modal" style="display: none;">-->
+<!--            <div class="modal-overlay" onclick="closeQuickViewModal()"></div>-->
+<!--            <div class="modal-content">-->
+<!--                <button class="modal-close" onclick="closeQuickViewModal()">✕</button>-->
+<!--                -->
 <!--                <div class="modal-inner">-->
 <!--                    &lt;!&ndash; Product Image &ndash;&gt;-->
 <!--                    <div class="modal-image-section" id="modal-image-section">-->
@@ -127,26 +127,14 @@
 <!--                        </div>-->
 <!--                    </div>-->
 <!--                </div>-->
-            </div>
-        </div>
+<!--            </div>-->
+<!--        </div>-->
 
         <th:block layout:fragment="scripts">
             <script th:src="@{/js/wishlist/wishlist.js}"></script>
             <script>
-                function updateWishlistOnRemove(button, event) {
-                    // Call the existing wishlistToggle which handles the server call
-                    if (typeof wishlistToggle === 'function') {
-                        wishlistToggle(button, event);
-                    }
-
-                    // Remove the card with animation
-                    if (typeof removeWishlistCard === 'function') {
-                        removeWishlistCard(button);
-                    }
-
-                    // After removing the card and updating count, check if list is empty
-                    setTimeout(() => {
-                        const productGrid = document.querySelector('.product-grid');
+                function initCheckWishlistState() {
+                    const productGrid = document.querySelector('.product-grid');
                         const cards = productGrid?.querySelectorAll('.wishlist-card');
                         const emptyState = document.getElementById('empty-wishlist-state');
 
@@ -160,15 +148,50 @@
                             if (emptyState) {
                                 emptyState.style.display = 'block';
                             }
-                            
+
                             // Update the count to 0
                             const countElement = document.getElementById('wishlist-count-list');
                             if (countElement) {
                                 countElement.textContent = '0';
                             }
                         }
+                        console.log('trigger');
+                }
+
+                function updateWishlistOnRemove(button, event) {
+                    // 1. Trigger existing logic
+                    if (typeof wishlistToggle === 'function') {
+                        wishlistToggle(button, event);
+                    }
+
+                    // 2. Animate removal
+                    if (typeof removeWishlistCard === 'function') {
+                        removeWishlistCard(button);
+                    }
+
+                    // 3. Check state after animation finishes
+                    setTimeout(() => {
+                        const productGrid = document.querySelector('.product-grid');
+                        const cards = productGrid?.querySelectorAll('.wishlist-card');
+                        const emptyState = document.getElementById('empty-wishlist-state');
+                        const countElement = document.getElementById('wishlist-count-list');
+
+                        // Check if there are no cards left
+                        if (!cards || cards.length === 0) {
+                            if (productGrid) productGrid.style.display = 'none';
+                            if (emptyState) emptyState.style.display = 'block';
+                            if (countElement) countElement.textContent = '0';
+                        } else {
+                            // FIX: Parse the textContent, not the element itself
+                            const currentCount = parseInt(countElement.textContent) || 0;
+                            countElement.textContent = Math.max(0, currentCount - 1);
+                        }
                     }, 250);
                 }
+
+                // instantly loads wishlist state at the beginning
+                window.onload = initCheckWishlistState;
+
             </script>
         </th:block>
     </section>
