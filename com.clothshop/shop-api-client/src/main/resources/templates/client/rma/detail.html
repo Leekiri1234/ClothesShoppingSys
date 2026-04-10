@@ -334,8 +334,8 @@
                 <div th:if="${rmaRequest.evidenceImages != null and !rmaRequest.evidenceImages.isEmpty()}" class="detail-section" style="margin-top: 20px;">
                     <div class="detail-section-title">Hình ảnh minh chứng</div>
                     <div class="evidence-gallery">
-                        <div class="evidence-image" th:each="imagePath : ${#strings.listSplit(rmaRequest.evidenceImages, ',')}">
-                            <img th:src="${imagePath}" alt="Bằng chứng đổi trả" />
+                        <div class="evidence-image" th:each="imagePath : ${#strings.arraySplit(rmaRequest.evidenceImages, ',')}">
+                            <img th:src="${#strings.trim(imagePath)}" alt="Bằng chứng đổi trả" />
                         </div>
                     </div>
                 </div>

@@ -22,12 +22,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -165,7 +165,30 @@ public class RmaClientService {
                 .adminNote(rmaRequest.getAdminNote())
                 .refundAmount(rmaRequest.getRefundAmount())
                 .createdAt(rmaRequest.getCreatedAt())
-                .evidenceImages(rmaRequest.getEvidenceImages())
+                .evidenceImages(normalizeEvidenceImages(rmaRequest.getEvidenceImages()))
                 .build();
+    }
+
+    private String normalizeEvidenceImages(String raw) {
+        if (!StringUtils.hasText(raw)) {
+            return raw;
+        }
+
+        List<String> normalized = new ArrayList<>();
+        for (String part : raw.split(",")) {
+            String value = part.trim();
+            if (!StringUtils.hasText(value)) {
+                continue;
+            }
+
+            if (value.startsWith("http://") || value.startsWith("https://") || value.startsWith("/")) {
+                normalized.add(value);
+            } else {
+                // Backward compatibility: old data might store only filename.
+                normalized.add("/uploads/rma/" + value);
+            }
+        }
+
+        return String.join(",", normalized);
     }
 }
