@@ -81,7 +81,7 @@
                     <tbody>
                     <tr th:each="item : ${rma.orderItems}">
                       <td>
-                        <img th:src="${item.imageUrl}" width="40" height="40" class="rounded shadow-sm" style="object-fit: cover;">
+                        <img th:src="${item.imageUrl}" width="40" height="40" class="rounded shadow-sm" style="object-fit: cover;" alt="Product Image">
                       </td>
                       <td>
                         <div class="small font-weight-bold" th:text="${item.productName}"></div>
@@ -109,11 +109,18 @@
             <div class="row mb-3">
               <div class="col-sm-4 font-weight-bold">Hình ảnh bằng chứng:</div>
               <div class="col-sm-8">
-                <div th:if="${rma.evidenceImages != null}">
-                  <img th:each="imgUrl : ${#strings.arraySplit(rma.evidenceImages, ',')}"
-                       th:src="${imgUrl}" class="evidence-img" alt="Evidence">
+                <div th:if="${rma.evidenceImages != null && rma.evidenceImages.trim().length() > 0}">
+                  <div class="row">
+                    <div th:each="imgUrl : ${#strings.arraySplit(rma.evidenceImages, ',')}" class="col-md-6 mb-2">
+                      <img th:src="${imgUrl}"
+                           class="evidence-img border rounded hover-shadow"
+                           alt="Evidence"
+                           style="cursor: zoom-in; transition: 0.3s; width: 100%; max-height: 200px; object-fit: cover;"
+                           onclick="openImageModal(this.src)">
+                    </div>
+                  </div>
                 </div>
-                <div th:unless="${rma.evidenceImages != null}" class="text-muted small italic">Không có ảnh đi kèm</div>
+                <div th:unless="${rma.evidenceImages != null && rma.evidenceImages.trim().length() > 0}" class="text-muted small italic">Không có ảnh đi kèm</div>
               </div>
             </div>
           </div>
@@ -196,15 +203,117 @@
       </div>
     </div>
   </div>
+
+  <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+      <div class="modal-content bg-transparent border-0 position-relative">
+        <div class="modal-body text-center p-0 d-flex justify-content-center align-items-center position-relative">
+          <img src="" id="fullImage" class="img-fluid rounded shadow-lg" style="max-height: 90vh;" alt="Evidence Image">
+          <button type="button" class="btn btn-light btn-circle position-absolute"
+                  style="top: 10px; right: 10px; z-index: 10;" data-bs-dismiss="modal">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
 </body>
 </html>
 
 <script>
+  // Helper function to safely get element
+  function safeGetElement(id) {
+    const el = document.getElementById(id);
+    if (!el) {
+      console.warn(`Element with id "${id}" not found`);
+    }
+    return el;
+  }
+
   function submitStatus(status) {
-    if (confirm('Bạn chắc chắn muốn chuyển sang trạng thái: ' + status + '?')) {
-      document.getElementById('targetStatus').value = status;
-      document.getElementById('rmaStatusForm').submit();
+    const statusText = {
+      'APPROVED': 'Chấp nhận',
+      'REJECTED': 'Từ chối',
+      'RECEIVED': 'Xác nhận đã nhận hàng',
+      'COMPLETED': 'Hoàn tất xử lý'
+    };
+
+    if (confirm('Bạn chắc chắn muốn cập nhật trạng thái sang: ' + (statusText[status] || status) + '?')) {
+      const targetStatusEl = safeGetElement('targetStatus');
+      const formEl = safeGetElement('rmaStatusForm');
+
+      if (targetStatusEl && formEl) {
+        targetStatusEl.value = status;
+        formEl.submit();
+      } else {
+        alert('Lỗi: Không tìm thấy form hoặc input cần thiết');
+      }
     }
   }
+
+  function openImageModal(src) {
+    if (!src) {
+      console.error('No image source provided');
+      alert('Không thể tải ảnh');
+      return;
+    }
+
+    const fullImageEl = safeGetElement('fullImage');
+    const imageModalEl = safeGetElement('imageModal');
+
+    if (!fullImageEl || !imageModalEl) {
+      console.error('Modal elements not found');
+      alert('Lỗi: Modal không tìm thấy');
+      return;
+    }
+
+    try {
+      fullImageEl.src = src;
+      // Use Bootstrap 5 API
+      const imageModal = new bootstrap.Modal(imageModalEl);
+      imageModal.show();
+    } catch (error) {
+      console.error('Error opening image modal:', error);
+      alert('Lỗi khi mở ảnh: ' + error.message);
+    }
+  }
+
+  // Add hover effects to evidence images
+  document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.evidence-img').forEach(img => {
+      // Handle image loading errors (404, network errors, etc)
+      img.addEventListener('error', function() {
+        console.warn('Image failed to load:', this.src);
+        // Use SVG data URL as placeholder (won't be blocked)
+        this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="200"%3E%3Crect fill="%23e9ecef" width="200" height="200"/%3E%3Ctext x="50%" y="50%" font-family="Arial" font-size="14" fill="%236c757d" text-anchor="middle" dominant-baseline="middle"%3EImage Not Found%3C/text%3E%3C/svg%3E';
+        this.style.opacity = '0.5';
+        this.style.cursor = 'not-allowed';
+        this.style.pointerEvents = 'none';
+        // Remove hover effects on error
+        this.removeEventListener('mouseover', imgMouseOver);
+        this.removeEventListener('mouseout', imgMouseOut);
+      });
+
+      // Define hover handlers
+      const imgMouseOver = function() {
+        if (this.src.indexOf('data:image') === -1) {
+          this.style.opacity = "0.8";
+          this.style.transform = "scale(1.02)";
+        }
+      };
+
+      const imgMouseOut = function() {
+        if (this.src.indexOf('data:image') === -1) {
+          this.style.opacity = "1";
+          this.style.transform = "scale(1)";
+        }
+      };
+
+      // Add hover effects
+      img.addEventListener('mouseover', imgMouseOver);
+      img.addEventListener('mouseout', imgMouseOut);
+    });
+    console.log('✅ Image error handlers initialized');
+  });
 </script>

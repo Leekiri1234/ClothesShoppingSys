@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
     layout:decorate="~{layouts/layout}">
 
 <head>
@@ -25,8 +25,8 @@
 
             <form th:action="@{/orders/{inv}/rma(inv=${order.orderInvoice})}" th:object="${rmaRequest}" method="post" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label class="form-label">Loại yêu cầu</label>
-                    <select th:field="*{type}" class="form-select" required>
+                    <label class="form-label" for="rmaType">Loại yêu cầu</label>
+                    <select id="rmaType" th:field="*{type}" class="form-select" required>
                         <option value="">-- Chọn loại yêu cầu --</option>
                         <option value="RETURN">Trả hàng</option>
                         <option value="EXCHANGE">Đổi hàng</option>
@@ -34,8 +34,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Lý do đổi trả</label>
-                    <textarea th:field="*{reason}" class="form-textarea" rows="6" placeholder="Vui lòng mô tả chi tiết lý do bạn muốn đổi/trả sản phẩm..." required></textarea>
+                    <label class="form-label" for="rmaReason">Lý do đổi trả</label>
+                    <textarea id="rmaReason" th:field="*{reason}" class="form-textarea" rows="6" placeholder="Vui lòng mô tả chi tiết lý do bạn muốn đổi/trả sản phẩm..." required></textarea>
                 </div>
 
                 <div class="form-group">
@@ -45,7 +45,7 @@
                         <p class="upload-text">Nhấn hoặc kéo thả ảnh vào đây</p>
                         <p class="upload-hint">Hỗ trợ: JPG, PNG, WEBP — Tối đa 5MB/ảnh</p>
                     </div>
-                    <input type="file" id="fileInput" name="evidenceImages" multiple accept="image/*" style="display: none;" onchange="previewImages(this)">
+                    <input type="file" id="fileInput" name="evidenceImages" multiple accept="image/jpeg,image/jpg,image/png,image/gif,image/webp" style="display: none;" onchange="previewImages(this)">
                     <div class="image-preview-container" id="previewContainer"></div>
                 </div>
 
@@ -60,26 +60,48 @@
     <th:block layout:fragment="scripts">
     <script>
         const maxFiles = 5;
+        const maxFileSize = 5 * 1024 * 1024;
+        const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+        const allowedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+        function isValidImageFile(file) {
+            const fileName = (file.name || '').toLowerCase();
+            const extension = fileName.includes('.') ? fileName.split('.').pop() : '';
+            return allowedMimeTypes.includes(file.type) || allowedExtensions.includes(extension);
+        }
 
         function previewImages(input) {
             const container = document.getElementById('previewContainer');
             const uploadArea = document.getElementById('uploadArea');
             container.innerHTML = '';
 
-            if (input.files.length > maxFiles) {
+            const files = Array.from(input.files || []);
+
+            const invalidFile = files.find(function(file) {
+                return !isValidImageFile(file) || file.size > maxFileSize;
+            });
+
+            if (invalidFile) {
+                alert('Chỉ hỗ trợ JPG, PNG, GIF, WEBP và tối đa 5MB/ảnh. File không hợp lệ: ' + invalidFile.name);
+                input.value = '';
+                uploadArea.classList.remove('has-files');
+                return;
+            }
+
+            if (files.length > maxFiles) {
                 alert('Chỉ được chọn tối đa ' + maxFiles + ' ảnh.');
                 input.value = '';
                 return;
             }
 
-            if (input.files.length > 0) {
+            if (files.length > 0) {
                 uploadArea.classList.add('has-files');
             } else {
                 uploadArea.classList.remove('has-files');
                 return;
             }
 
-            Array.from(input.files).forEach(function(file, index) {
+            files.forEach(function(file, index) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     const item = document.createElement('div');
@@ -111,6 +133,16 @@
             e.preventDefault();
             uploadArea.classList.remove('dragover');
             if (e.dataTransfer.files.length > 0) {
+                const files = Array.from(e.dataTransfer.files);
+                const invalidFile = files.find(function(file) {
+                    return !isValidImageFile(file) || file.size > maxFileSize;
+                });
+
+                if (invalidFile) {
+                    alert('Chỉ hỗ trợ JPG, PNG, GIF, WEBP và tối đa 5MB/ảnh. File không hợp lệ: ' + invalidFile.name);
+                    return;
+                }
+
                 fileInput.files = e.dataTransfer.files;
                 previewImages(fileInput);
             }
