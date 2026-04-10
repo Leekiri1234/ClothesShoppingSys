@@ -85,8 +85,9 @@ public class RmaClientService {
                 List<String> paths = new ArrayList<>();
                 for (MultipartFile file : request.getEvidenceImages()) {
                     if (!file.isEmpty()) {
+                        // ✅ FileUploadUtil now returns complete path like /uploads/rma/filename.webp
                         String savedPath = fileUploadUtil.upload(file, "rma");
-                        paths.add("/uploads/" + savedPath);
+                        paths.add(savedPath);  // No need to add /uploads/ anymore
                     }
                 }
                 if (!paths.isEmpty()) {

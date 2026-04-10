@@ -71,7 +71,7 @@ public class SecurityConfig {
                     .csrfTokenRequestHandler(requestHandler);
             })
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/admin/login", "/css/**", "/js/**", "/images/**").permitAll()
+                        .requestMatchers("/admin/login", "/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
                         .requestMatchers("/admin/staff/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/admin/**").hasAnyRole("STAFF", "SUPER_ADMIN", "MARKETING_STAFF",
                                 "SALE_PRODUCT_STAFF", "CUSTOMER_SERVICE")
