@@ -75,16 +75,35 @@
             </div>
 
             <div class="col-lg-4">
-                <div class="dashboard-card shadow-sm mb-4">
-                    <div class="card-header">
-                        <h3>Ảnh hiển thị</h3>
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Ảnh hiển thị</h6>
                     </div>
                     <div class="card-body p-3 text-center">
-                        <div class="image-preview-container" onclick="document.getElementById('imageFile').click()">
-                            <img id="preview" th:src="${collectionDTO.imageUrl != null ? collectionDTO.imageUrl : 'https://via.placeholder.com/400x225?text=Click+to+upload'}" alt="Preview">
+                        <div class="image-preview-container mb-3"
+                             style="border: 2px dashed #333; padding: 10px; border-radius: 8px; cursor: pointer; background: #fdfdfd;"
+                             onclick="document.getElementById('imageFile').click()">
+
+                            <img id="preview"
+                                 th:src="${collectionDTO.imageUrl != null ? collectionDTO.imageUrl : '/images/no-image.png'}"
+                                 alt="Preview"
+                                 class="img-fluid rounded"
+                                 style="width: 100%; max-height: 200px; object-fit: cover; display: block;">
                         </div>
-                        <input type="file" id="imageFile" name="imageFile" style="display: none;" accept="image/*">
-                        <small class="text-muted">Định dạng khuyên dùng: 16:9 (Ví dụ: 1280x720px)</small>
+
+                        <div class="mb-2">
+                            <button type="button" id="btnRemoveImage"
+                                    th:style="${collectionDTO.imageUrl != null ? 'display:inline-block' : 'display:none'}"
+                                    class="btn btn-danger btn-sm shadow-sm"
+                                    onclick="removeImage()">
+                                <i class="fas fa-trash-alt mr-1"></i> Xóa ảnh
+                            </button>
+
+                            <input type="file" id="imageFile" name="imageFile" style="display: none;" accept="image/*">
+                            <input type="hidden" id="deleteImage" name="deleteImage" value="false">
+                        </div>
+
+                        <p class="text-muted small mb-0">Nhấn vào khung trên để thay đổi ảnh</p>
                     </div>
                 </div>
 
@@ -120,38 +139,56 @@
 
 <div layout:fragment="scripts">
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // Preview ảnh ngay khi chọn file
-            const imageInput = document.getElementById('imageFile');
-            const previewImage = document.getElementById('preview');
+        function removeImage() {
+            if (confirm('Bạn có chắc chắn muốn gỡ bỏ ảnh này?')) {
+                const preview = document.getElementById('preview');
+                const deleteFlag = document.getElementById('deleteImage');
+                const btnRemove = document.getElementById('btnRemoveImage');
+                const fileInput = document.getElementById('imageFile');
 
-            if (imageInput) {
-                imageInput.addEventListener('change', function() {
-                    const file = this.files[0];
-                    if (file) {
-                        const reader = new FileReader();
-                        reader.onload = function(e) {
-                            previewImage.src = e.target.result;
-                        }
-                        reader.readAsDataURL(file);
-                    }
-                });
+                // Reset về ảnh mặc định
+                preview.src = '/images/no-image.png';
+                // Báo cho Backend biết là cần xóa ảnh trong DB
+                deleteFlag.value = "true";
+                // Ẩn nút xóa đi
+                btnRemove.style.display = 'none';
+                // Xóa giá trị trong input file (nếu đang chọn file mà đổi ý xóa)
+                fileInput.value = '';
             }
+        }
 
-            // Character counter (Dữ nguyên logic cũ của bạn)
-            const descriptionTextarea = document.getElementById('description');
-            if (descriptionTextarea) {
-                const maxLength = descriptionTextarea.getAttribute('maxlength');
-                const counterDiv = document.createElement('div');
-                counterDiv.style.cssText = 'text-align: right; color: var(--muted); font-size: 11px; margin-top: 4px;';
-                descriptionTextarea.parentNode.appendChild(counterDiv);
-                function updateCounter() {
-                    counterDiv.textContent = descriptionTextarea.value.length + '/' + maxLength + ' ký tự';
+        // Lắng nghe sự kiện thay đổi file để hiện lại nút Xóa
+        document.getElementById('imageFile').addEventListener('change', function() {
+            const file = this.files[0];
+            const preview = document.getElementById('preview');
+            const btnRemove = document.getElementById('btnRemoveImage');
+            const deleteFlag = document.getElementById('deleteImage');
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // Khi chọn file, nó dùng đường dẫn ảo Base64 đè lên ảnh no-image
+                    preview.src = e.target.result;
+                    btnRemove.style.display = 'inline-block';
+                    deleteFlag.value = "false";
                 }
-                descriptionTextarea.addEventListener('input', updateCounter);
-                updateCounter();
+                reader.readAsDataURL(file);
             }
         });
+
+        // Character counter (Dữ nguyên logic cũ của bạn)
+        const descriptionTextarea = document.getElementById('description');
+        if (descriptionTextarea) {
+            const maxLength = descriptionTextarea.getAttribute('maxlength');
+            const counterDiv = document.createElement('div');
+            counterDiv.style.cssText = 'text-align: right; color: var(--muted); font-size: 11px; margin-top: 4px;';
+            descriptionTextarea.parentNode.appendChild(counterDiv);
+            function updateCounter() {
+                counterDiv.textContent = descriptionTextarea.value.length + '/' + maxLength + ' ký tự';
+            }
+            descriptionTextarea.addEventListener('input', updateCounter);
+            updateCounter();
+        }
     </script>
 </div>
 </body>

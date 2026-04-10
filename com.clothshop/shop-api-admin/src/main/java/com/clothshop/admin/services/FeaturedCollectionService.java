@@ -89,9 +89,9 @@ public class FeaturedCollectionService {
             // USAGE 2: Dùng Mapper update các trường (name, description, isActive) từ Request vào Entity
             collectionMapper.updateEntityFromRequest(request, collection);
 
-            // Xử lý upload ảnh (nếu Admin có chọn file mới)
-            handleImageUpload(request, collection);
         }
+
+        handleImageUpload(request, collection);
 
         // Save lần 2 (áp dụng cho cả Create để lưu cái finalSlug, và Update)
         Collection saved = collectionRepository.save(collection);
@@ -252,7 +252,6 @@ public class FeaturedCollectionService {
     private CollectionResponse mapToResponse(Collection collection) {
         // USAGE 3: Dùng Mapper biến Entity thành DTO
         CollectionResponse response = collectionMapper.toResponse(collection);
-
         // Count số lượng và set vào
         Long itemCount = collection.getId() != null ? collectionItemRepository.countActiveItemsByCollectionId(collection.getId()) : 0L;
         response.setItemCount(itemCount);
@@ -290,10 +289,29 @@ public class FeaturedCollectionService {
             log.info("Removed image for collection ID: {}", collection.getId());
         }
 
-        // TH2: Admin chọn FILE MỚI (Nếu chọn file mới thì ghi đè luôn kể cả có nhấn xóa hay không)
+        // TH2: Admin chọn FILE MỚI
         if (request.getImageFile() != null && !request.getImageFile().isEmpty()) {
+            // Giả sử savedPath trả về: "collections/abc.png"
             String savedPath = fileUploadUtil.upload(request.getImageFile(), "collections");
-            collection.setImageUrl("/uploads/" + savedPath);
+
+            // KIỂM TRA VÀ CHUẨN HÓA:
+            String finalUrl;
+            if (savedPath.startsWith("/uploads/")) {
+                // Nếu utils đã trả về full path rồi thì dùng luôn
+                finalUrl = savedPath;
+            } else if (savedPath.startsWith("/")) {
+                // Nếu bắt đầu bằng / nhưng thiếu uploads
+                finalUrl = "/uploads" + savedPath;
+            } else {
+                // Nếu là collections/abc.png -> Nối chuẩn /uploads/
+                finalUrl = "/uploads/" + savedPath;
+            }
+
+            // Xử lý trường hợp bị dính dấu gạch chéo kép // do nối chuỗi
+            finalUrl = finalUrl.replace("//", "/");
+
+            collection.setImageUrl(finalUrl);
+            log.info("Lưu path ảnh chuẩn: {}", finalUrl);
         }
     }
 }

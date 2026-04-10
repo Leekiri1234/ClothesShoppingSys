@@ -9,7 +9,6 @@ import org.mapstruct.*;
 public interface CollectionMapper {
 
     // 1. Entity -> Response
-    @Mapping(source = "bannerUrl", target = "imageUrl")
     @Mapping(target = "itemCount", ignore = true)
     CollectionResponse toResponse(Collection collection);
 
