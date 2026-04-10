@@ -61,7 +61,7 @@ public class ReviewClientService {
                 .customer(customer)
                 .rating(request.getRating())
                 .comment(request.getComment())
-                .feedbackStatus("APPROVED") // Tự động duyệt hoặc để PENDING tùy logic
+                .feedbackStatus("PENDING") // Tự động duyệt hoặc để PENDING tùy logic
                 .build();
 
         // 4. Save
