@@ -4,21 +4,28 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.*;
 import java.util.UUID;
 
 @Component
 public class FileUploadUtil {
 
-    private Path resolveUploadRoot() {
-        Path rootPath = Paths.get(System.getProperty("user.dir"));
-        String userDir = rootPath.toString();
+    private Path resolveWorkspaceRoot() {
+        Path current = Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
 
-        if (userDir.endsWith("shop-api-admin") || userDir.endsWith("shop-api-client")) {
-            rootPath = rootPath.getParent();
+        for (int i = 0; i < 6 && current != null; i++) {
+            if (Files.exists(current.resolve("src/main/resources/static"))) {
+                return current;
+            }
+            current = current.getParent();
         }
 
-        return rootPath.resolve("src/main/resources/static/uploads").toAbsolutePath().normalize();
+        return Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
+    }
+
+    private Path resolveUploadRoot() {
+        return resolveWorkspaceRoot().resolve("src/main/resources/static/uploads").toAbsolutePath().normalize();
     }
 
     public String upload(MultipartFile file, String folder) {
