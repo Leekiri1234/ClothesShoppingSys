@@ -24,7 +24,6 @@ public interface RmaRequestRepository extends JpaRepository<RmaRequest, Long>, J
     @Override
     Optional<RmaRequest> findById(Long id);
 
-    boolean existsByOrderIdAndCustomerId(Long orderId, Long customerId);
     /**
      * Lọc danh sách RMA theo trạng thái.
      */
