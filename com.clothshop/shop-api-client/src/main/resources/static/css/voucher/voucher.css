@@ -1,0 +1,156 @@
+/* Container & Layout */
+.voucher-page {
+    display: block;
+    padding-top: 60px;
+    padding-bottom: 100px;
+    background-color: #fafafa;
+}
+
+.voucher-page .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.page-title {
+    font-size: 36px;
+    font-weight: 400;
+    font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif; /* Elegant serif font similar to image */
+    color: #333;
+    margin-bottom: 40px;
+    text-align: left;
+}
+
+/* Grid Layout */
+.voucher-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+}
+
+/* Voucher Card */
+.voucher-card {
+    border: 1px solid #ebebeb;
+    border-radius: 6px;
+    background-color: #fff;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.voucher-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.06);
+}
+
+/* Voucher Header (The color blocks) */
+.voucher-header {
+    height: 110px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    margin-bottom: 25px;
+}
+
+.voucher-header.bg-color-0 {
+    background-color: #eeeae7; 
+}
+
+.voucher-header.bg-color-1 {
+    background-color: #ebdcd2; 
+}
+
+.voucher-header.bg-color-2 {
+    background-color: #e5e4e2; 
+}
+
+.voucher-code {
+    font-size: 26px;
+    font-weight: 600;
+    color: #111;
+    letter-spacing: 1px;
+    margin: 0;
+}
+
+/* Voucher Body */
+.voucher-body {
+    text-align: center;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.voucher-title {
+    font-size: 28px;
+    font-weight: 400;
+    font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    color: #111;
+    margin-bottom: 20px;
+}
+
+.voucher-details {
+    font-size: 15px;
+    color: #111;
+    line-height: 1.6;
+    margin-bottom: 25px;
+    flex-grow: 1;
+}
+
+.voucher-details p {
+    margin: 0 0 6px 0;
+}
+
+.voucher-status {
+    color: #92ab92 !important; 
+    font-weight: 500;
+    margin-top: 15px !important;
+}
+
+/* Copy Button */
+.btn-copy-code {
+    width: 100%;
+    padding: 14px;
+    background-color: #111;
+    color: #fff;
+    border: none;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    border-radius: 4px;
+}
+
+.btn-copy-code:hover {
+    background-color: #333;
+}
+
+.btn-copy-code:active {
+    transform: scale(0.98);
+}
+
+.btn-copy-code.copied {
+    background-color: #27ae60;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: left;
+    padding: 50px 0;
+    font-size: 16px;
+    color: #666;
+}
+
+/* Responsive */
+@media (max-width: 991px) {
+    .voucher-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 767px) {
+    .voucher-grid {
+        grid-template-columns: 1fr;
+    }
+}

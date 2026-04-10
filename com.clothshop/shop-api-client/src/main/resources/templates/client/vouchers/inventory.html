@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Voucher của tôi - MINIMAL</title>
+    <link rel="stylesheet" th:href="@{/css/voucher/voucher.css}">
+</head>
+<body>
+<div layout:fragment="content">
+    <section class="voucher-page">
+        <div class="container">
+            <h1 class="page-title">Voucher của tôi</h1>
+            
+            <div class="voucher-grid" th:if="${vouchers != null and !vouchers.isEmpty()}">
+                <!-- Loop through vouchers -->
+                <div class="voucher-card" th:each="voucher, iterStat : ${vouchers}">
+                    <!-- Add cycle class based on index for different background colors -->
+                    <div class="voucher-header" th:classappend="'bg-color-' + (${iterStat.index % 3})">
+                        <h3 class="voucher-code" th:text="${voucher.code}">SAVE50K</h3>
+                    </div>
+                    <div class="voucher-body">
+                        <div class="voucher-title">
+                            <span th:if="${voucher.discountType.name() == 'FIXED'}" th:text="'Giảm ' + ${#numbers.formatDecimal(voucher.discountValue, 0, 'COMMA', 0, 'POINT')} + 'đ'">Giảm 50,000đ</span>
+                            <span th:if="${voucher.discountType.name() == 'PERCENTAGE'}" th:text="'Giảm ' + ${#numbers.formatDecimal(voucher.discountValue, 0, 'COMMA', 0, 'POINT')} + '%'">Giảm 10%</span>
+                        </div>
+                        <div class="voucher-details">
+                            <p th:if="${voucher.maxDiscount != null and voucher.discountType.name() == 'PERCENTAGE'}" th:text="'Giảm tối đa: ' + ${#numbers.formatDecimal(voucher.maxDiscount, 0, 'COMMA', 0, 'POINT')} + 'đ'">Giảm tối đa: 120,000đ</p>
+                            <p th:if="${voucher.minOrderValue != null}" th:text="'Đơn tối thiểu: ' + ${#numbers.formatDecimal(voucher.minOrderValue, 0, 'COMMA', 0, 'POINT')} + 'đ'">Đơn tối thiểu: 250,000đ</p>
+                            <p th:if="${voucher.validTo != null}" th:text="'Hạn sử dụng: ' + ${#temporals.format(voucher.validTo, 'dd/MM/yyyy')}">Hạn sử dụng: 24/05/2026</p>
+                            <p th:if="${voucher.validTo == null}">Không thời hạn</p>
+                            <p class="voucher-status">Đang hiệu lực</p>
+                        </div>
+                        <button class="btn-copy-code" th:data-code="${voucher.code}" onclick="copyVoucherCode(this)">
+                            Sao chép mã
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="empty-state" th:if="${vouchers == null or vouchers.isEmpty()}">
+                <p>Bạn chưa có voucher nào.</p>
+            </div>
+        </div>
+    </section>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script th:src="@{/js/voucher/voucher.js}"></script>
+</th:block>
+</body>
+</html>
