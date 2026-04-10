@@ -22,7 +22,7 @@ function wishlistToggle(button, event) {
         event.stopPropagation?.();
         event.stopImmediatePropagation?.();
     }
-    
+
     const productId = button.dataset.productId;
     if (!productId) {
         showToast('Sản phẩm không hợp lệ', 'error');
@@ -51,7 +51,7 @@ function wishlistToggle(button, event) {
     .then(data => {
         button.disabled = false;
         button.style.opacity = originalOpacity;
-        
+
         if (data && data.success) {
             const svg = button.querySelector('svg');
             if (data.isAdded) {
@@ -67,7 +67,7 @@ function wishlistToggle(button, event) {
                     svg.style.fill = 'none';
                 }
             }
-            
+
             showToast(data.message || (data.isAdded ? 'Đã thêm vào yêu thích' : 'Đã xóa khỏi yêu thích'), 'success');
             loadWishlistCount();
         } else if (data && data.message) {
@@ -80,7 +80,7 @@ function wishlistToggle(button, event) {
         console.error('Wishlist toggle error:', e);
         showToast('Có lỗi xảy ra', 'error');
     });
-    
+
     return false;
 }
 
@@ -94,7 +94,7 @@ function openQuickViewModal(button, event) {
         event.stopPropagation?.();
         event.stopImmediatePropagation?.();
     }
-    
+
     const productSlug = button.dataset.productSlug;
     if (!productSlug) {
         showToast('Sản phẩm không hợp lệ', 'error');
@@ -103,7 +103,7 @@ function openQuickViewModal(button, event) {
 
     // Show loading state
     showQuickViewModal(null, 'loading');
-    
+
     fetch(`/products/${productSlug}/quick-view`)
         .then(r => r.json())
         .then(product => {
@@ -119,7 +119,7 @@ function openQuickViewModal(button, event) {
             showToast('Có lỗi xảy ra', 'error');
             closeQuickViewModal();
         });
-    
+
     return false;
 }
 
@@ -145,15 +145,15 @@ function showQuickViewModal(product, state = 'loaded') {
 
     // Render modal content
     const variantOptions = renderVariantOptions(product.variants || []);
-    
+
     modal.innerHTML = `
         <button class="modal-close" onclick="closeQuickViewModal()" style="position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer; z-index: 10;">✕</button>
-        
+
         <div class="modal-inner" style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 32px;">
             <!-- Product Image -->
             <div class="modal-image-section" style="display: flex; align-items: center; justify-content: center; background: #f5f5f5; border-radius: 4px; min-height: 400px;">
                 <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
-                    <img src="${product.imageUrl || product.images?.[0] || ''}" alt="${product.productName}" 
+                    <img src="${product.imageUrl || product.images?.[0] || ''}" alt="${product.productName}"
                         style="max-width: 100%; max-height: 100%; object-fit: contain;">
                 </div>
             </div>
@@ -165,10 +165,10 @@ function showQuickViewModal(product, state = 'loaded') {
                 <div style="font-size: 20px; font-weight: 600; margin-bottom: 16px; color: #1C1C1A;">
                     ${(product.price ? product.price.toLocaleString('vi-VN') : '0')}₫
                 </div>
-                
+
                 <!-- Variants -->
                 ${variantOptions}
-                
+
                 <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
                     <label style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #999; flex: 0 0 50px;">Số lượng</label>
                     <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #e8e8e8; border-radius: 4px; padding: 0 8px;">
@@ -186,7 +186,7 @@ function showQuickViewModal(product, state = 'loaded') {
             </div>
         </div>
     `;
-    
+
     modal.style.display = 'block';
 }
 
@@ -207,10 +207,10 @@ function createQuickViewModal() {
     modal = document.createElement('div');
     modal.id = 'quick-view-modal';
     modal.style.cssText = 'position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; border-radius: 8px; width: 90%; max-width: 800px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.15);';
-    
+
     wrapper.appendChild(modal);
     document.body.appendChild(wrapper);
-    
+
     return modal;
 }
 
@@ -229,14 +229,14 @@ function renderVariantOptions(variants) {
     });
 
     let html = '<div style="margin-bottom: 16px;">';
-    
+
     if (colors.size > 0) {
         html += `
             <div style="margin-bottom: 12px;">
                 <label style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #999;">Màu sắc</label>
                 <div id="quick-view-colors" style="display: flex; gap: 8px; margin-top: 8px;">
                     ${Array.from(colors).map((color, i) => `
-                        <div class="color-swatch ${i === 0 ? 'selected' : ''}" 
+                        <div class="color-swatch ${i === 0 ? 'selected' : ''}"
                             style="width: 32px; height: 32px; border-radius: 4px; background: ${color}; cursor: pointer; border: ${i === 0 ? '2px solid #1C1C1A' : '1px solid #e8e8e8'}; transition: all 0.2s;"
                             onclick="selectQuickViewColor(this, '${color}')"></div>
                     `).join('')}
@@ -376,10 +376,10 @@ function quickAddToCart(button, event) {
         event.stopPropagation?.();
         event.stopImmediatePropagation?.();
     }
-    
+
     const productId = button.dataset.productId;
     const productSlug = button.parentElement.parentElement.parentElement.dataset.productSlug || button.dataset.productSlug;
-    
+
     if (!productId || !productSlug) {
         showToast('Sản phẩm không hợp lệ', 'error');
         return false;
@@ -400,9 +400,9 @@ function quickAddToCart(button, event) {
                 button.innerHTML = originalHtml;
                 return;
             }
-            
+
             const variantId = product.variants[0].variantId;
-            
+
             // Then add to cart with proper variant ID
             return fetch('/cart/add', {
                 method: 'POST',
@@ -425,7 +425,7 @@ function quickAddToCart(button, event) {
             .then(data => {
                 button.disabled = false;
                 button.innerHTML = originalHtml;
-                
+
                 if (data && data.success) {
                     showToast('Đã thêm vào giỏ hàng', 'success');
                     loadCartCount();
@@ -442,7 +442,7 @@ function quickAddToCart(button, event) {
             console.error('Quick add to cart error:', e);
             showToast('Có lỗi xảy ra', 'error');
         });
-    
+
     return false;
 }
 
@@ -452,7 +452,7 @@ function quickAddToCart(button, event) {
 function showToast(message, type = 'default') {
     const container = document.getElementById('toast-container') || createToastContainer();
     const toast = document.createElement('div');
-    
+
     const colors = {
         'success': '#4CAF50',
         'error': '#f44336',

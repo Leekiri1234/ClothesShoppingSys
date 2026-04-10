@@ -4,11 +4,12 @@ import com.clothshop.client.dtos.request.AddToCartRequest;
 import com.clothshop.client.dtos.response.CartSummaryResponse;
 import com.clothshop.client.services.CartClientService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
 import java.util.Map;
@@ -16,52 +17,59 @@ import java.util.Map;
 @Controller
 @RequestMapping("/cart")
 @RequiredArgsConstructor
+@Slf4j
 public class CartController {
 
     private final CartClientService cartService;
 
-    // 1. Xem giỏ hàng (Trả về View HTML)
+    // ── 1. Xem giỏ hàng ──────────────────────────────────────────
     @GetMapping
     public String viewCart(Principal principal, Model model) {
-        if (principal == null) {
-            return "redirect:/login";
-        }
-        model.addAttribute("cart", cartService.getCartSummary(principal.getName()));
+        if (principal == null) return "redirect:/login";
+
+        CartSummaryResponse cart = cartService.getCartSummary(principal.getName());
+        model.addAttribute("cart", cart);
         model.addAttribute("cartCount", cartService.getCartItemCount(principal.getName()));
         return "client/cart/view";
     }
 
-    // 2. Thêm vào giỏ (AJAX)
-    @PostMapping("/add")
-    @PreAuthorize("hasRole('CUSTOMER')")
-    @ResponseBody
-    public ResponseEntity<?> addToCart(@RequestBody AddToCartRequest request, Principal principal) {
-        cartService.addToCart(principal.getName(), request);
-        return ResponseEntity.ok(Map.of("success", true, "message", "Đã thêm vào giỏ hàng"));
-    }
-
-    // 3. Cập nhật số lượng (AJAX từ sidebar - không redirect)
+    // ── 2. Cập nhật số lượng (form POST → redirect) ───────────────
+    // cart.html dùng <form method="post"> bình thường → phải redirect, KHÔNG dùng @ResponseBody
     @PostMapping("/update/{itemId}")
-    @PreAuthorize("hasRole('CUSTOMER')")
-    @ResponseBody
-    public ResponseEntity<?> updateQuantity(
+    public String updateQuantity(
             @PathVariable Long itemId,
             @RequestParam Integer quantity,
-            Principal principal) {
-        cartService.updateQuantity(principal.getName(), itemId, quantity);
-        return ResponseEntity.ok(Map.of("success", true));
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
+
+        if (principal == null) return "redirect:/login";
+
+        try {
+            cartService.updateQuantity(principal.getName(), itemId, quantity);
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("cartError", ex.getMessage());
+        }
+        return "redirect:/cart";
     }
 
-    // 4. Xóa khỏi giỏ (AJAX từ sidebar - không redirect)
+    // ── 3. Xóa khỏi giỏ (form POST → redirect) ───────────────────
     @PostMapping("/remove/{itemId}")
-    @PreAuthorize("hasRole('CUSTOMER')")
-    @ResponseBody
-    public ResponseEntity<?> removeFromCart(@PathVariable Long itemId, Principal principal) {
-        cartService.removeFromCart(principal.getName(), itemId);
-        return ResponseEntity.ok(Map.of("success", true));
+    public String removeFromCart(
+            @PathVariable Long itemId,
+            Principal principal,
+            RedirectAttributes redirectAttributes) {
+
+        if (principal == null) return "redirect:/login";
+
+        try {
+            cartService.removeFromCart(principal.getName(), itemId);
+        } catch (Exception ex) {
+            redirectAttributes.addFlashAttribute("cartError", ex.getMessage());
+        }
+        return "redirect:/cart";
     }
 
-    // 5. Đếm số lượng (AJAX - Badge trên header)
+    // ── 4. Đếm badge (AJAX) ───────────────────────────────────────
     @GetMapping("/count")
     @ResponseBody
     public ResponseEntity<?> getCartCount(Principal principal) {
@@ -70,12 +78,16 @@ public class CartController {
         return ResponseEntity.ok(Map.of("count", count));
     }
 
-    // 6. Lấy toàn bộ thông tin giỏ hàng cho sidebar (AJAX)
+    // ── 5. Summary cho sidebar (AJAX) ────────────────────────────
     @GetMapping("/summary")
     @ResponseBody
     public ResponseEntity<?> getCartSummary(Principal principal) {
         if (principal == null) {
-            return ResponseEntity.ok(Map.of("items", java.util.List.of(), "totalItems", 0, "totalAmount", 0));
+            return ResponseEntity.ok(Map.of(
+                    "items", java.util.List.of(),
+                    "totalItems", 0,
+                    "totalAmount", 0
+            ));
         }
         CartSummaryResponse summary = cartService.getCartSummary(principal.getName());
         return ResponseEntity.ok(summary);
