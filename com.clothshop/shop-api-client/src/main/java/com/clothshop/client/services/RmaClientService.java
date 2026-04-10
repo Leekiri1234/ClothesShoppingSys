@@ -1,6 +1,7 @@
 package com.clothshop.client.services;
 
 import com.clothshop.client.dtos.request.RmaCreateRequest;
+import com.clothshop.client.dtos.response.RmaListResponse;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
 import com.clothshop.common.utils.FileUploadUtil;
@@ -15,6 +16,10 @@ import com.clothshop.domain.repositories.auth.AccountRepository;
 import com.clothshop.domain.repositories.order.OrderRepository;
 import com.clothshop.domain.repositories.order.RmaRequestRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -100,5 +106,66 @@ public class RmaClientService {
         } catch (IllegalArgumentException e) {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Loại yêu cầu không hợp lệ");
         }
+    }
+
+    /**
+     * Get all RMA requests for the current customer
+     */
+    @Transactional(readOnly = true)
+    public Page<RmaListResponse> getMyRmaRequests(String username, int page, int size) {
+        Customer customer = getCustomer(username);
+        
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<RmaRequest> rmaRequests = rmaRequestRepository.findByCustomerId(customer.getId(), pageable);
+        
+        return rmaRequests.map(this::mapToRmaListResponse);
+    }
+
+    /**
+     * Get RMA request detail
+     */
+    @Transactional(readOnly = true)
+    public RmaListResponse getRmaRequestDetail(String username, Long rmaId) {
+        Customer customer = getCustomer(username);
+        
+        RmaRequest rmaRequest = rmaRequestRepository.findByIdAndCustomerId(rmaId, customer.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy yêu cầu đổi trả"));
+        
+        return mapToRmaListResponse(rmaRequest);
+    }
+
+    /**
+     * Cancel RMA request (only if status is PENDING)
+     */
+    @Transactional
+    public void cancelRmaRequest(String username, Long rmaId) {
+        Customer customer = getCustomer(username);
+        
+        RmaRequest rmaRequest = rmaRequestRepository.findByIdAndCustomerId(rmaId, customer.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy yêu cầu đổi trả"));
+        
+        if (!RmaStatus.PENDING.equals(rmaRequest.getStatus())) {
+            throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Chỉ có thể hủy yêu cầu đang chờ xử lý");
+        }
+        
+        rmaRequestRepository.delete(rmaRequest);
+    }
+
+    /**
+     * Map RmaRequest entity to DTO
+     */
+    private RmaListResponse mapToRmaListResponse(RmaRequest rmaRequest) {
+        return RmaListResponse.builder()
+                .rmaId(rmaRequest.getId())
+                .orderInvoice(rmaRequest.getOrder().getOrderInvoice())
+                .rmaType(rmaRequest.getRmaType().toString())
+                .reason(rmaRequest.getReason())
+                .status(rmaRequest.getStatus().toString())
+                .processedAt(rmaRequest.getProcessedAt())
+                .adminNote(rmaRequest.getAdminNote())
+                .refundAmount(rmaRequest.getRefundAmount())
+                .createdAt(rmaRequest.getCreatedAt())
+                .evidenceImages(rmaRequest.getEvidenceImages())
+                .build();
     }
 }

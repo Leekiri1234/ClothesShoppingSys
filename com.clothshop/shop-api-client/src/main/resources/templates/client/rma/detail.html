@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{layouts/layout}">
+
+<head>
+    <title>Chi tiết yêu cầu đổi trả</title>
+    <th:block layout:fragment="styles">
+        <style>
+            .rma-detail-container {
+                max-width: 900px;
+                margin: 0 auto;
+                padding: 60px 24px;
+            }
+
+            .rma-back-link {
+                font-size: 12px;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
+                color: #999;
+                text-decoration: none;
+                margin-bottom: 24px;
+                display: inline-block;
+            }
+
+            .rma-back-link:hover {
+                color: #1c1c1a;
+            }
+
+            .section-header {
+                margin-bottom: 40px;
+            }
+
+            .section-header h2 {
+                font-size: 32px;
+                font-weight: 300;
+                letter-spacing: 0.01em;
+                margin-bottom: 12px;
+            }
+
+            .detail-grid {
+                display: grid;
+                grid-template-columns: 2fr 1fr;
+                gap: 32px;
+                margin-bottom: 40px;
+            }
+
+            .detail-section {
+                padding: 24px;
+                background: #fafaf8;
+                border: 1px solid #e8e6e1;
+                border-radius: 4px;
+            }
+
+            .detail-section-title {
+                font-size: 12px;
+                letter-spacing: 0.15em;
+                text-transform: uppercase;
+                color: #999;
+                margin-bottom: 16px;
+            }
+
+            .detail-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 12px 0;
+                border-bottom: 1px solid #e8e6e1;
+                font-size: 14px;
+            }
+
+            .detail-row:last-child {
+                border-bottom: none;
+            }
+
+            .detail-label {
+                color: #666;
+                font-weight: 400;
+            }
+
+            .detail-value {
+                color: #1c1c1a;
+                font-weight: 500;
+            }
+
+            .status-badge {
+                display: inline-block;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 11px;
+                font-weight: 600;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
+            }
+
+            .status-badge.pending {
+                background: #fff3cd;
+                color: #856404;
+            }
+
+            .status-badge.approved {
+                background: #d4edda;
+                color: #155724;
+            }
+
+            .status-badge.rejected {
+                background: #f8d7da;
+                color: #721c24;
+            }
+
+            .status-badge.processing {
+                background: #d1ecf1;
+                color: #0c5460;
+            }
+
+            .detail-content {
+                padding: 20px;
+                background: white;
+                border: 1px solid #e8e6e1;
+                border-radius: 4px;
+                margin-bottom: 24px;
+                line-height: 1.6;
+                color: #666;
+                word-break: break-word;
+            }
+
+            .evidence-gallery {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 12px;
+                margin-top: 16px;
+            }
+
+            .evidence-image {
+                width: 100%;
+                aspect-ratio: 1;
+                background: #eee;
+                border-radius: 4px;
+                overflow: hidden;
+                cursor: pointer;
+                transition: transform 0.3s ease;
+            }
+
+            .evidence-image:hover {
+                transform: scale(1.05);
+            }
+
+            .evidence-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .sidebar-section {
+                padding: 20px;
+                background: #fafaf8;
+                border: 1px solid #e8e6e1;
+                border-radius: 4px;
+                margin-bottom: 20px;
+            }
+
+            .sidebar-title {
+                font-size: 13px;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                color: #1c1c1a;
+                margin-bottom: 12px;
+            }
+
+            .sidebar-content {
+                font-size: 13px;
+                line-height: 1.6;
+                color: #666;
+            }
+
+            .action-buttons {
+                display: flex;
+                gap: 12px;
+                margin-top: 20px;
+            }
+
+            .btn {
+                padding: 12px 24px;
+                border-radius: 4px;
+                border: 1px solid;
+                cursor: pointer;
+                font-size: 12px;
+                letter-spacing: 0.05em;
+                text-transform: uppercase;
+                text-decoration: none;
+                display: inline-block;
+                transition: all 0.3s ease;
+            }
+
+            .btn-primary {
+                background: #1c1c1a;
+                color: white;
+                border-color: #1c1c1a;
+            }
+
+            .btn-primary:hover {
+                background: #333;
+                border-color: #333;
+            }
+
+            .btn-danger {
+                background: #c0392b;
+                color: white;
+                border-color: #c0392b;
+            }
+
+            .btn-danger:hover {
+                background: #a02622;
+                border-color: #a02622;
+            }
+
+            .btn-outline {
+                background: transparent;
+                color: #1c1c1a;
+                border-color: #1c1c1a;
+            }
+
+            .btn-outline:hover {
+                background: #1c1c1a;
+                color: white;
+            }
+
+            .timeline {
+                padding: 0;
+            }
+
+            .timeline-item {
+                padding: 12px 0;
+                padding-left: 20px;
+                border-left: 2px solid #e8e6e1;
+                position: relative;
+            }
+
+            .timeline-item::before {
+                content: '';
+                position: absolute;
+                left: -7px;
+                top: 12px;
+                width: 12px;
+                height: 12px;
+                background: #1c1c1a;
+                border-radius: 50%;
+            }
+
+            .timeline-item strong {
+                display: block;
+                font-size: 13px;
+                margin-bottom: 4px;
+            }
+
+            .timeline-item small {
+                color: #999;
+                font-size: 12px;
+            }
+
+            @media (max-width: 768px) {
+                .detail-grid {
+                    grid-template-columns: 1fr;
+                }
+
+                .rma-detail-container {
+                    padding: 40px 16px;
+                }
+            }
+        </style>
+    </th:block>
+</head>
+
+<body>
+    <main layout:fragment="content" class="rma-detail-container">
+        <!-- Back Link -->
+        <a href="/rma-management" class="rma-back-link">← QUAY LẠI</a>
+
+        <!-- Header -->
+        <div class="section-header">
+            <h2>Chi tiết yêu cầu đổi trả</h2>
+            <p style="color: #999; font-size: 14px; margin-top: 8px;" th:text="${'Mã đơn hàng: ' + rmaRequest.orderInvoice}"></p>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="detail-grid">
+            <!-- Left Column -->
+            <div>
+                <!-- Request Info -->
+                <div th:if="${rmaRequest.status == 'PENDING'}" class="detail-section" style="background: #fff3cd; border-color: #ffc107;">
+                    <div class="detail-section-title">Tình trạng</div>
+                    <div class="detail-row" style="border: none; padding: 0;">
+                        <span class="status-badge pending">CHỜ XỬ LÝ</span>
+                        <p style="font-size: 12px; color: #666; margin: 0;">Yêu cầu của bạn đang chờ admin xử lý</p>
+                    </div>
+                </div>
+
+                <div th:if="${rmaRequest.status == 'APPROVED'}" class="detail-section" style="background: #d4edda; border-color: #28a745;">
+                    <div class="detail-section-title">Tình trạng</div>
+                    <div class="detail-row" style="border: none; padding: 0;">
+                        <span class="status-badge approved">ĐÃ PHÊ DUYỆT</span>
+                    </div>
+                </div>
+
+                <div th:if="${rmaRequest.status == 'REJECTED'}" class="detail-section" style="background: #f8d7da; border-color: #dc3545;">
+                    <div class="detail-section-title">Tình trạng</div>
+                    <div class="detail-row" style="border: none; padding: 0;">
+                        <span class="status-badge rejected">BỊ TỪ CHỐI</span>
+                    </div>
+                </div>
+
+                <!-- Request Details -->
+                <div class="detail-section" style="margin-top: 20px;">
+                    <div class="detail-section-title">Thông tin yêu cầu</div>
+                    <div class="detail-row">
+                        <span class="detail-label">Loại yêu cầu</span>
+                        <span class="detail-value" th:text="${rmaRequest.rmaType == 'RETURN' ? 'Trả hàng' : 'Đổi hàng'}"></span>
+                    </div>
+                    <div class="detail-row">
+                        <span class="detail-label">Ngày gửi</span>
+                        <span class="detail-value" th:text="${#temporals.format(rmaRequest.createdAt, 'dd/MM/yyyy HH:mm')}"></span>
+                    </div>
+                    <div class="detail-row" th:if="${rmaRequest.processedAt}">
+                        <span class="detail-label">Ngày xử lý</span>
+                        <span class="detail-value" th:text="${#temporals.format(rmaRequest.processedAt, 'dd/MM/yyyy HH:mm')}"></span>
+                    </div>
+                </div>
+
+                <!-- Reason -->
+                <div class="detail-section" style="margin-top: 20px;">
+                    <div class="detail-section-title">Lý do đổi trả</div>
+                    <div class="detail-content" th:text="${rmaRequest.reason}"></div>
+                </div>
+
+                <div th:if="${rmaRequest.evidenceImages != null and !rmaRequest.evidenceImages.isEmpty()}" class="detail-section" style="margin-top: 20px;">
+                    <div class="detail-section-title">Hình ảnh minh chứng</div>
+                    <div class="evidence-gallery">
+                        <div class="evidence-image" th:each="imagePath : ${#strings.listSplit(rmaRequest.evidenceImages, ',')}">
+                            <img th:src="${imagePath}" alt="Bằng chứng đổi trả" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Admin Note (if exists) -->
+                <div th:if="${rmaRequest.adminNote}" class="detail-section" style="margin-top: 20px; background: #e7f3ff; border-color: #0066cc;">
+                    <div class="detail-section-title" style="color: #0066cc;">Ghi chú từ Admin</div>
+                    <div class="detail-content" style="background: white;" th:text="${rmaRequest.adminNote}"></div>
+                </div>
+            </div>
+
+            <!-- Right Sidebar -->
+            <div>
+                <!-- Order Summary -->
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Thông tin đơn hàng</div>
+                    <div class="sidebar-content">
+                        <p style="margin: 0 0 8px 0;">
+                            <strong>Mã đơn:</strong><br>
+                            <span th:text="${rmaRequest.orderInvoice}"></span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Refund Info -->
+                <div th:if="${rmaRequest.refundAmount}" class="sidebar-section">
+                    <div class="sidebar-title">Hoàn tiền</div>
+                    <div class="sidebar-content">
+                        <p style="margin: 0; font-size: 18px; font-weight: 600; color: #1c1c1a;">
+                            <span th:text="${#numbers.formatDecimal(rmaRequest.refundAmount, 0, 'POINT', 0, 'COMMA') + '₫'}"></span>
+                        </p>
+                        <small style="display: block; margin-top: 8px; color: #999;">Số tiền hoàn lại cho bạn</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons (only show cancel button if PENDING) -->
+        <div class="action-buttons" th:if="${rmaRequest.status == 'PENDING'}">
+            <form th:action="@{/rma-management/{id}/cancel(id=${rmaRequest.rmaId})}" method="post" onsubmit="return confirm('Bạn có chắc chắn muốn hủy yêu cầu này?');">
+                <button type="submit" class="btn btn-danger">HỦY YÊU CẦU</button>
+            </form>
+            <a href="/rma-management" class="btn btn-outline">QUAY LẠI</a>
+        </div>
+
+        <div class="action-buttons" th:if="${rmaRequest.status != 'PENDING'}">
+            <a href="/rma-management" class="btn btn-outline">QUAY LẠI</a>
+        </div>
+    </main>
+</body>
+
+</html>

@@ -61,4 +61,16 @@ public interface RmaRequestRepository extends JpaRepository<RmaRequest, Long>, J
             "LOWER(r.customer.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     @EntityGraph(attributePaths = {"order", "customer"})
     Page<RmaRequest> searchRma(@Param("keyword") String keyword, Pageable pageable);
+
+    /**
+     * Tìm tất cả yêu cầu RMA của một khách hàng.
+     */
+    @EntityGraph(attributePaths = {"order", "customer"})
+    Page<RmaRequest> findByCustomerId(Long customerId, Pageable pageable);
+
+    /**
+     * Tìm yêu cầu RMA theo ID với đầy đủ thông tin.
+     */
+    @EntityGraph(attributePaths = {"order", "customer", "order.orderItems"})
+    Optional<RmaRequest> findByIdAndCustomerId(Long rmaId, Long customerId);
 }
