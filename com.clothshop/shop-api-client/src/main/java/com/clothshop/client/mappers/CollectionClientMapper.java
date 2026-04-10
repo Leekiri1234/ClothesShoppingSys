@@ -24,7 +24,7 @@ public interface CollectionClientMapper {
     @Mapping(source = "name", target = "name")
     @Mapping(source = "slug", target = "slug")
     @Mapping(source = "description", target = "description")
-    @Mapping(source = "bannerUrl", target = "bannerUrl")
+    @Mapping(source = "imageUrl", target = "bannerUrl")
     @Mapping(source = "items", target = "products", qualifiedByName = "mapItemsToProducts")
     CollectionResponse toCollectionResponse(Collection collection);
 
