@@ -168,34 +168,68 @@
     </div>
 
     <!-- Quick View Modal -->
-    <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
-        <div class="modal" id="quick-view-modal">
-            <button class="modal-close" onclick="closeQuickView()">✕</button>
-            <div class="modal-body">
-                <div class="modal-image img-placeholder" id="modal-image"></div>
-                <div class="modal-info">
-                    <p style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#999" id="modal-brand">
-                        MINIMAL</p>
-                    <h2 id="modal-name" style="font-size:22px;font-weight:300"></h2>
-                    <div class="product-info-price" id="modal-price-wrap"></div>
-                    <div class="variant-group">
-                        <div class="variant-label">Màu sắc</div>
-                        <div class="color-swatches" id="modal-colors"></div>
+    <div class="qv-overlay" id="quickViewModal" onclick="if(event.target===this) closeQuickViewModal()">
+        <div class="qv-modal">
+            <button type="button" class="qv-close" onclick="closeQuickViewModal()">✕</button>
+
+            <div id="qvLoading" class="qv-loading" style="display:none;">
+                Đang tải sản phẩm...
+            </div>
+
+            <div id="qvContent" class="qv-content" style="display:none;">
+                <div class="qv-gallery">
+                    <img id="qvMainImage" src="" alt="" class="qv-main-image">
+                    <div id="qvThumbs" class="qv-thumbs"></div>
+                </div>
+
+                <div class="qv-info">
+                    <p id="qvBrand" class="qv-brand">MINIMAL</p>
+                    <h2 id="qvProductName" class="qv-product-name"></h2>
+
+                    <div class="qv-price-wrap">
+                        <span id="qvPrice" class="qv-price"></span>
+                        <span id="qvPriceOriginal" class="qv-price-original"></span>
+                        <span id="qvDiscountBadge" class="qv-discount-badge"></span>
+                        <span id="qvBadge" class="qv-badge"></span>
                     </div>
-                    <div class="variant-group">
-                        <div class="variant-label">Kích cỡ <span id="modal-selected-size"></span></div>
-                        <div class="size-options" id="modal-sizes"></div>
+
+                    <p id="qvDescription" class="qv-description"></p>
+
+                    <div id="qvVariantSection" class="qv-section">
+                        <div class="qv-label">
+                            Màu sắc
+                            <span id="qvSelectedVariantLabel" class="qv-selected-label"></span>
+                        </div>
+                        <div id="qvVariantList" class="qv-options"></div>
                     </div>
-                    <div class="quantity-selector">
-                        <button class="quantity-btn" onclick="changeModalQty(-1)">−</button>
-                        <input class="quantity-input" type="number" id="modal-qty" value="1" min="1" max="10">
-                        <button class="quantity-btn" onclick="changeModalQty(1)">+</button>
+
+                    <div id="qvSizeSection" class="qv-section">
+                        <div class="qv-label">
+                            Kích cỡ
+                            <span id="qvSelectedSizeLabel" class="qv-selected-label"></span>
+                        </div>
+                        <div id="qvSizeList" class="qv-options"></div>
                     </div>
-                    <div class="product-add-actions" style="flex-direction:column;gap:8px">
-                        <button class="btn btn--primary btn--full" onclick="addModalToCart()">Thêm vào giỏ hàng</button>
-                        <button class="btn btn--outline btn--full" onclick="addModalToWishlist()">
-                            Thêm vào wishlist
+
+                    <div id="qvStockHint" class="qv-stock-hint"></div>
+                    <div id="qvError" class="qv-error" style="display:none;"></div>
+
+                    <div class="qv-qty-row">
+                        <span class="qv-label">Số lượng</span>
+                        <div class="qv-qty-box">
+                            <button type="button" class="qv-qty-btn" onclick="qvChangeQty(-1)">−</button>
+                            <span id="qvQtyDisplay" class="qv-qty-display">1</span>
+                            <button type="button" class="qv-qty-btn" onclick="qvChangeQty(1)">+</button>
+                        </div>
+                    </div>
+
+                    <div class="qv-actions">
+                        <button type="button" id="qvAddBtn" class="btn btn--primary btn--full" onclick="qvAddToCart()" disabled>
+                            Thêm vào giỏ hàng
                         </button>
+                        <a id="qvDetailLink" class="btn btn--outline btn--full" href="#">
+                            Xem chi tiết
+                        </a>
                     </div>
                 </div>
             </div>
@@ -240,9 +274,9 @@
                 <div>
                     <div class="footer-col-title">Hỗ trợ</div>
                     <div class="footer-links">
-                        <span class="footer-link">Hướng dẫn chọn size</span>
-                        <span class="footer-link">Chính sách đổi trả</span>
-                        <span class="footer-link">Vận chuyển</span>
+                        <a class="footer-link" th:href="@{/size-guide}">Hướng dẫn chọn size</a>
+                        <a class="footer-link" th:href="@{/return-policy}">Chính sách đổi trả</a>
+                        <a class="footer-link" th:href="@{/shipping}">Vận chuyển</a>
                         <a class="footer-link" th:href="@{/orders}">Theo dõi đơn hàng</a>
                     </div>
                 </div>
@@ -316,49 +350,91 @@
             return new Intl.NumberFormat('vi-VN').format(Math.round(safeValue)) + '₫';
         }
 
-        function renderCartSidebar(summary) {
-            const body = document.getElementById('cart-sidebar-body');
-            const badge = document.getElementById('cart-count');
-            const sidebarCount = document.getElementById('cart-sidebar-count');
-            const totalEl = document.getElementById('cart-sidebar-total');
+       function renderCartSidebar(summary) {
+    const body = document.getElementById('cart-sidebar-body');
+    const badge = document.getElementById('cart-count');
+    const sidebarCount = document.getElementById('cart-sidebar-count');
+    const totalEl = document.getElementById('cart-sidebar-total');
 
-            if (!body) return;
+    if (!body) return;
 
-            const items = summary?.items || [];
-            const totalItems = summary?.totalItems || 0;
-            const totalAmount = summary?.totalAmount || 0;
+    const items = summary?.items || [];
+    const totalItems = summary?.totalItems || 0;
+    const totalAmount = summary?.totalAmount || 0;
 
-            if (badge) badge.textContent = totalItems;
-            if (sidebarCount) sidebarCount.textContent = totalItems;
-            if (totalEl) totalEl.textContent = formatSidebarCurrency(totalAmount);
+    if (badge) badge.textContent = totalItems;
+    if (sidebarCount) sidebarCount.textContent = totalItems;
+    if (totalEl) totalEl.textContent = formatSidebarCurrency(totalAmount);
 
-            if (!items.length) {
-                body.innerHTML = '<div style="text-align:center;padding:60px 0;color:#999;font-size:14px">Giỏ hàng trống</div>';
-                return;
-            }
+    if (!items.length) {
+        body.innerHTML = '<div style="text-align:center;padding:60px 0;color:#999;font-size:14px">Giỏ hàng trống</div>';
+        return;
+    }
 
-            body.innerHTML = items.map(item => `
-                <div class="cart-sidebar-item" style="display:flex;gap:12px;padding:16px 0;border-bottom:1px solid #f0f0f0;align-items:flex-start;position:relative;">
-                    <a href="/products/${item.productSlug || ''}" style="flex-shrink:0;">
-                        <img src="${item.imageUrl || '/images/no-image.png'}" alt="${item.productName || ''}" style="width:72px;height:90px;object-fit:cover;background:#f5f5f5;">
-                    </a>
-                    <div style="flex:1;min-width:0;">
-                        <a href="/products/${item.productSlug || ''}" style="font-size:13px;font-weight:400;color:#1C1C1A;text-decoration:none;display:block;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                            ${item.productName || ''}
-                        </a>
-                        <div style="font-size:12px;color:#888;margin-bottom:8px;">
-                            ${(item.colorName || '') + ((item.colorName && item.sizeName) ? ' / ' : '') + (item.sizeName || '')}
-                        </div>
-                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-                            <span style="font-size:12px;color:#666;">SL: ${item.quantity || 0}</span>
-                            <span style="font-size:13px;font-weight:500;color:#1C1C1A;">${formatSidebarCurrency(item.subtotal || 0)}</span>
-                        </div>
-                    </div>
-                    <button onclick="removeSidebarItem(${item.cartItemId})" style="position:absolute;top:8px;right:0;background:none;border:none;color:#ccc;cursor:pointer;font-size:16px;padding:4px 8px;" title="Xóa">✕</button>
+    body.innerHTML = items.map(item => `
+        <div class="cart-sidebar-item"
+             style="display:flex;gap:12px;padding:16px 0;border-bottom:1px solid #f0f0f0;align-items:flex-start;position:relative;">
+
+            <a href="/products/${item.productSlug || ''}" style="flex-shrink:0;">
+                <img src="${item.imageUrl || '/images/no-image.png'}"
+                     alt="${item.productName || ''}"
+                     style="width:72px;height:90px;object-fit:cover;background:#f5f5f5;">
+            </a>
+
+            <div style="flex:1;min-width:0;padding-right:20px;">
+                <a href="/products/${item.productSlug || ''}"
+                   style="font-size:13px;font-weight:400;color:#1C1C1A;text-decoration:none;display:block;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    ${item.productName || ''}
+                </a>
+
+                <div style="font-size:12px;color:#888;margin-bottom:8px;">
+                    ${(item.colorName || '') + ((item.colorName && item.sizeName) ? ' / ' : '') + (item.sizeName || '')}
                 </div>
-            `).join('');
-        }
 
+                <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                    <span style="font-size:12px;color:#666;">SL: ${item.quantity || 0}</span>
+                    <span style="font-size:13px;font-weight:500;color:#1C1C1A;">
+                        ${formatSidebarCurrency(item.subtotal || 0)}
+                    </span>
+                </div>
+            </div>
+
+            <button type="button"
+                    onclick="removeCartSidebarItem(${item.cartItemId})"
+                    title="Xóa sản phẩm"
+                    style="position:absolute;top:14px;right:0;border:none;background:none;color:#999;font-size:18px;line-height:1;cursor:pointer;padding:4px 6px;">
+                ×
+            </button>
+        </div>
+    `).join('');
+}
+function getLayoutCsrfHeaders() {
+    const token = document.querySelector('meta[name="_csrf"]')?.content;
+    const headerName = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-XSRF-TOKEN';
+
+    if (!token) return {};
+    return { [headerName]: token };
+}
+
+async function removeCartSidebarItem(itemId) {
+    try {
+        const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '';
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+
+        await fetch(`/cart/remove/${itemId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                [csrfHeader]: csrfToken
+            }
+        });
+
+        await loadCartSidebar();
+        loadCartCount();
+    } catch (err) {
+        console.error('Remove item error:', err);
+    }
+}
         async function loadCartSidebar() {
             try {
                 const response = await fetch('/cart/summary');
@@ -385,25 +461,6 @@
                 sidebar.classList.remove('open');
                 overlay.classList.remove('open');
                 document.body.style.overflow = '';
-            }
-        }
-
-        async function removeSidebarItem(itemId) {
-            try {
-                const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '';
-                const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
-
-                await fetch(`/cart/remove/${itemId}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        [csrfHeader]: csrfToken
-                    }
-                });
-
-                await loadCartSidebar();
-            } catch (err) {
-                console.error('Remove item error:', err);
             }
         }
 

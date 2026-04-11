@@ -57,7 +57,7 @@ public class CustomerProfileController {
 
     /**
      * 3. Xử lý submit form cập nhật
-     * Bỏ hoàn toàn try-catch, để BusinessException tự bay lên Global Handler
+     * Bỏ hoàn toàn try-catch, để BusinessException tự bay lên Global Handlee
      */
     @PostMapping("/update")
     public String updateProfile(

@@ -34,6 +34,9 @@ public class Collection extends BaseEntity {
     @Column(name = "banner_url", length = 500)
     private String bannerUrl;
 
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
+
     //  Dùng LAZY để không kéo cả bảng trung gian lên khi query Collection
     @OneToMany(mappedBy = "collection", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default

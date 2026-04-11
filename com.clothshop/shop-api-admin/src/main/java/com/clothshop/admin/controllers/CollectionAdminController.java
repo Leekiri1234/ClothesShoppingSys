@@ -79,6 +79,7 @@ public class CollectionAdminController {
             request.setName(collection.getName());
             request.setDescription(collection.getDescription());
             request.setIsActive(collection.getIsActive());
+            request.setImageUrl(collection.getBannerUrl());
             model.addAttribute("pageTitle", "Chỉnh sửa Bộ sưu tập");
         } else {
             // Chế độ Create
@@ -119,9 +120,15 @@ public class CollectionAdminController {
         }
 
         // Gọi Service lưu
-        featuredCollectionService.saveCollection(request, principal.getName());
+        try {
+            featuredCollectionService.saveCollection(request, principal.getName());
+            redirectAttributes.addFlashAttribute("successMessage", "Lưu bộ sưu tập thành công!");
+        } catch (Exception e) {
+            log.error("Lỗi khi lưu bộ sưu tập: ", e);
+            redirectAttributes.addFlashAttribute("errorMessage", "Lỗi hệ thống: " + e.getMessage());
+            return "redirect:/admin/collections/form" + (request.getId() != null ? "?id=" + request.getId() : "");
+        }
 
-        redirectAttributes.addFlashAttribute("successMessage", "Lưu bộ sưu tập thành công!");
         return "redirect:/admin/collections";
     }
 

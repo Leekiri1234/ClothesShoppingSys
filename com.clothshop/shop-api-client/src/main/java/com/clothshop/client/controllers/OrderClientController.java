@@ -4,6 +4,7 @@ import com.clothshop.client.dtos.request.OrderCancellationRequest;
 import com.clothshop.client.dtos.request.RmaCreateRequest;
 import com.clothshop.client.dtos.response.OrderDetailResponse;
 import com.clothshop.client.dtos.response.OrderListClientResponse;
+import com.clothshop.client.services.CustomerProfileService;
 import com.clothshop.client.services.OrderClientService;
 import com.clothshop.client.services.RmaClientService;
 import com.clothshop.common.dtos.request.PagingRequest;
@@ -25,6 +26,7 @@ public class OrderClientController {
 
     private final OrderClientService orderService;
     private final RmaClientService rmaService;
+    private final CustomerProfileService profileService;
 
     @GetMapping
     public String listMyOrders(
@@ -37,6 +39,7 @@ public class OrderClientController {
         PageResponse<OrderListClientResponse> orders = orderService.getMyOrders(principal.getName(), pagingRequest);
 
         model.addAttribute("orders", orders);
+        model.addAttribute("profile", profileService.getProfile(principal.getName()));
         return "client/orders/list";
     }
 
@@ -45,6 +48,7 @@ public class OrderClientController {
         OrderDetailResponse order = orderService.getOrderDetail(principal.getName(), orderInvoice);
         model.addAttribute("order", order);
         model.addAttribute("cancelRequest", new OrderCancellationRequest());
+        model.addAttribute("profile", profileService.getProfile(principal.getName()));
         return "client/orders/detail";
     }
 
@@ -87,6 +91,7 @@ public class OrderClientController {
         model.addAttribute("rmaRequest", RmaCreateRequest.builder()
                 .orderInvoice(orderInvoice)
                 .build());
+        model.addAttribute("profile", profileService.getProfile(principal.getName()));
         return "client/rma/form";
     }
 

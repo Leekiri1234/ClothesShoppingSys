@@ -25,9 +25,9 @@
                     </div>
                     <nav class="profile-sidebar-nav">
                         <a th:href="@{/profile}" class="profile-sidebar-link active" style="text-decoration: none;">Thông tin tài khoản</a>
-                        <a href="#" class="profile-sidebar-link" style="text-decoration: none;">Đơn hàng của tôi</a>
-                        <a href="#" class="profile-sidebar-link" style="text-decoration: none;">Danh sách yêu thích</a>
-                        <a href="/rma-management" class="profile-sidebar-link" style="text-decoration: none;">Đổi / Trả hàng</a>
+                        <a th:href="@{/orders}" class="profile-sidebar-link" style="text-decoration: none;">Đơn hàng của tôi</a>
+                        <a th:href="@{/wishlist}" class="profile-sidebar-link" style="text-decoration: none;">Danh sách yêu thích</a>
+                        <a th:href="@{/rma-management}" class="profile-sidebar-link" style="text-decoration: none;">Đổi / Trả hàng</a>
                         <form th:action="@{/logout}" method="post" style="margin: 0;">
                             <button type="submit" class="profile-sidebar-link" style="color:#e63946; border: none; background: none; width: 100%; text-align: left; padding: 12px 16px; font-family: inherit; font-size: 14px; cursor: pointer;">Đăng xuất</button>
                         </form>

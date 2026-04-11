@@ -54,6 +54,24 @@ public class HomeController {
     }
 
     /**
+     * Footer endpoints
+     * */
+    @GetMapping("/size-guide")
+    public String sizeGuide() {
+        return "client/pages/size-guide";
+    }
+
+    @GetMapping("/return-policy")
+    public String returnPolicy() {
+        return "client/pages/return-policy";
+    }
+
+    @GetMapping("/shipping")
+    public String shipping() {
+        return "client/pages/shipping";
+    }
+
+    /**
      * Get list of RMA requests for the current user
      */
     @GetMapping("/rma-management")

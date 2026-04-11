@@ -13,6 +13,7 @@ import com.clothshop.domain.models.product.Product;
 import com.clothshop.domain.repositories.marketing.CollectionItemRepository;
 import com.clothshop.domain.repositories.marketing.CollectionRepository;
 import com.clothshop.domain.repositories.product.ProductRepository;
+import com.clothshop.common.utils.FileUploadUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -35,6 +36,7 @@ public class FeaturedCollectionService {
     private final CollectionItemRepository collectionItemRepository;
     private final ProductRepository productRepository;
     private final CollectionMapper collectionMapper;
+    private final FileUploadUtil fileUploadUtil;
 
     /**
      * Tạo mới hoặc Cập nhật Collection (Unified endpoint)
@@ -58,6 +60,9 @@ public class FeaturedCollectionService {
             if (request.getIsActive() == null) {
                 collection.setIsActive(true);
             }
+
+            // Xử lý upload ảnh cho bộ sưu tập mới
+            handleImageUpload(request, collection);
 
             // Save lần 1 để DB sinh ra ID
             collection = collectionRepository.save(collection);
@@ -83,7 +88,10 @@ public class FeaturedCollectionService {
 
             // USAGE 2: Dùng Mapper update các trường (name, description, isActive) từ Request vào Entity
             collectionMapper.updateEntityFromRequest(request, collection);
+
         }
+
+        handleImageUpload(request, collection);
 
         // Save lần 2 (áp dụng cho cả Create để lưu cái finalSlug, và Update)
         Collection saved = collectionRepository.save(collection);
@@ -244,7 +252,6 @@ public class FeaturedCollectionService {
     private CollectionResponse mapToResponse(Collection collection) {
         // USAGE 3: Dùng Mapper biến Entity thành DTO
         CollectionResponse response = collectionMapper.toResponse(collection);
-
         // Count số lượng và set vào
         Long itemCount = collection.getId() != null ? collectionItemRepository.countActiveItemsByCollectionId(collection.getId()) : 0L;
         response.setItemCount(itemCount);
@@ -269,6 +276,42 @@ public class FeaturedCollectionService {
             return Long.parseLong(idPart);
         } catch (Exception e) {
             return null;
+        }
+    }
+
+    /**
+     * Helper xử lý upload ảnh
+     */
+    private void handleImageUpload(CollectionSaveRequest request, Collection collection) {
+        // TH1: Admin nhấn nút XÓA ảnh
+        if (request.isDeleteImage()) {
+            collection.setImageUrl(null);
+            log.info("Removed image for collection ID: {}", collection.getId());
+        }
+
+        // TH2: Admin chọn FILE MỚI
+        if (request.getImageFile() != null && !request.getImageFile().isEmpty()) {
+            // Giả sử savedPath trả về: "collections/abc.png"
+            String savedPath = fileUploadUtil.upload(request.getImageFile(), "collections");
+
+            // KIỂM TRA VÀ CHUẨN HÓA:
+            String finalUrl;
+            if (savedPath.startsWith("/uploads/")) {
+                // Nếu utils đã trả về full path rồi thì dùng luôn
+                finalUrl = savedPath;
+            } else if (savedPath.startsWith("/")) {
+                // Nếu bắt đầu bằng / nhưng thiếu uploads
+                finalUrl = "/uploads" + savedPath;
+            } else {
+                // Nếu là collections/abc.png -> Nối chuẩn /uploads/
+                finalUrl = "/uploads/" + savedPath;
+            }
+
+            // Xử lý trường hợp bị dính dấu gạch chéo kép // do nối chuỗi
+            finalUrl = finalUrl.replace("//", "/");
+
+            collection.setImageUrl(finalUrl);
+            log.info("Lưu path ảnh chuẩn: {}", finalUrl);
         }
     }
 }
