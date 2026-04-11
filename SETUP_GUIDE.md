@@ -35,15 +35,23 @@ cd ../../shop-api-client/src/main/resources
 cp application.yaml.example application.yaml
 ```
 
-Sửa username và password trong file vừa tạo.
+Sửa `application.yaml` (username và password MySQL). Lưu ý **OpenAI API Key** đã được cấu hình lấy từ biến môi trường.
 
-## Bước 4: Build Project
+## Bước 4: Setup Biến Môi Trường (Cho tính năng Try-On)
+
+Tính năng Virtual Try-On tải cần khóa OpenAI API. Xuất giá trị này trực tiếp trên terminal của bạn:
+```bash
+export OPENAI_API_KEY="sk-your-openai-api-key-here"
+```
+*(Lưu ý: Bạn phải chạy lệnh `export` này trên cùng một terminal trước khi khởi động ứng dụng Client. Có thể thêm dòng này vào `~/.zshrc` hoặc `~/.bashrc` để không phải gõ lại mỗi lần).*
+
+## Bước 5: Build Project
 ```bash
 cd /path/to/ClothesShoppingSys/com.clothshop
 mvn clean install -DskipTests
 ```
 
-## Bước 5: Chạy Application
+## Bước 6: Chạy Application
 
 ### Admin Portal
 ```bash
@@ -54,6 +62,7 @@ mvn spring-boot:run
 → Login: `admin` / `admin@123`
 
 ### Client Portal
+Xin nhớ mở terminal mới, chạy lại lệnh `export OPENAI_API_KEY=...` nếu bạn chưa thiết lập toàn cục, sau đó:
 ```bash
 cd shop-api-client
 mvn spring-boot:run

@@ -59,6 +59,11 @@ public class ProductSearchService {
             spec = spec.and(collSpec);
         }
 
+        if (Boolean.TRUE.equals(request.getMustHaveImage())) {
+            Specification<Product> imageSpec = (root, query, cb) -> cb.isNotEmpty(root.get("images"));
+            spec = spec.and(imageSpec);
+        }
+
         Page<Product> productPage = productRepository.findAll(spec, pageable);
 
         return productPage.map(productMapper::toListResponse);
