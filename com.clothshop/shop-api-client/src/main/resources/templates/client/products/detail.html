@@ -1088,7 +1088,7 @@
             fetch('/checkout/direct', { method: 'POST', headers: getSecurityHeaders(), credentials: 'same-origin',
                 body: JSON.stringify({ variantId: parseInt(variantId), quantity }) })
             .then(res => { if (res.status === 401 || res.status === 403) { window.location.href = '/login'; throw new Error('Unauthorized'); } if (!res.ok) throw new Error('Error'); return res.json(); })
-            .then(data => { if (data?.success) window.location.href = '/cart/direct'; })
+            .then(data => { if (data?.success) window.location.href = '/checkout/direct'; })
             .catch(err => { if (err.message !== 'Unauthorized') showToast("Lỗi hệ thống!"); });
         }
 
