@@ -93,9 +93,13 @@ async function wishlistToggle(button, event) {
             if (result.isAdded) {
                 button.classList.add("active");
                 showToast("Đã thêm vào wishlist!", "success");
+                // ← thêm: đánh dấu product này đang IN wishlist
+                sessionStorage.setItem(`wishlist_${productId}`, 'true');
             } else {
                 button.classList.remove("active");
                 showToast("Đã xóa khỏi wishlist.", "info");
+                // ← thêm: đánh dấu product này đã bị REMOVE
+                sessionStorage.setItem(`wishlist_${productId}`, 'false');
             }
 
             updateWishlistCount();
