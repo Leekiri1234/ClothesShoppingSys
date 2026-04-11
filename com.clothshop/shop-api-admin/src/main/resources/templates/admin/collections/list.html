@@ -53,6 +53,7 @@
             <thead>
                 <tr>
                     <th style="width: 60px;">ID</th>
+                    <th style="width: 80px;">Ảnh</th>
                     <th>Tên bộ sưu tập</th>
                     <th>Mô tả</th>
                     <th style="width: 100px; text-align: center;">Số SP</th>
@@ -80,6 +81,11 @@
                 <!-- Data rows -->
                 <tr th:each="collection : ${collections.content}">
                     <td th:text="${collection.id}" style="font-weight: 600; color: var(--muted);">1</td>
+                    <td>
+                        <img th:src="${collection.imageUrl != null ? collection.imageUrl : '/images/no-image.png'}"
+                             alt="Thumbnail"
+                             style="width: 60px; height: 34px; border-radius: 4px; object-fit: cover; border: 1px solid #eee;">
+                    </td>
                     <td>
                         <span style="font-weight: 600;" th:text="${collection.name}">Bộ sưu tập mùa hè</span>
                     </td>
