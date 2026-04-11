@@ -18,6 +18,7 @@ public class WishlistController {
 
     private final WishlistClientService wishlistService;
 
+
     // 1. Xem wishlist (Trả về View HTML)
     @GetMapping
     public String viewWishlist(Principal principal, Model model) {
@@ -78,4 +79,5 @@ public class WishlistController {
         }
         return ResponseEntity.ok(wishlistService.getWishlistProductIds(principal.getName()));
     }
+
 }

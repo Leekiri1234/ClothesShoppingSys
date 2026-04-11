@@ -682,7 +682,7 @@
     border: 1px solid #e5e5e5;
     color: #444;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.25s ease;
 }
 
 .product-card-action-btn svg {
@@ -697,34 +697,41 @@
     border-color: #dcdcdc;
 }
 
-.product-card-action-btn.wishlist-btn.active {
-    background: #111;
-    border-color: #111;
-    color: #fff;
-}
-
-.product-card-action-btn.wishlist-btn.active:hover {
-    background: #111;
-    border-color: #111;
-    color: #fff;
-}
+/* wishlist */
 .product-card-action-btn.wishlist-btn {
     background: #fff;
+    color: #111;
     border: 1px solid #111;
 }
 
-.product-card-action-btn.wishlist-btn svg {
-    fill: #fff;
-    stroke: #111;
-    transition: all 0.2s ease;
+.product-card-action-btn.wishlist-btn .wishlist-icon path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: all 0.25s ease;
 }
 
-.product-card-action-btn.wishlist-btn.active {
+.product-card-action-btn.wishlist-btn:hover {
     background: #111;
+    color: #fff;
     border-color: #111;
 }
 
-.product-card-action-btn.wishlist-btn.active svg {
-    fill: #fff;
-    stroke: #fff;
+.product-card-action-btn.wishlist-btn.is-active {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+}
+
+.product-card-action-btn.wishlist-btn.is-active:hover {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+}
+
+.product-card-action-btn.wishlist-btn.is-active .wishlist-icon path {
+    fill: currentColor;
+    stroke: currentColor;
 }
