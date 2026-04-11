@@ -12,6 +12,7 @@ import com.clothshop.domain.repositories.marketing.FeaturedProductRepository;
 import com.clothshop.domain.repositories.product.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -113,7 +114,7 @@ public class ProductClientService {
      * @return List of featured products
      */
     @Transactional(readOnly = true)
-    @Cacheable(value = "featuredProducts", key = "#limit") // Đọc note số 3 bên dưới về Cache
+    @CacheEvict(value = "featuredProducts", allEntries = true)
     public List<ProductListResponse> getFeaturedProducts(int limit) {
         log.debug("Fetching top {} featured products from DB", limit);
 

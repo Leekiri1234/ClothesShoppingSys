@@ -31,7 +31,7 @@ public interface FeaturedProductRepository extends JpaRepository<FeaturedProduct
     @Query("UPDATE FeaturedProduct f SET f.isActive = false, f.updatedBy = :username WHERE f.isActive = true")
     void deactivateAllFeaturedProducts(@Param("username") String username);
 
-    @Query("SELECT fp.product FROM FeaturedProduct fp " +
+    @Query("SELECT p FROM FeaturedProduct fp " +
             "JOIN fp.product p " +
             "LEFT JOIN FETCH p.category " +
             "WHERE fp.isActive = true AND p.isActive = true " +

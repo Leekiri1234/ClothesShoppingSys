@@ -6,8 +6,8 @@ function removeWishlistCard(button) {
         setTimeout(() => {
             card.style.opacity = '0';
             card.style.transform = 'scale(0.95)';
-            setTimeout(() => card.remove(), 300);
-        }, 200);
+            setTimeout(() => card.remove(), 100);
+        }, 100);
     }
 }
 
