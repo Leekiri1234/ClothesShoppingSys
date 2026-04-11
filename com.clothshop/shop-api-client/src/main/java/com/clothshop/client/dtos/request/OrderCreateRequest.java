@@ -44,4 +44,12 @@ public class OrderCreateRequest {
     /** Phương thức thanh toán */
     @NotNull(message = "Vui lòng chọn phương thức thanh toán")
     private PaymentMethod paymentMethod = PaymentMethod.COD;
+
+    // Thêm 2 field này vào cuối class OrderCreateRequest
+
+    /** Mua ngay — variantId (không qua giỏ hàng) */
+    private Integer directVariantId;
+
+    /** Mua ngay — số lượng */
+    private Integer directQuantity;
 }

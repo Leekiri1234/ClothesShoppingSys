@@ -70,7 +70,9 @@ public class WishlistController {
     public ResponseEntity<?> checkProductInWishlist(@PathVariable Long productId, Principal principal) {
         if (principal == null) return ResponseEntity.ok(Map.of("inWishlist", false));
         boolean inWishlist = wishlistService.isProductInWishlist(principal.getName(), productId);
-        return ResponseEntity.ok(Map.of("inWishlist", inWishlist));
+        return ResponseEntity.ok()
+                .cacheControl(org.springframework.http.CacheControl.noStore())  // ← thêm
+                .body(Map.of("inWishlist", inWishlist));
     }
 
     // 6. Lấy danh sách ID sản phẩm trong wishlist (AJAX)

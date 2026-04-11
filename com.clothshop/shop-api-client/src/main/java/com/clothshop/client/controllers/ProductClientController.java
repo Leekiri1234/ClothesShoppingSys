@@ -4,6 +4,7 @@ import com.clothshop.client.dtos.request.ProductSearchRequest;
 import com.clothshop.client.dtos.response.CategoryResponse;
 import com.clothshop.client.dtos.response.ProductDetailResponse;
 import com.clothshop.client.dtos.response.ProductListResponse;
+import com.clothshop.client.dtos.response.VariantDetailResponse;
 import com.clothshop.client.services.CategoryClientService;
 import com.clothshop.client.services.ProductClientService;
 import com.clothshop.client.services.ProductSearchService;
@@ -80,6 +81,22 @@ public class ProductClientController {
     public String productDetail(@PathVariable String slug, Model model, Principal principal) {
         ProductDetailResponse product = productClientService.getProductBySlug(slug);
         model.addAttribute("product", product);
+        // Lọc ra danh sách màu sắc không trùng lặp từ list variants
+        List<String> colors = product.getVariants().stream()
+                .map(VariantDetailResponse::getColor)
+                .distinct()
+                .toList();
+        product.setAvailableColors(colors);
+
+        // Lọc ra danh sách size không trùng lặp từ list variants
+        List<String> sizes = product.getVariants().stream()
+                .map(VariantDetailResponse::getSizeValue)
+                .distinct()
+                .toList();
+        product.setAvailableSizes(sizes);
+
+        // Code cũ của bạn: model.addAttribute("product", product);
+        // Code cũ của bạn: return "client/products/detail";
         model.addAttribute("pageTitle", product.getProductName());
 
         // Review logic
