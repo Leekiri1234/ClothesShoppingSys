@@ -2,6 +2,7 @@ package com.clothshop.common.utils;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
+import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -9,29 +10,14 @@ import java.nio.file.*;
 import java.util.UUID;
 
 @Component
+@RequiredArgsConstructor
 public class FileUploadUtil {
-
-    private Path resolveWorkspaceRoot() {
-        Path current = Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
-
-        for (int i = 0; i < 6 && current != null; i++) {
-            if (Files.exists(current.resolve("src/main/resources/static"))) {
-                return current;
-            }
-            current = current.getParent();
-        }
-
-        return Paths.get(System.getProperty("user.dir")).toAbsolutePath().normalize();
-    }
-
-    private Path resolveUploadRoot() {
-        return resolveWorkspaceRoot().resolve("src/main/resources/static/uploads").toAbsolutePath().normalize();
-    }
+    private final UploadPathResolver uploadPathResolver;
 
     public String upload(MultipartFile file, String folder) {
         try {
             // 📌 Tạo folder nếu chưa có
-            Path uploadPath = resolveUploadRoot().resolve(folder);
+            Path uploadPath = uploadPathResolver.resolveUploadRoot().resolve(folder);
             if (!Files.exists(uploadPath)) {
                 Files.createDirectories(uploadPath);
             }

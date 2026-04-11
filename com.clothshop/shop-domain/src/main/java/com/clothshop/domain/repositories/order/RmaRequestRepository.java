@@ -24,7 +24,6 @@ public interface RmaRequestRepository extends JpaRepository<RmaRequest, Long>, J
     @Override
     Optional<RmaRequest> findById(Long id);
 
-    boolean existsByOrderIdAndCustomerId(Long orderId, Long customerId);
     /**
      * Lọc danh sách RMA theo trạng thái.
      */
@@ -36,6 +35,17 @@ public interface RmaRequestRepository extends JpaRepository<RmaRequest, Long>, J
      */
     @EntityGraph(attributePaths = {"order", "customer"})
     Page<RmaRequest> findByOrder_OrderInvoiceContainingIgnoreCase(String orderInvoice, Pageable pageable);
+
+    /**
+     * Kiểm tra xem yêu cầu RMA có tồn tại cho Order và Customer này không.
+     */
+    boolean existsByOrderIdAndCustomerId(Long orderId, Long customerId);
+
+    /**
+     * Tìm yêu cầu RMA dựa trên ID của đơn hàng và ID của khách hàng.
+     */
+    @EntityGraph(attributePaths = {"order", "customer"})
+    Optional<RmaRequest> findByOrderIdAndCustomerId(Long orderId, Long customerId);
 
     /**
      * Đếm số lượng yêu cầu theo trạng thái (để làm thông báo số yêu cầu mới).
@@ -51,4 +61,16 @@ public interface RmaRequestRepository extends JpaRepository<RmaRequest, Long>, J
             "LOWER(r.customer.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     @EntityGraph(attributePaths = {"order", "customer"})
     Page<RmaRequest> searchRma(@Param("keyword") String keyword, Pageable pageable);
+
+    /**
+     * Tìm tất cả yêu cầu RMA của một khách hàng.
+     */
+    @EntityGraph(attributePaths = {"order", "customer"})
+    Page<RmaRequest> findByCustomerId(Long customerId, Pageable pageable);
+
+    /**
+     * Tìm yêu cầu RMA theo ID với đầy đủ thông tin.
+     */
+    @EntityGraph(attributePaths = {"order", "customer", "order.orderItems"})
+    Optional<RmaRequest> findByIdAndCustomerId(Long rmaId, Long customerId);
 }

@@ -20,6 +20,8 @@ public interface CollectionMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "bannerUrl", ignore = true) // Tạm thời ignore nếu chưa dùng đến trong form này
+    @Mapping(target = "imageUrl", ignore = true)  //Service tự set sau khi upload file
     Collection toEntity(CollectionSaveRequest request);
 
     // 3. Request -> Entity (Update)
@@ -30,5 +32,6 @@ public interface CollectionMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "createdBy", ignore = true)
     @Mapping(target = "updatedBy", ignore = true)
+    @Mapping(target = "imageUrl", ignore = true) //Tránh việc MapStruct ghi đè giá trị null vào link ảnh cũ
     void updateEntityFromRequest(CollectionSaveRequest request, @MappingTarget Collection collection);
 }

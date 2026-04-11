@@ -7,6 +7,7 @@
     <title>Trang chủ</title>
     <th:block layout:fragment="styles">
         <link rel="stylesheet" th:href="@{/css/home/home.css}">
+        <link rel="stylesheet" th:href="@{/css/quick-view-modal.css}">
     </th:block>
 </head>
 
@@ -105,9 +106,15 @@
                         <button type="button"
                                 class="product-card-action-btn wishlist-btn"
                                 th:data-product-id="${item.id}"
-                                onclick="wishlistToggle(this, event)"
-                                title="Yêu thích">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                                onclick="event.stopPropagation(); event.preventDefault(); wishlistToggle(this, event)"
+                                title="Yêu thích"
+                                aria-label="Yêu thích"
+                                aria-pressed="false">
+                            <svg class="wishlist-icon"
+                                 xmlns="http://www.w3.org/2000/svg"
+                                 width="16"
+                                 height="16"
+                                 viewBox="0 0 24 24">
                                 <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
                             </svg>
                         </button>
@@ -123,9 +130,9 @@
                         </button>
 
                         <!-- Add to Cart -->
-                        <button class="product-card-action-btn cart-btn"
-                                th:data-variant-id="${item.defaultVariantId}"
-                                onclick="quickAddToCart(this, event)" title="Thêm vào giỏ">
+                        <button class="product-card-action-btn quick-view-btn"
+                                th:data-product-slug="${item.slug != null ? item.slug : item.productSlug}"
+                                onclick="openQuickViewModal(this, event)" title="Thêm vào giỏ">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <circle cx="9" cy="21" r="1"/>
                                 <circle cx="20" cy="21" r="1"/>
@@ -168,6 +175,7 @@
 <th:block layout:fragment="scripts">
     <script th:src="@{/js/home/home.js}"></script>
     <script th:src="@{/js/wishlist/wishlist.js}"></script>
+    <script th:src="@{/js/product-actions.js}"></script>
 </th:block>
 </body>
 </html>

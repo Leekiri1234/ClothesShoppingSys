@@ -1,5 +1,6 @@
 package com.clothshop.client.controllers;
 
+import com.clothshop.client.services.CustomerProfileService;
 import com.clothshop.client.services.WishlistClientService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,8 @@ import java.util.Map;
 public class WishlistController {
 
     private final WishlistClientService wishlistService;
+    private final CustomerProfileService profileService;
+
 
     // 1. Xem wishlist (Trả về View HTML)
     @GetMapping
@@ -25,6 +28,7 @@ public class WishlistController {
             return "redirect:/login";
         }
         model.addAttribute("wishlist", wishlistService.getWishlistItems(principal.getName()));
+        model.addAttribute("profile", profileService.getProfile(principal.getName()));
         return "client/wishlist/list";
     }
 
@@ -78,4 +82,5 @@ public class WishlistController {
         }
         return ResponseEntity.ok(wishlistService.getWishlistProductIds(principal.getName()));
     }
+
 }

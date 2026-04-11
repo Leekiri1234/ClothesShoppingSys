@@ -15,11 +15,11 @@
         <div class="container" style="padding: 40px 0;">
             <div class="section-header">
                 <p class="eyebrow">Sưu tập của bạn</p>
-                <h2>Danh sách yêu thích (<span th:text="${wishlist.totalItems}">0</span> sản phẩm)</h2>
+                <h2>Danh sách yêu thích (<span id="wishlist-count-list" th:text="${wishlist.totalItems}">0</span> sản phẩm)</h2>
             </div>
 
             <!-- Empty Wishlist State -->
-            <div th:if="${wishlist.totalItems == 0}" style="text-align: center; padding: 80px 0;">
+            <div id="empty-wishlist-state" style="text-align: center; padding: 80px 0; display: none;">
                 <div style="font-size: 48px; margin-bottom: 16px;">♡</div>
                 <h4 style="font-size: 20px; margin-bottom: 8px;">Danh sách yêu thích trống</h4>
                 <p style="color: #666; margin-bottom: 24px;">Thêm các sản phẩm yêu thích của bạn để tìm chúng dễ dàng hơn</p>
@@ -27,7 +27,7 @@
             </div>
 
             <!-- Wishlist Grid -->
-            <div class="product-grid" th:if="${wishlist.totalItems > 0}">
+            <div class="product-grid">
                 <article class="product-card wishlist-card" th:each="item : ${wishlist.items}" 
                     th:data-product-id="${item.productId}" th:data-item-id="${item.itemId}">
                     <a th:href="@{/products/{slug}(slug=${item.productSlug})}">
@@ -36,7 +36,7 @@
                                 <!-- Wishlist Remove Button -->
                                 <button class="product-card-action-btn wishlist-btn active" 
                                     th:data-product-id="${item.productId}" 
-                                    onclick="event.stopPropagation(); wishlistToggle(this, event); removeWishlistCard(this);" 
+                                    onclick="event.stopPropagation(); updateWishlistOnRemove(this, event);" 
                                     title="Bỏ yêu thích">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5">
                                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
@@ -82,56 +82,117 @@
         </div>
 
         <!-- Quick View Modal -->
-        <div id="quick-view-modal" class="quick-view-modal" style="display: none;">
-            <div class="modal-overlay" onclick="closeQuickViewModal()"></div>
-            <div class="modal-content">
-                <button class="modal-close" onclick="closeQuickViewModal()">✕</button>
-                
-                <div class="modal-inner">
-                    <!-- Product Image -->
-                    <div class="modal-image-section" id="modal-image-section">
-                        <div id="modal-image" class="modal-image img-placeholder">Loading...</div>
-                    </div>
+<!--        <div id="quick-view-modal" class="quick-view-modal" style="display: none;">-->
+<!--            <div class="modal-overlay" onclick="closeQuickViewModal()"></div>-->
+<!--            <div class="modal-content">-->
+<!--                <button class="modal-close" onclick="closeQuickViewModal()">✕</button>-->
+<!--                -->
+<!--                <div class="modal-inner">-->
+<!--                    &lt;!&ndash; Product Image &ndash;&gt;-->
+<!--                    <div class="modal-image-section" id="modal-image-section">-->
+<!--                        <div id="modal-image" class="modal-image img-placeholder">Loading...</div>-->
+<!--                    </div>-->
 
-                    <!-- Product Info -->
-                    <div class="modal-info-section">
-                        <h2 id="modal-name">Product Name</h2>
-                        <div id="modal-price" style="font-size: 20px; font-weight: 600; margin-bottom: 16px; color: #1C1C1A;">0₫</div>
-                        
-                        <!-- Variants Section -->
-                        <div class="variants-section" style="margin-bottom: 20px;">
-                            <div style="margin-bottom: 12px;">
-                                <label style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #999;">Màu sắc</label>
-                                <div id="modal-colors" style="display: flex; gap: 8px; margin-top: 8px;"></div>
-                            </div>
-                            
-                            <div style="margin-bottom: 12px;">
-                                <label style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #999;">Kích cỡ</label>
-                                <div id="modal-sizes" style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;"></div>
-                            </div>
+<!--                    &lt;!&ndash; Product Info &ndash;&gt;-->
+<!--                    <div class="modal-info-section">-->
+<!--                        <h2 id="modal-name">Product Name</h2>-->
+<!--                        <div id="modal-price" style="font-size: 20px; font-weight: 600; margin-bottom: 16px; color: #1C1C1A;">0₫</div>-->
+<!--                        -->
+<!--                        &lt;!&ndash; Variants Section &ndash;&gt;-->
+<!--                        <div class="variants-section" style="margin-bottom: 20px;">-->
+<!--                            <div style="margin-bottom: 12px;">-->
+<!--                                <label style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #999;">Màu sắc</label>-->
+<!--                                <div id="modal-colors" style="display: flex; gap: 8px; margin-top: 8px;"></div>-->
+<!--                            </div>-->
+<!--                            -->
+<!--                            <div style="margin-bottom: 12px;">-->
+<!--                                <label style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #999;">Kích cỡ</label>-->
+<!--                                <div id="modal-sizes" style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;"></div>-->
+<!--                            </div>-->
 
-                            <div style="display: flex; align-items: center; gap: 12px;">
-                                <label style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #999; flex: 0 0 50px;">Số lượng</label>
-                                <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #e8e8e8; border-radius: 4px; padding: 0 8px;">
-                                    <button onclick="decreaseModalQty()" style="background: none; border: none; cursor: pointer; padding: 6px;">−</button>
-                                    <input id="modal-qty" type="number" value="1" min="1" max="10" style="width: 40px; text-align: center; border: none; outline: none;">
-                                    <button onclick="increaseModalQty()" style="background: none; border: none; cursor: pointer; padding: 6px;">+</button>
-                                </div>
-                            </div>
-                        </div>
+<!--                            <div style="display: flex; align-items: center; gap: 12px;">-->
+<!--                                <label style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: #999; flex: 0 0 50px;">Số lượng</label>-->
+<!--                                <div style="display: flex; align-items: center; gap: 8px; border: 1px solid #e8e8e8; border-radius: 4px; padding: 0 8px;">-->
+<!--                                    <button onclick="decreaseModalQty()" style="background: none; border: none; cursor: pointer; padding: 6px;">−</button>-->
+<!--                                    <input id="modal-qty" type="number" value="1" min="1" max="10" style="width: 40px; text-align: center; border: none; outline: none;">-->
+<!--                                    <button onclick="increaseModalQty()" style="background: none; border: none; cursor: pointer; padding: 6px;">+</button>-->
+<!--                                </div>-->
+<!--                            </div>-->
+<!--                        </div>-->
 
-                        <!-- Action Buttons -->
-                        <div class="modal-action-buttons">
-                            <button class="btn btn--primary" onclick="addModalToCart()">Thêm vào giỏ</button>
-                            <button class="btn btn--outline" onclick="closeQuickViewModal()">Xem chi tiết</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!--                        &lt;!&ndash; Action Buttons &ndash;&gt;-->
+<!--                        <div class="modal-action-buttons">-->
+<!--                            <button class="btn btn&#45;&#45;primary" onclick="addModalToCart()">Thêm vào giỏ</button>-->
+<!--                            <button class="btn btn&#45;&#45;outline" onclick="closeQuickViewModal()">Xem chi tiết</button>-->
+<!--                        </div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
 
         <th:block layout:fragment="scripts">
             <script th:src="@{/js/wishlist/wishlist.js}"></script>
+            <script>
+                function initCheckWishlistState() {
+                    const productGrid = document.querySelector('.product-grid');
+                        const cards = productGrid?.querySelectorAll('.wishlist-card');
+                        const emptyState = document.getElementById('empty-wishlist-state');
+
+                        if (!cards || cards.length === 0) {
+                            // List is empty, hide product grid
+                            if (productGrid) {
+                                productGrid.style.display = 'none';
+                            }
+
+                            // Show empty state
+                            if (emptyState) {
+                                emptyState.style.display = 'block';
+                            }
+
+                            // Update the count to 0
+                            const countElement = document.getElementById('wishlist-count-list');
+                            if (countElement) {
+                                countElement.textContent = '0';
+                            }
+                        }
+                        console.log('trigger');
+                }
+
+                function updateWishlistOnRemove(button, event) {
+                    // 1. Trigger existing logic
+                    if (typeof wishlistToggle === 'function') {
+                        wishlistToggle(button, event);
+                    }
+
+                    // 2. Animate removal
+                    if (typeof removeWishlistCard === 'function') {
+                        removeWishlistCard(button);
+                    }
+
+                    // 3. Check state after animation finishes
+                    setTimeout(() => {
+                        const productGrid = document.querySelector('.product-grid');
+                        const cards = productGrid?.querySelectorAll('.wishlist-card');
+                        const emptyState = document.getElementById('empty-wishlist-state');
+                        const countElement = document.getElementById('wishlist-count-list');
+
+                        // Check if there are no cards left
+                        if (!cards || cards.length === 0) {
+                            if (productGrid) productGrid.style.display = 'none';
+                            if (emptyState) emptyState.style.display = 'block';
+                            if (countElement) countElement.textContent = '0';
+                        } else {
+                            // FIX: Parse the textContent, not the element itself
+                            const currentCount = parseInt(countElement.textContent) || 0;
+                            countElement.textContent = Math.max(0, currentCount - 1);
+                        }
+                    }, 250);
+                }
+
+                // instantly loads wishlist state at the beginning
+                window.onload = initCheckWishlistState;
+
+            </script>
         </th:block>
     </section>
 </body>

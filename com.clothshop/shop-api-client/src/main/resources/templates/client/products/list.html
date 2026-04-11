@@ -5,6 +5,36 @@
     <title>Danh sách sản phẩm — MINIMAL</title>
     <!-- Thêm CSS cho phần sidebar và bộ lọc -->
     <style>
+        .product-card-action-btn.wishlist-btn {
+    background: #fff;
+    color: #111;
+    border: 1px solid #d9d9d9;
+    transition: all 0.25s ease;
+}
+
+.product-card-action-btn.wishlist-btn:hover {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+}
+
+.product-card-action-btn.wishlist-btn .wishlist-icon path {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    transition: all 0.25s ease;
+}
+
+.product-card-action-btn.wishlist-btn.is-active {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+}
+
+.product-card-action-btn.wishlist-btn.is-active .wishlist-icon path {
+    fill: currentColor;
+    stroke: currentColor;
+}
         .shop-container {
             display: flex;
             gap: 30px;
@@ -328,17 +358,25 @@
 
                                     <div class="product-card-actions" th:if="${#authorization.expression('isAuthenticated()')}">
                                         <!-- Wishlist Button -->
-                                        <button class="product-card-action-btn wishlist-btn" th:data-product-id="${p.id != null ? p.id : p.productId}" onclick="event.stopPropagation(); event.preventDefault(); wishlistToggle(this, event)" title="Yêu thích">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+                                        <!-- Wishlist Button -->
+                                        <button type="button"
+                                                class="product-card-action-btn wishlist-btn"
+                                                th:data-product-id="${p.id != null ? p.id : p.productId}"
+                                                onclick="event.stopPropagation(); event.preventDefault(); wishlistToggle(this, event)"
+                                                title="Yêu thích"
+                                                aria-label="Yêu thích"
+                                                aria-pressed="false">
+                                            <svg class="wishlist-icon" width="14" height="14" viewBox="0 0 24 24">
+                                                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                                            </svg>
                                         </button>
-                                        <!-- Quick View Button -->
                                         <button class="product-card-action-btn quick-view-btn" th:data-product-slug="${p.slug != null ? p.slug : p.productSlug}" onclick="event.stopPropagation(); event.preventDefault(); openQuickViewModal(this, event)" title="Xem nhanh">
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                         </button>
                                         <!-- Quick Cart Button -->
-                                        <button class="product-card-action-btn cart-btn"
-                                                th:data-variant-id="${p.defaultVariantId}"
-                                                onclick="event.stopPropagation(); event.preventDefault(); quickAddToCart(this, event)" title="Thêm vào giỏ">
+                                        <button class="product-card-action-btn quick-view-btn"
+                                                th:data-product-slug="${p.slug != null ? p.slug : p.productSlug}"
+                                                onclick="openQuickViewModal(this, event)" title="Thêm vào giỏ">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="9" cy="21" r="1"/>
                                                 <circle cx="20" cy="21" r="1"/>

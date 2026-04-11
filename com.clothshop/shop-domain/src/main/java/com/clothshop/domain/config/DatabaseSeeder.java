@@ -703,7 +703,37 @@ public class DatabaseSeeder implements CommandLineRunner {
             "Cancelled by customer"
         );
 
-        log.info("Vouchers and orders seeded: 3 vouchers, 5 client orders for single customer");
+        createOrderWithVoucherIfMissing(
+            "INV-1006",
+            customers.get(1),
+            PaymentMethod.MOMO,
+            OrderStatus.PENDING,
+            List.of(new ItemSpec(variants.get(8), 1), new ItemSpec(variants.get(9), 1)),
+            percentVoucher,
+            "Pending payment verification"
+        );
+
+        createOrderWithVoucherIfMissing(
+            "INV-1007",
+            customers.get(2),
+            PaymentMethod.BANK_TRANSFER,
+            OrderStatus.PENDING,
+            List.of(new ItemSpec(variants.get(10), 1)),
+            fixedVoucher,
+            "Waiting for customer confirmation"
+        );
+
+        createOrderWithVoucherIfMissing(
+            "INV-1008",
+            customers.get(0),
+            PaymentMethod.VNPAY,
+            OrderStatus.COMPLETED,
+            List.of(new ItemSpec(variants.get(11), 1), new ItemSpec(variants.get(12), 1)),
+            percentVoucher,
+            "Completed successfully"
+        );
+
+        log.info("Vouchers and orders seeded: 3 vouchers, 8 client orders");
     }
 
     private void createOrderWithVoucherIfMissing(String invoice, Customer customer, PaymentMethod paymentMethod,
