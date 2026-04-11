@@ -691,7 +691,7 @@
        height: 38px;
        background: #fff;
        border: 1px solid #000;
-       border-radius: 8px;
+       border-radius: 8px;.
 
        display: flex;
        align-items: center;
@@ -701,47 +701,64 @@
        transition: all 0.25s ease;
    }
 
-   /* ICON */
-   .action-btn i {
-       font-size: 14px;
-       color: #000;
-   }
+  .product-card-image {
+      position: relative;
+      overflow: hidden;
+  }
 
-   /* HOVER EFFECT */
-   .action-btn:hover {
-       background: #000;
-   }
+  .product-card-actions {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 20;
 
-   .action-btn:hover i {
-       color: #fff;
-   }
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+  }
 
-   /* MOBILE: luôn hiện */
-   @media (max-width: 768px) {
-       .product-actions {
-           opacity: 1;
-           transform: none;
-           pointer-events: auto;
-       }
-   }
-   .product-card-actions {
-       z-index: 20;
-   }
+  .product-card-action-btn {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      min-height: 36px;
+      padding: 0;
+      box-sizing: border-box;
+      flex: 0 0 36px;
+      border-radius: 4px;
 
-   .product-card-action-btn {
-       width: 36px !important;
-       height: 36px !important;
-       min-width: 36px;
-       min-height: 36px;
-       padding: 0 !important;
-       box-sizing: border-box;
-       flex: 0 0 36px;
-       border-radius: 0;
-   }
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-   .product-card-action-btn svg {
-       width: 14px;
-       height: 14px;
-       flex-shrink: 0;
-       pointer-events: none;
-   }
+      background: #fff;
+      border: 1px solid #e5e5e5;
+      color: #444;
+      cursor: pointer;
+      transition: all 0.2s ease;
+  }
+
+  .product-card-action-btn svg {
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+      pointer-events: none;
+  }
+
+  .product-card-action-btn:hover {
+      background: #f7f7f7;
+      border-color: #dcdcdc;
+  }
+
+  /* wishlist khi đã click */
+  .product-card-action-btn.wishlist-btn.active {
+      background: #111;
+      border-color: #111;
+      color: #fff;
+  }
+
+  .product-card-action-btn.wishlist-btn.active:hover {
+      background: #111;
+      border-color: #111;
+      color: #fff;
+  }
