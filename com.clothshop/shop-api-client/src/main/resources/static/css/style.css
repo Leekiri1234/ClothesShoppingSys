@@ -4838,4 +4838,20 @@ img {
     .qv-product-name {
         font-size: 28px;
     }
+    /* ===== FIX CART SIDEBAR MOBILE ===== */
+    @media (max-width: 768px) {
+        .cart-sidebar {
+            position: fixed !important;
+            top: 0 !important;
+            right: -100% !important;
+            width: 100% !important;
+            height: 100% !important;
+            z-index: 9999 !important;
+            transition: right 0.3s ease !important;
+        }
+
+        .cart-sidebar.open {
+            right: 0 !important;
+        }
+    }
 }
