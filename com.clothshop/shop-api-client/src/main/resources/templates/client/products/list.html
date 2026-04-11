@@ -4,245 +4,7 @@
 <head>
     <title>Danh sách sản phẩm — MINIMAL</title>
     <!-- Thêm CSS cho phần sidebar và bộ lọc -->
-    <style>
-        .product-card-action-btn.wishlist-btn {
-    background: #fff;
-    color: #111;
-    border: 1px solid #d9d9d9;
-    transition: all 0.25s ease;
-}
-
-.product-card-action-btn.wishlist-btn:hover {
-    background: #111;
-    color: #fff;
-    border-color: #111;
-}
-
-.product-card-action-btn.wishlist-btn .wishlist-icon path {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.8;
-    transition: all 0.25s ease;
-}
-
-.product-card-action-btn.wishlist-btn.is-active {
-    background: #111;
-    color: #fff;
-    border-color: #111;
-}
-
-.product-card-action-btn.wishlist-btn.is-active .wishlist-icon path {
-    fill: currentColor;
-    stroke: currentColor;
-}
-        .shop-container {
-            display: flex;
-            gap: 30px;
-            margin-top: 20px;
-        }
-
-        /* Sidebar Styles */
-        .shop-sidebar {
-            width: 280px;
-            flex-shrink: 0;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 1px 4px rgba(0,0,0,0.05); /* Hiệu ứng chuyên nghiệp */
-        }
-
-        .filter-section {
-            margin-bottom: 25px;
-            border-bottom: 1px solid #f0f0f0;
-            padding-bottom: 15px;
-        }
-
-        .filter-section:last-child {
-            border-bottom: none;
-        }
-
-        .filter-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        /* Cây danh mục (Accordion) */
-        .category-tree {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .category-tree li {
-            margin-bottom: 8px;
-        }
-
-        .category-tree label {
-            color: #555;
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-        }
-
-        .category-tree label:hover {
-            color: #000;
-            font-weight: 500;
-        }
-
-        .category-tree input[type="checkbox"] {
-            margin-right: 10px;
-        }
-
-        .category-tree .sub-categories {
-            list-style: none;
-            padding-left: 20px;
-            margin-top: 5px;
-            border-left: 1px dashed #ddd; /* Hiệu ứng dạng cây */
-        }
-
-        /* Filter Checkbox styles */
-        .filter-checkbox-group label {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-            cursor: pointer;
-            color: #555;
-            transition: color 0.2s ease;
-        }
-
-        .filter-checkbox-group label:hover {
-            color: #000;
-        }
-
-        .filter-checkbox-group input[type="checkbox"] {
-            margin-right: 10px;
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-        }
-
-        /* Price Range */
-        .price-inputs {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .price-inputs input {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            outline: none;
-        }
-
-        .price-inputs input:focus {
-            border-color: #000;
-        }
-
-        .filter-btn {
-            width: 100%;
-            padding: 10px;
-            background-color: #000;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            margin-top: 15px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-
-        .filter-btn:hover {
-            background-color: #333;
-        }
-
-        /* Main Content Styles */
-        .shop-main {
-            flex-grow: 1;
-            position: relative;
-        }
-
-        .shop-toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .sort-select {
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            outline: none;
-            background-color: #fff;
-            min-width: 150px;
-        }
-
-        .product-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr); /* 4 cột như yêu cầu */
-            gap: 30px 20px;
-            transition: opacity 0.3s ease;
-        }
-
-        /* Loading Skeleton Overlay */
-        .grid-loading {
-            opacity: 0.4;
-            pointer-events: none;
-        }
-
-        /* Badge Sale */
-        .badge-sale {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: #e81c24;
-            color: #fff;
-            padding: 4px 8px;
-            font-size: 12px;
-            font-weight: bold;
-            border-radius: 2px;
-            z-index: 2;
-        }
-
-        .product-card {
-            position: relative;
-        }
-
-        @media (max-width: 1200px) {
-            .product-grid { grid-template-columns: repeat(3, 1fr); }
-        }
-
-        @media (max-width: 991px) {
-            .shop-container {
-                flex-direction: column;
-            }
-            .shop-sidebar {
-                width: 100%;
-            }
-            .product-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 576px) {
-            .product-grid {
-                grid-template-columns: repeat(1, 1fr);
-            }
-        }
-    </style>
+     <link rel="stylesheet" href="css/products/product-list.css">
 </head>
 <body>
 <main layout:fragment="content" class="container" style="padding-top: 120px; padding-bottom: 60px;">
@@ -322,7 +84,7 @@
 
                     <input type="hidden" name="keyword" th:value="${searchRequest.keyword}">
 
-                <button type="button" class="filter-btn" style="background-color: #fff; color: #000; border: 1px solid #000; margin-top: 20px;" onclick="window.location.href=window.location.pathname">
+                <button type="button" class="filter-btn" style="background-color: #fff; color: #000; border: 1px solid #000; margin-top: 20px;" id="clearFilterBtn">
                     XÓA BỘ LỌC
                 </button>
             </form>
@@ -422,6 +184,52 @@
     <link rel="js-implementation" th:href="@{/js/product-actions.js}">
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // ========== FILTER FORM INITIALIZATION ==========
+            const filterForm = document.getElementById('filterForm');
+            const filterInputs = document.querySelectorAll('.filter-input');
+            const clearFilterBtn = document.getElementById('clearFilterBtn');
+
+            if (filterForm && filterInputs.length > 0) {
+                // Add change event listener to all filter inputs
+                filterInputs.forEach(input => {
+                    input.addEventListener('change', function() {
+                        console.log('Filter changed:', input.name, '=', input.value);
+                        // Submit form after a short delay to allow all changes to be captured
+                        setTimeout(() => {
+                            filterForm.submit();
+                        }, 100);
+                    });
+                });
+
+                // Also listen for input events on number fields (min/max price)
+                document.getElementById('minPrice')?.addEventListener('change', () => {
+                    console.log('Min price changed');
+                    setTimeout(() => filterForm.submit(), 100);
+                });
+
+                document.getElementById('maxPrice')?.addEventListener('change', () => {
+                    console.log('Max price changed');
+                    setTimeout(() => filterForm.submit(), 100);
+                });
+            }
+
+            // Clear filter button handler
+            if (clearFilterBtn) {
+                clearFilterBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    // Reset all filter inputs
+                    if (filterForm) {
+                        filterForm.reset();
+                        // Clear the keyword hidden field and submit
+                        document.querySelector('input[name="keyword"]').value = '';
+                        setTimeout(() => {
+                            window.location.href = window.location.pathname;
+                        }, 50);
+                    }
+                });
+            }
+
+            // Load product actions script
             const link = document.querySelector('link[rel="js-implementation"]');
             if (link) {
                 const script = document.createElement('script');

@@ -6,13 +6,17 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.NoHandlerFoundException;
+
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Global exception handler for SSR (Server-Side Rendering) with Thymeleaf.
- * Handles all exceptions and returns appropriate error pages.
+ * Handles all exceptions and returns appropriate error pages with correct HTTP status codes.
  */
 @Slf4j
 @ControllerAdvice
@@ -20,40 +24,57 @@ public class GlobalExceptionHandler {
 
     /**
      * Handles business exceptions thrown from service layer.
-     * Logs error and returns error page with error details.
+     * Returns HTTP 400 and error page with error details.
      */
     @ExceptionHandler(BusinessException.class)
-    public String handleBusinessException(BusinessException ex, Model model) {
+    public String handleBusinessException(BusinessException ex, Model model, HttpServletResponse response) {
         log.error("Business error: {}", ex.getMessage());
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         model.addAttribute("error", ex.getMessage());
         model.addAttribute("code", ex.getErrorCode().getCode());
-        return "error/error-page";
+        return "error/400";
     }
 
     /**
      * Handles validation errors from @Valid annotations.
-     * Extracts field errors and returns validation error page.
+     * Returns HTTP 400 with field validation errors.
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public String handleValidationException(MethodArgumentNotValidException ex, Model model) {
+    public String handleValidationException(MethodArgumentNotValidException ex, Model model, HttpServletResponse response) {
         Map<String, String> fieldErrors = new HashMap<>();
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {
             fieldErrors.put(error.getField(), error.getDefaultMessage());
         }
         log.error("Validation error: {}", fieldErrors);
+        response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
         model.addAttribute("errors", fieldErrors);
-        return "error/validation-error";
+        model.addAttribute("error", "Validation failed");
+        return "error/400";
+    }
+
+    /**
+     * Handles 404 Not Found exceptions.
+     * Returns HTTP 404 error page.
+     */
+    @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
+    public String handleNotFound(NoHandlerFoundException ex, Model model, HttpServletResponse response) {
+        log.warn("Resource not found: {}", ex.getRequestURL());
+        response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        model.addAttribute("error", "Resource not found");
+        model.addAttribute("path", ex.getRequestURL());
+        return "error/404";
     }
 
     /**
      * Handles all uncaught exceptions.
-     * Logs error and returns generic 500 error page.
+     * Returns HTTP 500 error page.
      */
-//    @ExceptionHandler(Exception.class)
-//    public String handleUnexpectedException(Exception ex, Model model) {
-//        log.error("Unexpected error", ex);
-//        model.addAttribute("error", "An unexpected error occurred");
-//        model.addAttribute("code", 500);
-//        return "error/500";
-//    }
+    @ExceptionHandler(Exception.class)
+    public String handleUnexpectedException(Exception ex, Model model, HttpServletResponse response) {
+        log.error("Unexpected error", ex);
+        response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        model.addAttribute("error", "An unexpected error occurred: " + ex.getMessage());
+        model.addAttribute("code", 500);
+        return "error/500";
+    }
 }
