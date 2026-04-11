@@ -1,0 +1,14 @@
+.product-detail {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 80px;
+            margin-bottom: 80px;
+}
+.review-item {
+    padding: 24px 0;
+    border-bottom: 1px solid #eee;
+}
+.stars {
+    color: #f1c40f;
+    margin-bottom: 8px;
+}
