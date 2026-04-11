@@ -53,6 +53,110 @@
            [meta.headerName || 'X-XSRF-TOKEN']: token
        };
    }
+   function setWishlistButtonState(button, isActive) {
+       button.classList.toggle('is-active', !!isActive);
+       button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+   }
+
+   function setWishlistStateForProduct(productId, isActive) {
+       document.querySelectorAll(`.wishlist-btn[data-product-id="${productId}"]`).forEach(button => {
+           setWishlistButtonState(button, isActive);
+       });
+   }
+
+   async function syncWishlistButtonsOnLoad() {
+       const buttons = Array.from(document.querySelectorAll('.wishlist-btn[data-product-id]'));
+       if (!buttons.length) return;
+
+       try {
+           const response = await fetch('/wishlist/ids', {
+               headers: {
+                   'Accept': 'application/json',
+                   'X-Requested-With': 'XMLHttpRequest'
+               }
+           });
+
+           if (!response.ok) return;
+
+           const wishlistIds = await response.json();
+           const wishedSet = new Set((wishlistIds || []).map(String));
+
+           buttons.forEach(button => {
+               const productId = String(button.dataset.productId || '');
+               setWishlistButtonState(button, wishedSet.has(productId));
+           });
+       } catch (error) {
+           console.error('Sync wishlist state error:', error);
+       }
+   }
+
+   window.wishlistToggle = async function (btn, event) {
+       if (event) {
+           event.preventDefault();
+           event.stopPropagation();
+       }
+
+       const productId = btn?.dataset?.productId;
+       if (!productId) return;
+       if (btn.disabled) return;
+
+       const wasActive = btn.classList.contains('is-active');
+       btn.disabled = true;
+
+       try {
+           const response = await fetch(`/wishlist/toggle/${productId}`, {
+               method: 'POST',
+               headers: {
+                   'Accept': 'application/json',
+                   'X-Requested-With': 'XMLHttpRequest',
+                   ...csrfHeaders()
+               }
+           });
+
+           if (response.status === 401) {
+               window.location.href = '/login';
+               return;
+           }
+
+           if (response.status === 403) {
+               throw new Error('Bạn không có quyền thao tác wishlist hoặc CSRF token không hợp lệ.');
+           }
+
+           let data = {};
+           try {
+               data = await response.json();
+           } catch (e) {
+               data = {};
+           }
+
+           if (!response.ok) {
+               throw new Error(data.message || 'Không thể cập nhật wishlist.');
+           }
+
+           const nextState =
+               typeof data.inWishlist === 'boolean' ? data.inWishlist :
+               typeof data.isAdded === 'boolean' ? data.isAdded :
+               typeof data.active === 'boolean' ? data.active :
+               typeof data.added === 'boolean' ? data.added :
+               !wasActive;
+
+           setWishlistStateForProduct(productId, nextState);
+
+           if (typeof data.count === 'number') {
+               setWishlistCount(data.count);
+           } else if (typeof data.wishlistCount === 'number') {
+               setWishlistCount(data.wishlistCount);
+           } else {
+               fetchAndUpdateWishlistCount();
+           }
+
+       } catch (error) {
+           console.error('Wishlist toggle error:', error);
+           showToast(error.message || 'Có lỗi khi cập nhật wishlist.', true);
+       } finally {
+           btn.disabled = false;
+       }
+   };
     /* ──────────────────────────────────────────────
        FORMAT PRICE
     ────────────────────────────────────────────── */
@@ -420,6 +524,36 @@
             el.style.display  = count > 0 ? '' : 'none';
         });
     }
+    function setWishlistCount(count) {
+        document.querySelectorAll('#wishlistCount, .wishlist-count, [data-wishlist-count]').forEach(el => {
+            el.textContent = count;
+            el.style.display = '';
+        });
+    }
+
+    function adjustWishlistCount(delta) {
+        document.querySelectorAll('#wishlistCount, .wishlist-count, [data-wishlist-count]').forEach(el => {
+            const current = parseInt((el.textContent || '0').trim(), 10) || 0;
+            const next = Math.max(0, current + delta);
+            el.textContent = next;
+        });
+    }
+
+    function fetchAndUpdateWishlistCount() {
+        fetch('/wishlist/count', {
+            headers: { 'Accept': 'application/json' }
+        })
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (data == null) return;
+                const count =
+                    typeof data === 'number' ? data :
+                    (data.count ?? data.wishlistCount ?? data.totalItems ?? 0);
+
+                setWishlistCount(count);
+            })
+            .catch(() => {});
+    }
 
     /* ──────────────────────────────────────────────
        UI HELPERS
@@ -514,5 +648,14 @@
     document.addEventListener('keydown', e => {
         if (e.key === 'Escape') closeQuickViewModal();
     });
+function initWishlistUi() {
+    syncWishlistButtonsOnLoad();
+    fetchAndUpdateWishlistCount();
+}
 
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initWishlistUi);
+} else {
+    initWishlistUi();
+}
 })();
