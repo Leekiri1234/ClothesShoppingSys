@@ -1083,12 +1083,12 @@
 
         function buyNow() {
             const variantId = document.getElementById('selectedVariantId').value;
-            const quantity  = parseInt(cadocument.getElementById('qty').value) || 1;
+            const quantity  = parseInt(document.getElementById('qty').value) || 1;
             if (!variantId) { showToast("Vui lòng chọn màu và size!"); return; }
             fetch('/checkout/direct', { method: 'POST', headers: getSecurityHeaders(), credentials: 'same-origin',
                 body: JSON.stringify({ variantId: parseInt(variantId), quantity }) })
             .then(res => { if (res.status === 401 || res.status === 403) { window.location.href = '/login'; throw new Error('Unauthorized'); } if (!res.ok) throw new Error('Error'); return res.json(); })
-            .then(data => { if (data?.success) window.location.href = '/checkout/direct'; })
+            .then(data => { if (data?.success) window.location.href = '/cart/direct'; })
             .catch(err => { if (err.message !== 'Unauthorized') showToast("Lỗi hệ thống!"); });
         }
 
