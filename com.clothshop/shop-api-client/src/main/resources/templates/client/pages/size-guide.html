@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+    <title>Hướng dẫn chọn size — MINIMAL</title>
+    <link rel="stylesheet" th:href="@{/css/pages/pages.css}">
+</head>
+
+<body>
+
+<main layout:fragment="content" class="container page-wrapper">
+
+    <div class="page-header">
+        <h1>Hướng dẫn chọn size</h1>
+        <p>Chọn đúng size giúp bạn mặc đẹp hơn.</p>
+    </div>
+
+    <div class="info-card">
+        <div class="icon">📏</div>
+        <div>
+            <h3>Cách đo</h3>
+            <p>Đo ngực, eo, hông sát cơ thể.</p>
+        </div>
+    </div>
+
+    <div class="size-table-wrapper">
+        <table class="size-table">
+            <thead>
+            <tr>
+                <th>Size</th>
+                <th>Ngực</th>
+                <th>Eo</th>
+                <th>Hông</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr><td>S</td><td>80-84</td><td>60-64</td><td>86-90</td></tr>
+            <tr><td>M</td><td>85-89</td><td>65-69</td><td>91-95</td></tr>
+            <tr><td>L</td><td>90-94</td><td>70-74</td><td>96-100</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="note-box">
+        💡 Nếu phân vân, chọn size lớn hơn.
+    </div>
+
+</main>
+
+<script th:src="@{/js/pages/pages.js}"></script>
+
+</body>
+</html>
