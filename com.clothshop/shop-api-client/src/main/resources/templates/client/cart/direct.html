@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="vi"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+
+<head>
+    <title>Mua ngay</title>
+    <link rel="stylesheet" th:href="@{/css/cart.css}">
+</head>
+
+<body>
+<section layout:fragment="content">
+    <div class="cart-page">
+        <h1 class="cart-page__title">Xác nhận sản phẩm</h1>
+        <hr class="cart-page__divider"/>
+
+        <div class="cart-layout">
+            <div>
+                <div class="cart-table">
+                    <div class="cart-table__head">
+                        <div>Sản phẩm</div>
+                        <div>Giá</div>
+                        <div>Số lượng</div>
+                        <div>Thành tiền</div>
+                        <div></div>
+                    </div>
+
+                    <div class="cart-table__row">
+                        <div class="cart-product">
+                            <div class="cart-product__thumb"
+                                 th:style="${directItem.imageUrl != null} ? 'background-image:url(' + ${directItem.imageUrl} + ');' : ''">
+                            </div>
+                            <div class="cart-product__info">
+                                <span class="cart-product__name" th:text="${directItem.productName}">Tên sản phẩm</span>
+                                <div class="cart-product__meta">
+                                    <div th:if="${directItem.color != null}">
+                                        Màu: <span th:text="${directItem.color}">Đen</span>
+                                    </div>
+                                    <div th:if="${directItem.sizeValue != null}">
+                                        Size: <span th:text="${directItem.sizeValue}">M</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cart-price money"
+                             th:text="${#numbers.formatDecimal(directItem.unitPrice, 0, 'POINT', 0, 'COMMA') + 'đ'}">
+                            0đ
+                        </div>
+
+                        <div th:text="${directItem.quantity}">1</div>
+
+                        <div class="cart-line-total money"
+                             th:text="${#numbers.formatDecimal(directItem.totalPrice, 0, 'POINT', 0, 'COMMA') + 'đ'}">
+                            0đ
+                        </div>
+
+                        <!-- Cột trống (không cho xóa trong luồng mua ngay) -->
+                        <div></div>
+                    </div>
+                </div>
+
+                <a class="btn-outline-back" th:href="@{/products}">← Tiếp tục mua sắm</a>
+            </div>
+
+            <aside class="cart-summary">
+                <h2 class="cart-summary__title">Tóm tắt đơn hàng</h2>
+
+                <div class="summary-line">
+                    <span>Tạm tính</span>
+                    <span class="value money"
+                          th:text="${#numbers.formatDecimal(directItem.totalPrice, 0, 'POINT', 0, 'COMMA') + 'đ'}">
+                        0đ
+                    </span>
+                </div>
+
+                <div class="summary-line">
+                    <span>Phí vận chuyển</span>
+                    <span class="value money">Tính khi thanh toán</span>
+                </div>
+
+                <div class="summary-total">
+                    <span>Tổng cộng</span>
+                    <span class="money"
+                          th:text="${#numbers.formatDecimal(directItem.totalPrice, 0, 'POINT', 0, 'COMMA') + 'đ'}">
+                        0đ
+                    </span>
+                </div>
+
+                <button class="btn-black" type="button"
+                        th:onclick="'window.location.href=\'' + @{/checkout/direct} + '\''">
+                    Tiến hành thanh toán
+                </button>
+            </aside>
+        </div>
+    </div>
+</section>
+</body>
+</html>

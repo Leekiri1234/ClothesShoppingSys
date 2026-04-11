@@ -2,6 +2,7 @@ package com.clothshop.client.services;
 
 import com.clothshop.client.dtos.request.OrderCreateRequest;
 import com.clothshop.client.dtos.response.CheckoutSummaryResponse;
+import com.clothshop.client.dtos.response.DirectPurchaseItemDTO;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
 import com.clothshop.domain.models.auth.Account;
@@ -23,6 +24,7 @@ import com.clothshop.domain.repositories.customer.CartRepository;
 import com.clothshop.domain.repositories.marketing.VoucherRepository;
 import com.clothshop.domain.repositories.marketing.VoucherRedemptionRepository;
 import com.clothshop.domain.repositories.order.OrderRepository;
+import com.clothshop.domain.repositories.product.ProductVariantRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -47,6 +49,7 @@ public class CheckoutClientService {
     private final VoucherRepository voucherRepository;
     private final AccountRepository accountRepository;
     private final VoucherRedemptionRepository voucherRedemptionRepository;
+    private final ProductVariantRepository variantRepository;
 
     private Customer getCustomerByUsername(String username) {
         Account account = accountRepository.findByUsernameWithCustomer(username)
@@ -234,6 +237,153 @@ public class CheckoutClientService {
 
         // CHÚ Ý: CHƯA TRỪ STOCK Ở ĐÂY. Stock sẽ được trừ khi Admin Verify Payment.
 
+        return savedOrder.getOrderInvoice();
+    }
+    @Transactional(readOnly = true)
+    public DirectPurchaseItemDTO getDirectPurchaseItem(int variantId, int quantity) {
+        var variant = variantRepository.findById((long) variantId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy sản phẩm"));
+
+        double unitPrice = variant.getRetailPrice() != null
+                ? variant.getRetailPrice().doubleValue()
+                : variant.getProduct().getBasePrice().doubleValue();
+
+        String imageUrl = variant.getImageUrl() != null
+                ? variant.getImageUrl()
+                : variant.getProduct().getImages().stream()
+                .filter(img -> Boolean.TRUE.equals(img.getIsMain()))
+                .map(img -> img.getImageUrl())
+                .findFirst().orElse(null);
+
+        return DirectPurchaseItemDTO.builder()
+                .variantId((long) variantId)
+                .productName(variant.getProduct().getProductName())
+                .imageUrl(imageUrl)
+                .color(variant.getColor())
+                .sizeValue(variant.getSizeValue())
+                .quantity(quantity)
+                .unitPrice(unitPrice)
+                .totalPrice(unitPrice * quantity)
+                .build();
+    }
+
+    // ==========================================
+    // 5. Đặt hàng mua ngay (không đọc cart)
+    // ==========================================
+    @Transactional
+    public String placeDirectOrder(String username, OrderCreateRequest request) {
+        Customer customer = getCustomerByUsername(username);
+
+        if (request.getFullName() != null && !request.getFullName().isBlank())
+            customer.setFullName(request.getFullName());
+        if (request.getEmail() != null && !request.getEmail().isBlank())
+            customer.setEmail(request.getEmail());
+        if (request.getPhoneNumber() != null)
+            customer.setPhoneNumber(request.getPhoneNumber());
+
+        List<String> addressParts = new ArrayList<>();
+        if (request.getShippingAddress() != null && !request.getShippingAddress().isBlank())
+            addressParts.add(request.getShippingAddress());
+        if (request.getDistrict() != null && !request.getDistrict().isBlank())
+            addressParts.add(request.getDistrict());
+        if (request.getProvince() != null && !request.getProvince().isBlank())
+            addressParts.add(request.getProvince());
+        if (!addressParts.isEmpty())
+            customer.setAddress(String.join(", ", addressParts));
+
+        var variant = variantRepository.findById((long) request.getDirectVariantId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Không tìm thấy sản phẩm"));
+
+        int qty = request.getDirectQuantity();
+
+        if (variant.getStockQuantity() < qty) {
+            throw new BusinessException(ErrorCode.INSUFFICIENT_STOCK,
+                    "Sản phẩm " + variant.getProduct().getProductName() +
+                            " (Size: " + variant.getSizeValue() + ") chỉ còn " +
+                            variant.getStockQuantity() + " chiếc");
+        }
+
+        double unitPrice = variant.getRetailPrice() != null
+                ? variant.getRetailPrice().doubleValue()
+                : variant.getProduct().getBasePrice().doubleValue();
+        double totalAmount = unitPrice * qty;
+
+        double discount = 0.0;
+        if (request.getVoucherCode() != null && !request.getVoucherCode().isBlank()) {
+            Voucher voucher = voucherRepository
+                    .findByCode(request.getVoucherCode().trim().toUpperCase())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Mã giảm giá không tồn tại"));
+
+            if (!"ACTIVE".equals(voucher.getStatus()) ||
+                    (voucher.getValidTo() != null && voucher.getValidTo().isBefore(LocalDateTime.now())) ||
+                    (voucher.getValidFrom() != null && voucher.getValidFrom().isAfter(LocalDateTime.now()))) {
+                throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Mã giảm giá đã hết hạn");
+            }
+
+            if (DiscountType.PERCENTAGE.equals(voucher.getDiscountType())) {
+                discount = totalAmount * (voucher.getDiscountValue().doubleValue() / 100);
+                if (voucher.getMaxDiscount() != null && discount > voucher.getMaxDiscount().doubleValue())
+                    discount = voucher.getMaxDiscount().doubleValue();
+            } else if (DiscountType.FIXED_AMOUNT.equals(voucher.getDiscountType())) {
+                discount = voucher.getDiscountValue().doubleValue();
+            }
+        }
+
+        double shippingFee = "EXPRESS".equalsIgnoreCase(request.getShippingMethod())
+                ? SHIPPING_FEE_EXPRESS : SHIPPING_FEE_STANDARD;
+        double finalAmount = Math.max(0, totalAmount - discount + shippingFee);
+
+        Order order = new Order();
+        order.setOrderInvoice("ORD-" + System.currentTimeMillis());
+        order.setCustomer(customer);
+        order.setTotalAmount(BigDecimal.valueOf(totalAmount));
+        order.setDiscount(BigDecimal.valueOf(discount));
+        order.setTotalPrice(BigDecimal.valueOf(finalAmount));
+        order.setPaymentMethod(request.getPaymentMethod());
+        order.setStatus(OrderStatus.PENDING);
+
+        OrderItem orderItem = new OrderItem();
+        orderItem.setOrder(order);
+        orderItem.setVariant(variant);
+        orderItem.setQuantity(qty);
+        orderItem.setUnitPrice(BigDecimal.valueOf(unitPrice));
+        order.setOrderItems(new ArrayList<>(List.of(orderItem)));
+        order.setTotalQuantity(qty);
+
+        OrderStatusHistory history = new OrderStatusHistory();
+        history.setOrder(order);
+        history.setNewStatus(OrderStatus.PENDING);
+        history.setChangedAt(LocalDateTime.now());
+        history.setNote("Direct purchase by customer");
+        order.setStatusHistory(new ArrayList<>(List.of(history)));
+
+        Payment payment = new Payment();
+        payment.setOrder(order);
+        payment.setPaymentMethod(request.getPaymentMethod().name());
+        payment.setAmount(order.getTotalPrice());
+        payment.setStatus(PaymentStatus.PENDING);
+        order.setPayment(payment);
+
+        Order savedOrder = orderRepository.save(order);
+
+        // Ghi nhận voucher sau khi order đã save
+        if (request.getVoucherCode() != null && !request.getVoucherCode().isBlank()) {
+            Voucher voucher = voucherRepository
+                    .findByCode(request.getVoucherCode().trim().toUpperCase()).orElse(null);
+            if (voucher != null) {
+                voucher.setCurrentUsage((voucher.getCurrentUsage() == null ? 0 : voucher.getCurrentUsage()) + 1);
+                voucherRepository.save(voucher);
+
+                VoucherRedemption redemption = new VoucherRedemption();
+                redemption.setVoucher(voucher);
+                redemption.setCustomer(customer);
+                redemption.setOrder(savedOrder);
+                redemption.setDiscountAmount(BigDecimal.valueOf(discount));
+                voucherRedemptionRepository.save(redemption);
+            }
+        }
+
+        // KHÔNG xóa cart, KHÔNG trừ stock (giống placeOrder)
         return savedOrder.getOrderInvoice();
     }
 }

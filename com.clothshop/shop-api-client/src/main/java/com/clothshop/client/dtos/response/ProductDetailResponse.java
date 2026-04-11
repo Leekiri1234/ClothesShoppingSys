@@ -26,4 +26,6 @@ public class ProductDetailResponse {
     private Boolean available; // Derived from stock > 0, not exposing actual stock count
     private List<VariantDetailResponse> variants;
     private List<String> images;
+    private List<String> availableColors;
+    private List<String> availableSizes;
 }
