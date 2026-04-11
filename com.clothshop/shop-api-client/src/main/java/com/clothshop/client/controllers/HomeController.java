@@ -45,4 +45,18 @@ public class HomeController {
 
         return "client/home/home";
     }
+    @GetMapping("/size-guide")
+    public String sizeGuide() {
+        return "client/pages/size-guide";
+    }
+
+    @GetMapping("/return-policy")
+    public String returnPolicy() {
+        return "client/pages/return-policy";
+    }
+
+    @GetMapping("/shipping")
+    public String shipping() {
+        return "client/pages/shipping";
+    }
 }

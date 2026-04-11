@@ -4630,3 +4630,212 @@ img {
     width: 14px;
     height: 14px;
 }
+.qv-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 24px;
+}
+
+.qv-overlay.is-open {
+    display: flex;
+}
+
+.qv-modal {
+    position: relative;
+    width: 100%;
+    max-width: 980px;
+    background: #fff;
+    padding: 32px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.qv-close {
+    position: absolute;
+    top: 14px;
+    right: 18px;
+    border: none;
+    background: transparent;
+    font-size: 28px;
+    cursor: pointer;
+}
+
+.qv-loading {
+    padding: 80px 20px;
+    text-align: center;
+    color: #777;
+    font-size: 14px;
+}
+
+.qv-content {
+    display: grid;
+    grid-template-columns: 1.05fr 1fr;
+    gap: 36px;
+}
+
+.qv-main-image {
+    width: 100%;
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+    background: #f6f6f6;
+}
+
+.qv-thumbs {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+}
+
+.qv-thumb {
+    width: 64px;
+    height: 80px;
+    object-fit: cover;
+    cursor: pointer;
+    border: 1px solid #ddd;
+}
+
+.qv-thumb.is-active {
+    border-color: #111;
+}
+
+.qv-brand {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: #999;
+    margin-bottom: 8px;
+}
+
+.qv-product-name {
+    font-size: 38px;
+    font-weight: 300;
+    margin-bottom: 12px;
+    line-height: 1.2;
+}
+
+.qv-price-wrap {
+    margin-bottom: 14px;
+}
+
+.qv-price {
+    font-size: 26px;
+    font-weight: 400;
+    color: #1c1c1a;
+}
+
+.qv-description {
+    color: #666;
+    margin-bottom: 18px;
+    line-height: 1.6;
+}
+
+.qv-section {
+    margin-bottom: 18px;
+}
+
+.qv-label {
+    font-size: 14px;
+    margin-bottom: 10px;
+    color: #222;
+}
+
+.qv-selected-label {
+    margin-left: 6px;
+    color: #777;
+    font-size: 13px;
+}
+
+.qv-options {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.qv-option {
+    min-width: 44px;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid #dcdcdc;
+    background: #fff;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.qv-option.is-selected {
+    border-color: #111;
+    background: #111;
+    color: #fff;
+}
+
+.qv-option.is-disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.qv-stock-hint {
+    min-height: 20px;
+    color: #9a6b00;
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.qv-error {
+    min-height: 20px;
+    color: #c62828;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+
+.qv-qty-row {
+    margin: 18px 0;
+}
+
+.qv-qty-box {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #ddd;
+    margin-top: 8px;
+}
+
+.qv-qty-btn {
+    width: 42px;
+    height: 42px;
+    border: none;
+    background: #fff;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.qv-qty-display {
+    width: 42px;
+    text-align: center;
+    font-size: 15px;
+}
+
+.qv-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+@media (max-width: 768px) {
+    .qv-modal {
+        padding: 18px;
+    }
+
+    .qv-content {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .qv-product-name {
+        font-size: 28px;
+    }
+}
