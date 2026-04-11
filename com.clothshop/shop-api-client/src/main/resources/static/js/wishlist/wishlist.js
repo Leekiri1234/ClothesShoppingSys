@@ -1,4 +1,59 @@
 /* Wishlist page JavaScript functions */
+function initCheckWishlistState() {
+    const productGrid = document.querySelector('.product-grid');
+        const cards = productGrid?.querySelectorAll('.wishlist-card');
+        const emptyState = document.getElementById('empty-wishlist-state');
+
+        if (!cards || cards.length === 0) {
+            // List is empty, hide product grid
+            if (productGrid) {
+                productGrid.style.display = 'none';
+            }
+
+            // Show empty state
+            if (emptyState) {
+                emptyState.style.display = 'block';
+            }
+
+            // Update the count to 0
+            const countElement = document.getElementById('wishlist-count-list');
+            if (countElement) {
+                countElement.textContent = '0';
+            }
+        }
+        console.log('trigger');
+}
+
+function updateWishlistOnRemove(button, event) {
+    // 1. Trigger existing logic
+    if (typeof wishlistToggle === 'function') {
+        wishlistToggle(button, event);
+    }
+
+    // 2. Animate removal
+    if (typeof removeWishlistCard === 'function') {
+        removeWishlistCard(button);
+    }
+
+    // 3. Check state after animation finishes
+    setTimeout(() => {
+        const productGrid = document.querySelector('.product-grid');
+        const cards = productGrid?.querySelectorAll('.wishlist-card');
+        const emptyState = document.getElementById('empty-wishlist-state');
+        const countElement = document.getElementById('wishlist-count-list');
+
+        // Check if there are no cards left
+        if (!cards || cards.length === 0) {
+            if (productGrid) productGrid.style.display = 'none';
+            if (emptyState) emptyState.style.display = 'block';
+            if (countElement) countElement.textContent = '0';
+        } else {
+            // FIX: Parse the textContent, not the element itself
+            const currentCount = parseInt(countElement.textContent) || 0;
+            countElement.textContent = Math.max(0, currentCount - 1);
+        }
+    }, 250);
+}
 
 function removeWishlistCard(button) {
     const card = button.closest('.wishlist-card');
@@ -93,9 +148,13 @@ async function wishlistToggle(button, event) {
             if (result.isAdded) {
                 button.classList.add("active");
                 showToast("Đã thêm vào wishlist!", "success");
+                // ← thêm: đánh dấu product này đang IN wishlist
+                sessionStorage.setItem(`wishlist_${productId}`, 'true');
             } else {
                 button.classList.remove("active");
                 showToast("Đã xóa khỏi wishlist.", "info");
+                // ← thêm: đánh dấu product này đã bị REMOVE
+                sessionStorage.setItem(`wishlist_${productId}`, 'false');
             }
 
             updateWishlistCount();
