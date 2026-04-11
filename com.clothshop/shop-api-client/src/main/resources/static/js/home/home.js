@@ -192,20 +192,15 @@ async function removeSidebarItem(itemId) {
 
 // ── Mở/Đóng Sidebar ──────────────────────────
 function openCartSidebar() {
-    if (typeof toggleCartSidebar === "function") {
-        toggleCartSidebar(true);
-        return;
-    }
+     // ✅ KHÔNG dùng toggleCartSidebar để tránh conflict
+     const sidebar = document.getElementById("cart-sidebar");
+     const overlay = document.getElementById("cart-overlay");
+     if (!sidebar || !overlay) return;
 
-    const sidebar = document.getElementById("cart-sidebar");
-    const overlay = document.getElementById("cart-overlay");
-    if (!sidebar || !overlay) return;
-
-    sidebar.classList.add("open");
-    overlay.classList.add("open");
-    document.body.style.overflow = "hidden";
-}
-
+     sidebar.classList.add("open");
+     overlay.classList.add("open");
+     document.body.style.overflow = "hidden";
+ }
 // ── Toast Notification ────────────────────────
 function showToast(msg, type = "info") {
     const container = document.getElementById("toast-container") || document.body;
@@ -423,7 +418,13 @@ async function wishlistToggle(button, event) {
 }
 
 // ── Khởi tạo khi trang load ───────────────────
+
 document.addEventListener("DOMContentLoaded", () => {
-    // Load cart sidebar data ngay khi trang load (để có sẵn items)
+    // Chỉ load data, KHÔNG mở sidebar
     loadCartSidebar();
+    const sidebar = document.getElementById("cart-sidebar");
+    const overlay = document.getElementById("cart-overlay");
+    if (sidebar) sidebar.classList.remove("open");
+    if (overlay) overlay.classList.remove("open");
+    document.body.style.overflow = "";
 });

@@ -445,24 +445,25 @@ async function removeCartSidebarItem(itemId) {
             }
         }
 
-        async function toggleCartSidebar(forceOpen) {
-            const sidebar = document.getElementById('cart-sidebar');
-            const overlay = document.getElementById('cart-overlay');
-            if (!sidebar || !overlay) return;
+       async function toggleCartSidebar(forceOpen) {
+    const sidebar = document.getElementById('cart-sidebar');
+    const overlay = document.getElementById('cart-overlay');
+    if (!sidebar || !overlay) return;
 
-            const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : !sidebar.classList.contains('open');
+    const isForced = forceOpen === true || forceOpen === false;
+    const shouldOpen = isForced ? forceOpen : !sidebar.classList.contains('open');
 
-            if (shouldOpen) {
-                await loadCartSidebar();
-                sidebar.classList.add('open');
-                overlay.classList.add('open');
-                document.body.style.overflow = 'hidden';
-            } else {
-                sidebar.classList.remove('open');
-                overlay.classList.remove('open');
-                document.body.style.overflow = '';
-            }
-        }
+    if (shouldOpen) {
+        await loadCartSidebar();
+        sidebar.classList.add('open');
+        overlay.classList.add('open');
+        document.body.style.overflow = 'hidden';
+    } else {
+        sidebar.classList.remove('open');
+        overlay.classList.remove('open');
+        document.body.style.overflow = '';
+    }
+}
 
         function closeModal(e) {
             if (e && e.target.id === 'modal-overlay') {
@@ -476,11 +477,16 @@ async function removeCartSidebarItem(itemId) {
         }
 
         // Load wishlist count and cart count on page load
-        document.addEventListener('DOMContentLoaded', function () {
-            loadWishlistCount();
-            loadCartCount();
-            loadCartSidebar();
-        });
+       document.addEventListener('DOMContentLoaded', function () {
+    const sidebar = document.getElementById('cart-sidebar');
+    const overlay = document.getElementById('cart-overlay');
+    if (sidebar) sidebar.classList.remove('open');
+    if (overlay) overlay.classList.remove('open');
+    document.body.style.overflow = '';
+
+    loadWishlistCount();
+    loadCartCount();
+});
 
         function loadWishlistCount() {
             fetch('/wishlist/count')
