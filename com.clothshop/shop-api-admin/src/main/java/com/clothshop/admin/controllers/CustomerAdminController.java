@@ -30,7 +30,7 @@ public class CustomerAdminController {
 
         model.addAttribute("customers", customerPage);
         model.addAttribute("currentPage", page);
-        return "admin/customers/list"; // Đường dẫn đến file HTML
+        return "admin/customer/list"; // Đường dẫn đến file HTML
     }
 
     /**
