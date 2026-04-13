@@ -30,7 +30,7 @@ public class Notification extends BaseEntity {
     private String content;
 
     @Column(name = "target_type", length = 20)
-    private NotificationType targetType; // SYSTEM, PROMOTION
+    private NotificationType type; // SYSTEM, PROMOTION
 
     @Column(name = "scheduled_at")
     private LocalDateTime scheduledAt; // Thời gian gửi thông báo
