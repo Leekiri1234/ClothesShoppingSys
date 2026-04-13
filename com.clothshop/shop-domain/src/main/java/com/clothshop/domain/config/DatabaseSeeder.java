@@ -609,7 +609,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         List<Customer> customers = customerRepository.findAll();
         List<ProductVariant> variants = productVariantRepository.findAll();
 
-        if (customers.isEmpty() || variants.isEmpty()) {
+        if (customers.isEmpty() || variants.size() < 3) {
             log.warn("Not enough customers or variants to seed orders. Skipping order seeding.");
             return;
         }
@@ -650,30 +650,88 @@ public class DatabaseSeeder implements CommandLineRunner {
             VoucherStatus.EXPIRED.name()
         ));
 
-        // Seed orders defensively: skip only orders whose customer/variant indexes are unavailable.
-        seedOrderIfDataAvailable("INV-1001", customers, 0, PaymentMethod.COD, OrderStatus.PENDING,
-                variants, new int[]{0, 1}, new int[]{1, 2}, percentVoucher, "Pending confirmation");
+        // Orders for single customer with different statuses
+        Customer customer = customers.get(0);
 
-        seedOrderIfDataAvailable("INV-1002", customers, 0, PaymentMethod.MOMO, OrderStatus.CONFIRMED,
-                variants, new int[]{2, 3}, new int[]{1, 1}, fixedVoucher, "Confirmed by system");
+        createOrderWithVoucherIfMissing(
+            "INV-1001",
+            customer,
+            PaymentMethod.COD,
+            OrderStatus.PENDING,
+            List.of(new ItemSpec(variants.get(0), 1), new ItemSpec(variants.get(1), 2)),
+            percentVoucher,
+            "Pending confirmation"
+        );
 
-        seedOrderIfDataAvailable("INV-1003", customers, 0, PaymentMethod.VNPAY, OrderStatus.SHIPPING,
-                variants, new int[]{4}, new int[]{2}, percentVoucher, "Shipping to customer");
+        createOrderWithVoucherIfMissing(
+            "INV-1002",
+            customer,
+            PaymentMethod.MOMO,
+            OrderStatus.CONFIRMED,
+            List.of(new ItemSpec(variants.get(2), 1), new ItemSpec(variants.get(3), 1)),
+            fixedVoucher,
+            "Confirmed by system"
+        );
 
-        seedOrderIfDataAvailable("INV-1004", customers, 0, PaymentMethod.BANK_TRANSFER, OrderStatus.DELIVERED,
-                variants, new int[]{5, 6}, new int[]{1, 1}, fixedVoucher, "Delivered successfully");
+        createOrderWithVoucherIfMissing(
+            "INV-1003",
+            customer,
+            PaymentMethod.VNPAY,
+            OrderStatus.SHIPPING,
+            List.of(new ItemSpec(variants.get(4), 2)),
+            percentVoucher,
+            "Shipping to customer"
+        );
 
-        seedOrderIfDataAvailable("INV-1005", customers, 0, PaymentMethod.COD, OrderStatus.CANCELLED,
-                variants, new int[]{7}, new int[]{1}, expiredVoucher, "Cancelled by customer");
+        createOrderWithVoucherIfMissing(
+            "INV-1004",
+            customer,
+            PaymentMethod.BANK_TRANSFER,
+            OrderStatus.DELIVERED,
+            List.of(new ItemSpec(variants.get(5), 1), new ItemSpec(variants.get(6), 1)),
+            fixedVoucher,
+            "Delivered successfully"
+        );
 
-        seedOrderIfDataAvailable("INV-1006", customers, 1, PaymentMethod.MOMO, OrderStatus.PENDING,
-                variants, new int[]{8, 9}, new int[]{1, 1}, percentVoucher, "Pending payment verification");
+        createOrderWithVoucherIfMissing(
+            "INV-1005",
+            customer,
+            PaymentMethod.COD,
+            OrderStatus.CANCELLED,
+            List.of(new ItemSpec(variants.get(7), 1)),
+            expiredVoucher,
+            "Cancelled by customer"
+        );
 
-        seedOrderIfDataAvailable("INV-1007", customers, 2, PaymentMethod.BANK_TRANSFER, OrderStatus.PENDING,
-                variants, new int[]{10}, new int[]{1}, fixedVoucher, "Waiting for customer confirmation");
+        createOrderWithVoucherIfMissing(
+            "INV-1006",
+            customers.get(1),
+            PaymentMethod.MOMO,
+            OrderStatus.PENDING,
+            List.of(new ItemSpec(variants.get(8), 1), new ItemSpec(variants.get(9), 1)),
+            percentVoucher,
+            "Pending payment verification"
+        );
 
-        seedOrderIfDataAvailable("INV-1008", customers, 0, PaymentMethod.VNPAY, OrderStatus.COMPLETED,
-                variants, new int[]{11, 12}, new int[]{1, 1}, percentVoucher, "Completed successfully");
+        createOrderWithVoucherIfMissing(
+            "INV-1007",
+            customers.get(2),
+            PaymentMethod.BANK_TRANSFER,
+            OrderStatus.PENDING,
+            List.of(new ItemSpec(variants.get(10), 1)),
+            fixedVoucher,
+            "Waiting for customer confirmation"
+        );
+
+        createOrderWithVoucherIfMissing(
+            "INV-1008",
+            customers.get(0),
+            PaymentMethod.VNPAY,
+            OrderStatus.COMPLETED,
+            List.of(new ItemSpec(variants.get(11), 1), new ItemSpec(variants.get(12), 1)),
+            percentVoucher,
+            "Completed successfully"
+        );
 
         log.info("Vouchers and orders seeded: 3 vouchers, 8 client orders");
     }
@@ -685,39 +743,6 @@ public class DatabaseSeeder implements CommandLineRunner {
             return;
         }
         createOrderWithVoucher(invoice, customer, paymentMethod, status, items, voucher, note);
-    }
-
-    private void seedOrderIfDataAvailable(String invoice,
-                                          List<Customer> customers,
-                                          int customerIndex,
-                                          PaymentMethod paymentMethod,
-                                          OrderStatus status,
-                                          List<ProductVariant> variants,
-                                          int[] variantIndexes,
-                                          int[] quantities,
-                                          Voucher voucher,
-                                          String note) {
-        if (variantIndexes.length != quantities.length) {
-            log.warn("Skipping {}: variantIndexes and quantities length mismatch.", invoice);
-            return;
-        }
-
-        if (customerIndex < 0 || customerIndex >= customers.size()) {
-            log.warn("Skipping {}: customer index {} is out of range (size={}).", invoice, customerIndex, customers.size());
-            return;
-        }
-
-        List<ItemSpec> itemSpecs = new java.util.ArrayList<>();
-        for (int i = 0; i < variantIndexes.length; i++) {
-            int variantIndex = variantIndexes[i];
-            if (variantIndex < 0 || variantIndex >= variants.size()) {
-                log.warn("Skipping {}: variant index {} is out of range (size={}).", invoice, variantIndex, variants.size());
-                return;
-            }
-            itemSpecs.add(new ItemSpec(variants.get(variantIndex), quantities[i]));
-        }
-
-        createOrderWithVoucherIfMissing(invoice, customers.get(customerIndex), paymentMethod, status, itemSpecs, voucher, note);
     }
 
     /**

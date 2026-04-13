@@ -6,12 +6,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Controller;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-
-import java.time.LocalDate;
 
 @Controller
 @RequestMapping("/admin/customers")
@@ -27,22 +24,13 @@ public class CustomerAdminController {
     public String listCustomers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "ALL") String status,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdFrom,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate createdTo,
             Model model) {
 
-        Page<CustomerAdminResponse> customerPage = customerService.getAllCustomers(
-                PageRequest.of(page, size), keyword, status, createdFrom, createdTo);
+        Page<CustomerAdminResponse> customerPage = customerService.getAllCustomers(PageRequest.of(page, size));
 
         model.addAttribute("customers", customerPage);
         model.addAttribute("currentPage", page);
-        model.addAttribute("keyword", keyword);
-        model.addAttribute("status", status);
-        model.addAttribute("createdFrom", createdFrom);
-        model.addAttribute("createdTo", createdTo);
-        return "admin/customer/list"; // Khớp với thư mục template hiện tại
+        return "admin/customers/list"; // Đường dẫn đến file HTML
     }
 
     /**

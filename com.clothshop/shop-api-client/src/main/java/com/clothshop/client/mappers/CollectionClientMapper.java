@@ -24,9 +24,29 @@ public interface CollectionClientMapper {
     @Mapping(source = "name", target = "name")
     @Mapping(source = "slug", target = "slug")
     @Mapping(source = "description", target = "description")
-    @Mapping(source = "imageUrl", target = "bannerUrl")
+    @Mapping(source = ".", target = "bannerUrl", qualifiedByName = "normalizeCollectionImageUrl")
     @Mapping(source = "items", target = "products", qualifiedByName = "mapItemsToProducts")
     CollectionResponse toCollectionResponse(Collection collection);
+
+    @Named("normalizeCollectionImageUrl")
+    default String normalizeCollectionImageUrl(Collection collection) {
+        if (collection == null) return "/images/no-image.png";
+
+        String raw = collection.getImageUrl();
+        if (raw == null || raw.isBlank()) {
+            raw = collection.getBannerUrl();
+        }
+
+        if (raw == null || raw.isBlank() || "undefined".equalsIgnoreCase(raw.trim())) {
+            return "/images/no-image.png";
+        }
+
+        String normalized = raw.trim().replace("\\", "/");
+        if (normalized.startsWith("http://") || normalized.startsWith("https://") || normalized.startsWith("/")) {
+            return normalized;
+        }
+        return "/uploads/" + normalized;
+    }
 
     @Named("mapItemsToProducts")
     default List<ProductListResponse> mapItemsToProducts(List<CollectionItem> items) {

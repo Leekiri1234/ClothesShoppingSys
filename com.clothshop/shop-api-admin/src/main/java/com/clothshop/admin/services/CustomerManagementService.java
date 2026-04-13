@@ -16,8 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -28,21 +26,11 @@ public class CustomerManagementService {
     private final CustomerAdminMapper customerMapper;
 
     /**
-     * Lấy danh sách khách hàng phân trang có tìm kiếm và lọc trạng thái.
+     * Lấy danh sách khách hàng phân trang (Chỉ lấy những khách đang active theo mặc định)
      */
     @Transactional(readOnly = true)
-    public Page<CustomerAdminResponse> getAllCustomers(Pageable pageable,
-                                                       String keyword,
-                                                       String status,
-                                                       LocalDate createdFrom,
-                                                       LocalDate createdTo) {
-        Boolean activeFilter = switch (status == null ? "ALL" : status.toUpperCase()) {
-            case "ACTIVE" -> true;
-            case "INACTIVE" -> false;
-            default -> null;
-        };
-
-        return customerRepository.findAllForAdmin(keyword, activeFilter, createdFrom, createdTo, pageable)
+    public Page<CustomerAdminResponse> getAllCustomers(Pageable pageable) {
+        return customerRepository.findAll(pageable)
                 .map(customerMapper::toResponse);
     }
 
