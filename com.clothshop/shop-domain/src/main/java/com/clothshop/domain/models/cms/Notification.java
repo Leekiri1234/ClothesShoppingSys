@@ -1,5 +1,6 @@
 package com.clothshop.domain.models.cms;
 
+import com.clothshop.domain.listeners.NotificationPropagationListener;
 import com.clothshop.domain.models.base.BaseEntity;
 import com.clothshop.domain.enums.NotificationType;
 import jakarta.persistence.*;
@@ -18,6 +19,7 @@ import java.util.List;
 @AttributeOverride(name = "id", column = @Column(name = "notification_id"))
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @SuperBuilder
+@EntityListeners(NotificationPropagationListener.class)
 public class Notification extends BaseEntity {
 
     @Column(name = "title", nullable = false, length = 200)
