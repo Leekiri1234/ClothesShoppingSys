@@ -54,14 +54,25 @@ public class GlobalExceptionHandler {
 
     /**
      * Handles 404 Not Found exceptions.
-     * Returns HTTP 404 error page.
+     * Chỉnh sửa: Sử dụng Exception chung hoặc bắt riêng để tránh lỗi "No suitable resolver"
      */
     @ExceptionHandler({NoHandlerFoundException.class, NoResourceFoundException.class})
-    public String handleNotFound(NoHandlerFoundException ex, Model model, HttpServletResponse response) {
-        log.warn("Resource not found: {}", ex.getRequestURL());
+    public String handleNotFound(Exception ex, Model model, HttpServletResponse response) {
+        String requestURL = "";
+
+        // Kiểm tra xem lỗi cụ thể là gì để lấy URL cho đúng
+        if (ex instanceof NoHandlerFoundException) {
+            requestURL = ((NoHandlerFoundException) ex).getRequestURL();
+        } else if (ex instanceof NoResourceFoundException) {
+            requestURL = ((NoResourceFoundException) ex).getResourcePath();
+        }
+
+        log.warn("Resource not found: {}", requestURL);
+
         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         model.addAttribute("error", "Resource not found");
-        model.addAttribute("path", ex.getRequestURL());
+        model.addAttribute("path", requestURL);
+
         return "error/404";
     }
 
