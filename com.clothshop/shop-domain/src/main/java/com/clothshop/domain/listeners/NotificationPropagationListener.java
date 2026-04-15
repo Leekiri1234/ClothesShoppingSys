@@ -19,8 +19,7 @@ public class NotificationPropagationListener {
         // Tín hiệu này sẽ tự động được trigger ở cả 2 JVM (Admin & Client)
         // nhờ cơ chế JDBC Loopback Sync
         log.info("JDBC Sync Signal: Đã phát hiện thông báo mới ID: {}", notification.getId());
-        NativeMemoryBridge.notifyNewId(notification.getId());
-        // Tại đây, bạn có thể gọi đến một Service xử lý UI
+        NativeMemoryBridge.update(notification.getId(), notification.getTitle());        // Tại đây, bạn có thể gọi đến một Service xử lý UI
         // ví dụ: NotificationUIService.pushToBrowser(notification);
     }
 }

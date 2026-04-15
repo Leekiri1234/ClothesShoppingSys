@@ -3,8 +3,7 @@ package com.clothshop.admin.controllers;
 import com.clothshop.admin.dtos.NotificationDTO;
 import com.clothshop.domain.models.cms.Notification;
 import com.clothshop.domain.repositories.cms.NotificationRepository;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -13,11 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/admin/notifications")
-@NoArgsConstructor
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AdminNotificationController {
 
-    private NotificationRepository notificationRepository;
+    private final NotificationRepository notificationRepository;
 
     @PostMapping("/send")
     public ResponseEntity<?> sendNotification(@RequestBody NotificationDTO dto) {

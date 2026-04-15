@@ -8,7 +8,7 @@
     <title layout:title-pattern="$LAYOUT_TITLE - $CONTENT_TITLE">MINIMAL — Thời trang tối giản cao cấp</title>
     <meta name="description"
         content="Khám phá bộ sưu tập thời trang tối giản cao cấp. Chất liệu premium, phong cách thanh lịch.">
-
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <th:block layout:fragment="styles"></th:block>
 
@@ -16,6 +16,78 @@
     <meta th:if="${_csrf != null}" name="_csrf_header" th:content="${_csrf.headerName}" />
     <meta name="_csrf" th:content="${_csrf.token}"/>
     <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+    <style>
+        /* 1. Hiệu ứng rung cho chuông khi có thông báo mới từ RAM */
+        @keyframes bell-ring {
+            0% { transform: rotate(0); }
+            10% { transform: rotate(15deg); }
+            20% { transform: rotate(-15deg); }
+            30% { transform: rotate(10deg); }
+            40% { transform: rotate(-10deg); }
+            50% { transform: rotate(0); }
+        }
+
+        .bell-anim svg {
+            animation: bell-ring 0.6s ease-in-out;
+            color: #000 !important; /* Đậm màu hơn khi có tin */
+            fill: #fdf2f2; /* Màu nền nhẹ cho chuông */
+        }
+
+        /* 2. Style cho Badge (Số lượng thông báo) */
+        .notification-count {
+            background: #000; /* Màu đen đồng bộ với style MINIMAL */
+            color: #fff;
+            border: 1px solid #fff;
+        }
+
+        /* 3. Dropdown Menu Thông báo */
+        #noti-dropdown {
+            display: none; /* Mặc định ẩn */
+            transition: all 0.2s ease-in-out;
+            border: 1px solid #eee !important;
+        }
+
+        /* 4. Từng item thông báo bên trong dropdown */
+        .noti-item {
+            padding: 15px;
+            border-bottom: 1px solid #f9f9f9;
+            transition: background 0.3s ease;
+            text-decoration: none;
+            display: block;
+        }
+
+        .noti-item:hover {
+            background: #f5f5f5;
+        }
+
+        .noti-item.unread {
+            background: #fdfdfd;
+            border-left: 3px solid #000; /* Vạch đen đánh dấu chưa đọc */
+        }
+
+        .noti-item-title {
+            font-size: 13px;
+            color: #1c1c1a;
+            font-weight: 500;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .noti-item-time {
+            font-size: 11px;
+            color: #999;
+            display: block;
+        }
+
+        /* 5. Tùy chỉnh thanh cuộn cho Dropdown */
+        #noti-items-container::-webkit-scrollbar {
+            width: 4px;
+        }
+        #noti-items-container::-webkit-scrollbar-thumb {
+            background: #eee;
+            border-radius: 10px;
+        }
+    </style>
 </head>
 
 <body>
@@ -42,6 +114,21 @@
                         <circle cx="11" cy="11" r="8" />
                         <path d="m21 21-4.35-4.35" />
                     </svg>
+                </div>
+                <div class="header-icon-btn notification-dropdown" id="notification-bell" style="position: relative; cursor: pointer;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span class="notification-count" id="noti-count" style="display:none; position: absolute; top: -6px; right: -6px; background: #000; color: white; border-radius: 50%; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600;">0</span>
+
+                    <div class="dropdown-menu" id="noti-dropdown" style="position: absolute; right: 0; top: 100%; background: white; border: 1px solid #eee; display: none; list-style: none; padding: 0; margin-top: 10px; min-width: 280px; z-index: 1001; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border-radius: 4px;">
+                        <div style="padding: 12px 15px; border-bottom: 1px solid #f5f5f5; font-weight: 500; font-size: 13px;">Thông báo mới nhất</div>
+                        <div id="noti-items-container" style="max-height: 300px; overflow-y: auto;">
+                            <div style="padding: 20px; text-align: center; color: #999; font-size: 12px;">Không có thông báo nào</div>
+                        </div>
+                        <a href="/profile/notifications" style="display: block; padding: 10px; text-align: center; font-size: 12px; color: #666; text-decoration: none; border-top: 1px solid #f5f5f5;">Xem tất cả</a>
+                    </div>
                 </div>
                 <div class="header-icon-btn" th:onclick="'window.location.href=\'' + @{/wishlist} + '\''"
                     title="Wishlist" style="position: relative;">
@@ -304,7 +391,8 @@
         </div>
     </footer>
 
-
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+    <script th:src="@{/js/notification-watcher.js}"></script>
     <script>
         // Simple script to toggle dropdown since we are not using Bootstrap anymore
         document.addEventListener('DOMContentLoaded', function () {

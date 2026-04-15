@@ -71,6 +71,7 @@ public class SecurityConfig {
                     .csrfTokenRequestHandler(requestHandler);
             })
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/sync/**").permitAll()
                         .requestMatchers("/admin/login", "/css/**", "/js/**", "/images/**", "/uploads/**").permitAll()
                         .requestMatchers("/admin/staff/**").hasRole("SUPER_ADMIN")
                         .requestMatchers("/admin/**").hasAnyRole("STAFF", "SUPER_ADMIN", "MARKETING_STAFF",
@@ -105,5 +106,18 @@ public class SecurityConfig {
             );
 
         return http.build();
+    }
+
+    @Bean
+    public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
+        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
+        configuration.setAllowedOrigins(java.util.List.of("http://localhost:8080")); // Cho phép Client 8080
+        configuration.setAllowedMethods(java.util.List.of("GET", "POST", "OPTIONS"));
+        configuration.setAllowedHeaders(java.util.List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/sync/**", configuration); // Chỉ áp dụng CORS cho API lấy RAM
+        return source;
     }
 }

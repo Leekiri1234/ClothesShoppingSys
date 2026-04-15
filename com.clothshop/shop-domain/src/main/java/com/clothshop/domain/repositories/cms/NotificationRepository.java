@@ -9,5 +9,5 @@ import java.util.List;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
-    List<Notification> findByTargetTypeOrderByCreatedAtDesc(NotificationType targetType);
+    List<Notification> findByTypeOrderByCreatedAtDesc(NotificationType targetType);
 }
