@@ -76,27 +76,28 @@ public class ProductClientController {
         return "redirect:/products?categoryIds=" + id;
     }
 
-    // Trang chi tiết sản phẩm (Giữ nguyên vì đã chuẩn)
+    // Trang chi tiết sản phẩm (Giữ nguyên về độ chuẩn)
     @GetMapping("/{slug}")
     public String productDetail(@PathVariable String slug, Model model, Principal principal) {
         ProductDetailResponse product = productClientService.getProductBySlug(slug);
-        model.addAttribute("product", product);
-        // Lọc ra danh sách màu sắc không trùng lặp từ list variants
+        
+        // Lọc ra danh sách màu sắc (Bỏ null, Mặc định)
         List<String> colors = product.getVariants().stream()
                 .map(VariantDetailResponse::getColor)
+                .filter(c -> c != null && !c.trim().isEmpty() && !c.equalsIgnoreCase("Mặc định"))
                 .distinct()
                 .toList();
         product.setAvailableColors(colors);
 
-        // Lọc ra danh sách size không trùng lặp từ list variants
+        // Lọc ra danh sách size (Bỏ null)
         List<String> sizes = product.getVariants().stream()
                 .map(VariantDetailResponse::getSizeValue)
+                .filter(s -> s != null && !s.trim().isEmpty())
                 .distinct()
                 .toList();
         product.setAvailableSizes(sizes);
 
-        // Code cũ của bạn: model.addAttribute("product", product);
-        // Code cũ của bạn: return "client/products/detail";
+        model.addAttribute("product", product);
         model.addAttribute("pageTitle", product.getProductName());
 
         // Review logic
