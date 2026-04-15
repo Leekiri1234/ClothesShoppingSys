@@ -14,8 +14,6 @@
 
     <meta th:if="${_csrf != null}" name="_csrf" th:content="${_csrf.token}" />
     <meta th:if="${_csrf != null}" name="_csrf_header" th:content="${_csrf.headerName}" />
-    <meta name="_csrf" th:content="${_csrf.token}"/>
-    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
     <style>
         /* 1. Hiệu ứng rung cho chuông khi có thông báo mới từ RAM */
         @keyframes bell-ring {

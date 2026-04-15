@@ -1,24 +1,27 @@
-<div th:fragment="notification-list" id="noti-items-container" style="max-height: 300px; overflow-y: auto;">
-    <th:block th:if="${not #lists.isEmpty(notifications)}">
+<div th:fragment="notification-list" id="noti-items-container">
+    <div style="padding: 10px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: flex-end; align-items: center;">
+        <button onclick="markAllNotificationsAsRead()" style="background: none; border: none; font-size: 11px; color: #666; cursor: pointer; text-decoration: underline;">Đánh dấu đã đọc</button>
+    </div>
+
+    <th:block th:if="${notifications != null and !notifications.empty}">
         <a th:each="item : ${notifications}"
            th:href="@{/profile/notifications/{id}(id=${item.notification.id})}"
            class="noti-item"
            th:classappend="${item.isRead ? '' : 'unread'}"
-           style="display:block; text-decoration:none; border-bottom: 1px solid #f9f9f9; padding: 15px; transition: background 0.3s ease;">
+           th:style="'display:block; text-decoration:none; border-bottom: 1px solid #f0f0f0; padding: 12px; transition: 0.2s; ' + (${item.isRead} ? 'background-color: transparent;' : 'background-color: #f7f9fc; border-left: 3px solid #000;')">
 
-            <span class="noti-item-title"
-                  th:text="${item.notification.title}"
-                  style="font-size: 13px; color: #1c1c1a; font-weight: 500; margin-bottom: 4px; display: block;">Tiêu đề</span>
+            <div class="noti-item-title"
+                 th:text="${item.notification.title}"
+                 th:style="'font-size: 13px; color: #1c1c1a; margin-bottom: 4px; display: block; ' + (${item.isRead} ? 'font-weight: 400;' : 'font-weight: 600;')">Tiêu đề</div>
 
-            <span class="noti-item-time" style="font-size: 11px; color: #999; display: block;">
+            <div class="noti-item-time" style="font-size: 11px; color: #999; display: block;">
                 <span th:text="${#temporals.format(item.createdAt, 'dd/MM HH:mm')}">Thời gian</span>
-                • ID: <span th:text="${item.notification.id}">0</span>
-            </span>
+            </div>
         </a>
     </th:block>
 
-    <div th:if="${#lists.isEmpty(notifications)}"
-         style="padding: 30px 20px; text-align: center; color: #999; font-size: 12px;">
-        Không có thông báo nào.
+    <div th:if="${notifications == null or notifications.empty}"
+         style="padding:20px; text-align:center; color:#999; font-size: 12px;">
+        Không có thông báo nào
     </div>
 </div>

@@ -23,6 +23,7 @@ public class ClientNotificationController {
     // Hàm bổ trợ lấy AccountID từ Principal (Session)
     private Long getCurrentUserId(Principal principal) {
         if (principal == null) return null;
+        // Tìm theo username từ CustomUserDetailsService
         return accountRepository.findByUsername(principal.getName())
                 .map(Account::getId)
                 .orElse(null);
@@ -31,13 +32,16 @@ public class ClientNotificationController {
     // Endpoint trả về HTML Fragment cho Dropdown
     @GetMapping("/fragment")
     public String getNotificationFragment(Model model, Principal principal) {
-        Long currentUserId = getCurrentUserId(principal);
-        if (currentUserId == null) return "fragments/notification-items :: empty-list";
+        Long userId = getCurrentUserId(principal);
+        if (userId == null) {
+            model.addAttribute("notifications", null);
+            return "fragments/notification-item :: notification-list";
+        }
 
-        List<NotificationRecipient> recipients = notificationService.getTop5ForUser(currentUserId);
-        model.addAttribute("notifications", recipients);
-
-        return "fragments/notification-items :: notification-list";
+        // Lấy danh sách Recipient gắn với User này
+        List<NotificationRecipient> list = notificationService.getTop5ForUser(userId);
+        model.addAttribute("notifications", list);
+        return "fragments/notification-item :: notification-list";
     }
 
     // Trang danh sách thông báo đầy đủ
@@ -63,5 +67,43 @@ public class ClientNotificationController {
         } catch (Exception e) {
             return "error/404";
         }
+    }
+
+    @PostMapping("/mark-all-read")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> markAllRead(Principal principal) {
+        Long currentUserId = getCurrentUserId(principal);
+        if (currentUserId == null) return org.springframework.http.ResponseEntity.status(401).build();
+
+        notificationService.markAllAsRead(currentUserId);
+        return org.springframework.http.ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/unread-count")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> getUnreadCount(Principal principal) {
+        Long currentUserId = getCurrentUserId(principal);
+        if (currentUserId == null) return org.springframework.http.ResponseEntity.ok(0);
+
+        long count = notificationService.countUnread(currentUserId);
+        return org.springframework.http.ResponseEntity.ok(count);
+    }
+
+    @GetMapping("/latest")
+    @ResponseBody
+    public org.springframework.http.ResponseEntity<?> getLatest(Principal principal) {
+        Long currentUserId = getCurrentUserId(principal);
+        if (currentUserId == null) return org.springframework.http.ResponseEntity.status(401).build();
+
+        List<NotificationRecipient> top = notificationService.getTop5ForUser(currentUserId);
+        if (top != null && !top.isEmpty()) {
+            NotificationRecipient latest = top.get(0);
+            return org.springframework.http.ResponseEntity.ok(java.util.Map.of(
+                "newId", latest.getNotification().getId(),
+                "title", latest.getNotification().getTitle(),
+                "isRead", latest.getIsRead()
+            ));
+        }
+        return org.springframework.http.ResponseEntity.ok(null);
     }
 }

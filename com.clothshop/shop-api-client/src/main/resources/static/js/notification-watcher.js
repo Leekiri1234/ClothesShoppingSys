@@ -1,8 +1,50 @@
-let lastNotificationId = parseInt(localStorage.getItem('minimal_last_noti_id')) || 0;
-let isFirstTime = (localStorage.getItem('minimal_last_noti_id') === null);
-let unreadCount = 0;
+// notification-watcher.js
+let lastUnreadCount = -1;
+let lastNotiId = -1;
+
+async function checkNotifications() {
+    try {
+        const [latestRes, countRes] = await Promise.all([
+            fetch('/profile/notifications/latest'),
+            fetch('/profile/notifications/unread-count')
+        ]);
+
+        if (countRes.ok) {
+            const count = await countRes.json();
+            if (count !== lastUnreadCount) {
+                lastUnreadCount = count;
+                updateBellUI(count);
+
+                const dropdown = document.getElementById('noti-dropdown');
+                if (dropdown && dropdown.style.display === 'block') {
+                    await loadNotificationsFromServer();
+                }
+            }
+        }
+
+        if (latestRes.ok) {
+            // endpoint trả về chuỗi rỗng nếu không có tin nào thay vì lỗi
+            const text = await latestRes.text();
+            if (text) {
+                const data = JSON.parse(text);
+                if (data && data.newId) {
+                    if (lastNotiId === -1) {
+                        lastNotiId = data.newId;
+                    } else if (data.newId > lastNotiId) {
+                        lastNotiId = data.newId;
+                        showMinimalToast(data.title, data.newId);
+                    }
+                }
+            }
+        }
+    } catch (e) {
+        // silent fail
+    }
+}
 
 function startMemoryWatcher() {
+    checkNotifications();
+
     const bellIcon = document.getElementById('notification-bell');
     const dropdown = document.getElementById('noti-dropdown');
 
@@ -13,8 +55,7 @@ function startMemoryWatcher() {
 
             if (isOpening) {
                 dropdown.style.display = 'block';
-                resetBell();
-                // TÍCH HỢP: Load dữ liệu cũ từ Database Client (8080)
+                bellIcon.classList.remove('bell-anim');
                 await loadNotificationsFromServer();
             } else {
                 dropdown.style.display = 'none';
@@ -23,72 +64,77 @@ function startMemoryWatcher() {
         document.addEventListener('click', () => dropdown.style.display = 'none');
     }
 
-    // POLLING: Kiểm tra tin mới từ RAM Admin (8081)
-    setInterval(async () => {
-        try {
-            const response = await fetch(`http://localhost:8081/api/sync/check?lastId=${lastNotificationId}`);
-            if (!response.ok) return;
-            const data = await response.json();
-
-            if (data.status === "UPDATE_FOUND") {
-                lastNotificationId = data.newId;
-                localStorage.setItem('minimal_last_noti_id', lastNotificationId);
-
-                if (!isFirstTime) {
-                    unreadCount++;
-                    updateBellUI(unreadCount);
-                    showMinimalToast(data.title, data.newId);
-                }
-                isFirstTime = false;
-            }
-        } catch (e) {}
-    }, 2000);
+    setInterval(checkNotifications, 3000);
 }
 
-// Hàm gọi Fragment từ Server 8080
 async function loadNotificationsFromServer() {
     const container = document.getElementById('noti-items-container');
+    if (!container) return;
     try {
         const response = await fetch('/profile/notifications/fragment');
         if (response.ok) {
             const html = await response.text();
-            // Ghi đè vào vùng chứa trong dropdown
+            // Thay thế nội dung cũ bằng fragment mới từ server
             container.outerHTML = html;
         }
     } catch (e) {
-        console.error("Lỗi đồng bộ thông báo:", e);
+        console.error("Lỗi đồng bộ fragment:", e);
     }
 }
 
+// Các hàm bổ trợ UI giữ nguyên
 function updateBellUI(count) {
     const badge = document.getElementById('noti-count');
     const bellWrapper = document.getElementById('notification-bell');
     if (badge) {
-        badge.textContent = count > 9 ? "9+" : count;
-        badge.style.display = 'flex';
+        if (count > 0) {
+            badge.textContent = count > 9 ? "9+" : count;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
     }
-    if (bellWrapper) bellWrapper.classList.add('bell-anim');
+    if (bellWrapper && count > 0) bellWrapper.classList.add('bell-anim');
 }
 
 function resetBell() {
-    const badge = document.getElementById('noti-count');
-    const bellWrapper = document.getElementById('notification-bell');
-    if (badge) badge.style.display = 'none';
-    if (bellWrapper) bellWrapper.classList.remove('bell-anim');
     unreadCount = 0;
+    updateBellUI(0);
 }
 
 function showMinimalToast(message, id) {
     if (typeof Toastify !== 'undefined') {
         Toastify({
             text: message,
-            duration: 5000,
+            duration: 8000,
             gravity: "top",
             position: "right",
-            style: { background: "#1c1c1a", color: "#fff", borderRadius: "0px" },
-            onClick: () => { if(id) window.location.href = `/profile/notifications/${id}`; }
+            destination: id ? `/profile/notifications/${id}` : undefined,
+            style: { background: "#1c1c1a", color: "#fff", borderRadius: "0px" }
         }).showToast();
     }
 }
+
+window.markAllNotificationsAsRead = function() {
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content') || '';
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content') || 'X-CSRF-TOKEN';
+
+    fetch('/profile/notifications/mark-all-read', {
+        method: 'POST',
+        headers: {
+            [csrfHeader]: csrfToken
+        }
+    })
+    .then(res => {
+        if (res.ok) {
+            checkNotifications(); // Refresh count right away
+            if (window.location.pathname.includes('/profile/notifications')) {
+                window.location.reload();
+            } else {
+                loadNotificationsFromServer();
+            }
+        }
+    });
+};
 
 document.addEventListener('DOMContentLoaded', startMemoryWatcher);
