@@ -29,6 +29,9 @@ public class Notification extends BaseEntity {
     @Column(name = "content", nullable = false)
     private String content;
 
+    @Column(name = "action_url", length = 255)
+    private String actionUrl;
+
     @Column(name = "target_type", length = 20)
     private NotificationType type; // SYSTEM, PROMOTION
 

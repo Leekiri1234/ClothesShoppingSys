@@ -10,7 +10,9 @@ import com.clothshop.domain.models.order.Order;
 import com.clothshop.domain.models.order.OrderItem;
 import com.clothshop.domain.models.order.OrderStatusHistory;
 import com.clothshop.domain.models.product.ProductVariant;
+import com.clothshop.domain.enums.NotificationType;
 import com.clothshop.domain.enums.OrderStatus;
+import com.clothshop.domain.models.auth.Account;
 import com.clothshop.domain.repositories.order.OrderRepository;
 import com.clothshop.domain.repositories.order.OrderStatusHistoryRepository;
 import com.clothshop.domain.repositories.product.ProductVariantRepository;
@@ -35,6 +37,7 @@ public class OrderAdminService {
     private final OrderRepository orderRepository;
     private final OrderStatusHistoryRepository historyRepository;
     private final OrderAdminMapper orderMapper;
+    private final AdminNotificationService notificationService;
 
     /**
      * Lấy danh sách đơn hàng có phân trang và lọc động.
@@ -120,6 +123,22 @@ public class OrderAdminService {
                 .note(note).changedAt(java.time.LocalDateTime.now())
                 .build();
         historyRepository.save(history);
+
+        // Gửi thông báo tự động cho khách hàng
+        if (order.getCustomer() != null && order.getCustomer().getAccount() != null) {
+            Account account = order.getCustomer().getAccount();
+            String title = "Cập nhật trạng thái đơn hàng: " + order.getOrderInvoice();
+            String content = String.format("Đơn hàng %s của bạn đã được cập nhật thành: %s.%s",
+                    order.getOrderInvoice(), newStatus.getDisplayName(),
+                    (note != null && !note.trim().isEmpty() ? " Ghi chú: " + note : ""));
+            String actionUrl = "/orders/" + order.getOrderInvoice();
+
+            try {
+                notificationService.sendUserNotification(account, title, content, NotificationType.ORDER_UPDATE, actionUrl);
+            } catch (Exception e) {
+                log.error("Failed to send notification for order {}: {}", order.getOrderInvoice(), e.getMessage());
+            }
+        }
     }
 
     private void validateStatusTransition(OrderStatus current, OrderStatus next) {
@@ -185,3 +204,4 @@ public class OrderAdminService {
         }
     }
 }
+
