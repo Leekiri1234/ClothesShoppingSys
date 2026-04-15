@@ -93,9 +93,10 @@ public class RmaAdminService {
         if (rmaOrder != null && rmaOrder.getCustomer() != null && rmaOrder.getCustomer().getAccount() != null) {
             Account account = rmaOrder.getCustomer().getAccount();
             String title = "Cập nhật yêu cầu trả hàng: #" + savedRma.getId();
-            String content = String.format("Yêu cầu trả hàng cho đơn %s đã được cập nhật thành: %s.%s",
+            String content = String.format("Yêu cầu trả hàng cho đơn %s đã được cập nhật thành: %s.%s<br/><a href='/orders/%s' style='color:#007bff; text-decoration: underline; font-weight: 500; font-size: 13px; display: inline-block; margin-top: 5px;'>Xem chi tiết yêu cầu →</a>",
                     rmaOrder.getOrderInvoice(), newStatus.getDisplayName(),
-                    (request.getAdminNote() != null && !request.getAdminNote().trim().isEmpty() ? " Ghi chú: " + request.getAdminNote() : ""));
+                    (request.getAdminNote() != null && !request.getAdminNote().trim().isEmpty() ? " Ghi chú: " + request.getAdminNote() : ""),
+                    rmaOrder.getOrderInvoice());
             
             notificationService.sendUserNotification(account, title, content, NotificationType.ORDER_UPDATE);
         }

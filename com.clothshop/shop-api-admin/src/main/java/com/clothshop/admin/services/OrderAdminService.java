@@ -128,9 +128,10 @@ public class OrderAdminService {
         if (order.getCustomer() != null && order.getCustomer().getAccount() != null) {
             Account account = order.getCustomer().getAccount();
             String title = "Cập nhật trạng thái đơn hàng: " + order.getOrderInvoice();
-            String content = String.format("Đơn hàng %s của bạn đã được cập nhật thành: %s.%s",
+            String content = String.format("Đơn hàng %s của bạn đã được cập nhật thành: %s.%s<br/><a href='/orders/%s' style='color:#007bff; text-decoration: underline; font-weight: 500; font-size: 13px; display: inline-block; margin-top: 5px;'>Xem chi tiết đơn hàng →</a>",
                     order.getOrderInvoice(), newStatus.getDisplayName(),
-                    (note != null && !note.trim().isEmpty() ? " Ghi chú: " + note : ""));
+                    (note != null && !note.trim().isEmpty() ? " Ghi chú: " + note : ""),
+                    order.getOrderInvoice());
             
             notificationService.sendUserNotification(account, title, content, NotificationType.ORDER_UPDATE);
         }
