@@ -83,6 +83,11 @@
                     <p style="font-size: 14px; color: #999; line-height: 1.6; font-style: italic;" th:text="${review.comment}">
                         Đánh giá hiện bị ẩn.
                     </p>
+                    <p th:if="${review.hideReason != null and !#strings.isEmpty(review.hideReason)}"
+                       style="font-size: 13px; color: #888; line-height: 1.6;"
+                       th:text="'Lý do từ quản trị viên: ' + ${review.hideReason}">
+                        Lý do từ quản trị viên.
+                    </p>
                 </th:block>
             </div>
         </section>

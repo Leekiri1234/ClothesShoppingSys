@@ -83,6 +83,7 @@ public class ReviewClientService {
                         .customerName(f.getCustomer().getFullName())
                         .rating(f.getRating())
                         .comment(STATUS_HIDDEN.equals(f.getFeedbackStatus()) ? HIDDEN_REVIEW_MESSAGE : f.getComment())
+                        .hideReason(f.getHideReason())
                         .reviewDate(f.getCreatedAt())
                         .hidden(STATUS_HIDDEN.equals(f.getFeedbackStatus()))
                         .build())
