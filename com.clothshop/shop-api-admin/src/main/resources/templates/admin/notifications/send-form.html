@@ -80,7 +80,7 @@
         });
 
         if (response.ok) {
-          status.innerHTML = '<span class="text-success fw-bold">✅ Thành công! Tín hiệu đã được đẩy vào RAM.</span>';
+          status.innerHTML = '<span class="text-success fw-bold">✅ Thông báo đã được gửi.</span>';
           status.style.display = "block";
           // Reset form
           document.getElementById('title').value = '';
@@ -89,7 +89,7 @@
           throw new Error("Lỗi Server");
         }
       } catch (e) {
-        status.innerHTML = '<span class="text-danger">❌ Lỗi: Không thể kết nối tới Service RAM.</span>';
+        status.innerHTML = '<span class="text-danger">❌ Lỗi: Không thể gửi được thông báo do lỗi kết nối.</span>';
         status.style.display = "block";
       } finally {
         btn.disabled = false;
