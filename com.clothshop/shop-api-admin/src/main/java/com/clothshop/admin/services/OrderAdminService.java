@@ -14,6 +14,11 @@ import com.clothshop.domain.enums.OrderStatus;
 import com.clothshop.domain.repositories.order.OrderRepository;
 import com.clothshop.domain.repositories.order.OrderStatusHistoryRepository;
 import com.clothshop.domain.repositories.product.ProductVariantRepository;
+import com.clothshop.domain.models.cms.Notification;
+import com.clothshop.domain.models.cms.NotificationRecipient;
+import com.clothshop.domain.enums.NotificationType;
+import com.clothshop.domain.repositories.cms.NotificationRepository;
+import com.clothshop.domain.repositories.cms.NotificationRecipientRepository;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -35,6 +40,8 @@ public class OrderAdminService {
     private final OrderRepository orderRepository;
     private final OrderStatusHistoryRepository historyRepository;
     private final OrderAdminMapper orderMapper;
+    private final NotificationRepository notificationRepository;
+    private final NotificationRecipientRepository notificationRecipientRepository;
 
     /**
      * Lấy danh sách đơn hàng có phân trang và lọc động.
@@ -120,6 +127,28 @@ public class OrderAdminService {
                 .note(note).changedAt(java.time.LocalDateTime.now())
                 .build();
         historyRepository.save(history);
+
+        sendOrderUpdateNotification(order, newStatus);
+    }
+
+    private void sendOrderUpdateNotification(Order order, OrderStatus newStatus) {
+        if (order.getCustomer() == null || order.getCustomer().getAccount() == null) {
+            return;
+        }
+
+        Notification notification = new Notification();
+        notification.setTitle("Cập nhật đơn hàng: " + order.getOrderInvoice());
+        notification.setContent("Đơn hàng " + order.getOrderInvoice() + " của bạn đã được cập nhật trạng thái thành: " + newStatus.getDisplayName() + ".");
+        notification.setType(NotificationType.ORDER_UPDATE);
+
+        notificationRepository.save(notification);
+
+        NotificationRecipient recipient = new NotificationRecipient();
+        recipient.setNotification(notification);
+        recipient.setAccount(order.getCustomer().getAccount());
+        recipient.setIsRead(false);
+
+        notificationRecipientRepository.save(recipient);
     }
 
     private void validateStatusTransition(OrderStatus current, OrderStatus next) {

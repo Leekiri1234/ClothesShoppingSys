@@ -16,6 +16,11 @@ import com.clothshop.domain.enums.RmaStatus;
 import com.clothshop.domain.repositories.order.RmaRequestRepository;
 import com.clothshop.domain.repositories.product.InventoryLogRepository;
 import com.clothshop.domain.repositories.product.ProductVariantRepository;
+import com.clothshop.domain.models.cms.Notification;
+import com.clothshop.domain.models.cms.NotificationRecipient;
+import com.clothshop.domain.enums.NotificationType;
+import com.clothshop.domain.repositories.cms.NotificationRepository;
+import com.clothshop.domain.repositories.cms.NotificationRecipientRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -37,6 +42,8 @@ public class RmaAdminService {
     private final RmaAdminMapper rmaMapper;
     private final ProductVariantRepository variantRepository; // Inject thêm
     private final InventoryLogRepository inventoryLogRepository; // Inject thêm
+    private final NotificationRepository notificationRepository;
+    private final NotificationRecipientRepository notificationRecipientRepository;
 
     @Transactional(readOnly = true)
     public PageResponse<RmaAdminResponse> getAllRmaRequests(PagingRequest pagingRequest) {
@@ -84,7 +91,30 @@ public class RmaAdminService {
         }
 
         RmaRequest savedRma = rmaRepository.save(rmaRequest);
+
+        sendRmaUpdateNotification(rmaRequest, newStatus);
+
         return rmaMapper.toResponse(savedRma);
+    }
+
+    private void sendRmaUpdateNotification(RmaRequest rmaRequest, RmaStatus newStatus) {
+        if (rmaRequest.getCustomer() == null || rmaRequest.getCustomer().getAccount() == null) {
+            return;
+        }
+
+        Notification notification = new Notification();
+        notification.setTitle("Cập nhật yêu cầu trả hàng: " + rmaRequest.getOrder().getOrderInvoice());
+        notification.setContent("Yêu cầu trả hàng cho đơn " + rmaRequest.getOrder().getOrderInvoice() + " của bạn đã được cập nhật sang trạng thái: " + newStatus.getDisplayName() + ".");
+        notification.setType(NotificationType.ORDER_UPDATE);
+
+        notificationRepository.save(notification);
+
+        NotificationRecipient recipient = new NotificationRecipient();
+        recipient.setNotification(notification);
+        recipient.setAccount(rmaRequest.getCustomer().getAccount());
+        recipient.setIsRead(false);
+
+        notificationRecipientRepository.save(recipient);
     }
 
     /**

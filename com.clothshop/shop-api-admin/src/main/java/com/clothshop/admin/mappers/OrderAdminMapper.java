@@ -1,6 +1,9 @@
 package com.clothshop.admin.mappers;
 
-import com.clothshop.admin.dtos.response.order.*;
+import com.clothshop.admin.dtos.response.order.OrderAdminResponse;
+import com.clothshop.admin.dtos.response.order.OrderDetailResponse;
+import com.clothshop.admin.dtos.response.order.OrderItemResponse;
+import com.clothshop.admin.dtos.response.order.OrderStatusHistoryResponse;
 import com.clothshop.domain.models.order.*;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
