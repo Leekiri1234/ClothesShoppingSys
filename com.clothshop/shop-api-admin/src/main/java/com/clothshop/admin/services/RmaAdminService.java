@@ -12,7 +12,9 @@ import com.clothshop.domain.models.order.OrderItem;
 import com.clothshop.domain.models.order.RmaRequest;
 import com.clothshop.domain.models.product.InventoryLog;
 import com.clothshop.domain.models.product.ProductVariant;
+import com.clothshop.domain.enums.NotificationType;
 import com.clothshop.domain.enums.RmaStatus;
+import com.clothshop.domain.models.auth.Account;
 import com.clothshop.domain.repositories.order.RmaRequestRepository;
 import com.clothshop.domain.repositories.product.InventoryLogRepository;
 import com.clothshop.domain.repositories.product.ProductVariantRepository;
@@ -37,6 +39,7 @@ public class RmaAdminService {
     private final RmaAdminMapper rmaMapper;
     private final ProductVariantRepository variantRepository; // Inject thêm
     private final InventoryLogRepository inventoryLogRepository; // Inject thêm
+    private final AdminNotificationService notificationService;
 
     @Transactional(readOnly = true)
     public PageResponse<RmaAdminResponse> getAllRmaRequests(PagingRequest pagingRequest) {
@@ -84,6 +87,19 @@ public class RmaAdminService {
         }
 
         RmaRequest savedRma = rmaRepository.save(rmaRequest);
+
+        // Gửi thông báo tự động cho khách hàng
+        Order rmaOrder = savedRma.getOrder();
+        if (rmaOrder != null && rmaOrder.getCustomer() != null && rmaOrder.getCustomer().getAccount() != null) {
+            Account account = rmaOrder.getCustomer().getAccount();
+            String title = "Cập nhật yêu cầu trả hàng: #" + savedRma.getId();
+            String content = String.format("Yêu cầu trả hàng cho đơn %s đã được cập nhật thành: %s.%s",
+                    rmaOrder.getOrderInvoice(), newStatus.getDisplayName(),
+                    (request.getAdminNote() != null && !request.getAdminNote().trim().isEmpty() ? " Ghi chú: " + request.getAdminNote() : ""));
+            
+            notificationService.sendUserNotification(account, title, content, NotificationType.ORDER_UPDATE);
+        }
+
         return rmaMapper.toResponse(savedRma);
     }
 
