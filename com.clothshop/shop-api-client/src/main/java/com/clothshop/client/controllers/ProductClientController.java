@@ -100,6 +100,7 @@ public class ProductClientController {
         model.addAttribute("pageTitle", product.getProductName());
 
         // Review logic
+        model.addAttribute("isAuthenticated", principal != null);
         if (principal != null) {
             model.addAttribute("canReview", reviewService.canReview(principal.getName(), product.getProductId()));
             log.debug("User {} viewing product {}", principal.getName(), product.getProductId());

@@ -20,7 +20,7 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
  * Spring Boot 3 / Spring Security 6 FIX:
  * - Mặc định Spring Security 6 dùng XorCsrfTokenRequestAttributeHandler,
  *   nó XOR-encode token trước khi ghi vào cookie.
- * - JS đọc cookie XSRF-TOKEN ra giá trị đã bị XOR → không khớp với
+ * - JS đọc cookie CSRF ra giá trị đã bị XOR → không khớp với
  *   giá trị Spring Security expect trong header → 403 Forbidden dù đã login.
  * - Fix: dùng CsrfTokenRequestAttributeHandler (raw, không XOR).
  *
@@ -59,9 +59,9 @@ public class SecurityConfig {
 
                 // CSRF Protection — FIX SPRING SECURITY 6
                 // CsrfTokenRequestAttributeHandler = raw token, không XOR
-                // → JS đọc cookie XSRF-TOKEN ra đúng giá trị cần gửi trong header
+                // → JS đọc cookie CSRF ra đúng giá trị cần gửi trong header
                 .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRepository(clientCsrfTokenRepository())
                         .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
                 )
 
@@ -96,7 +96,7 @@ public class SecurityConfig {
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/login?logout")
                         .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID", "clothshop-remember-me")
+                        .deleteCookies("CLIENTSESSIONID", "clothshop-remember-me", "CLIENT-XSRF-TOKEN")
                         .permitAll()
                 )
 
@@ -115,5 +115,11 @@ public class SecurityConfig {
                 );
 
         return http.build();
+    }
+
+    private CookieCsrfTokenRepository clientCsrfTokenRepository() {
+        CookieCsrfTokenRepository tokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        tokenRepository.setCookieName("CLIENT-XSRF-TOKEN");
+        return tokenRepository;
     }
 }

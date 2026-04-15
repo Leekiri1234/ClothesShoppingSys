@@ -46,10 +46,16 @@
                     <p style="font-size: 14px; color: #666; line-height: 1.6;" th:text="${product.description}"></p>
                 </div>
 
-                <!-- canReview button -->
-                <div th:if="${canReview}" style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 32px;">
-                    <p style="font-size: 14px; margin-bottom: 16px;">Bạn đã mua bộ sản phẩm này? Hãy chia sẻ cảm nhận của bạn!</p>
+                <!-- review action -->
+                <div th:if="${isAuthenticated}" style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 32px;">
+                    <p th:if="${canReview}" style="font-size: 14px; margin-bottom: 16px;">Bạn đã mua bộ sản phẩm này? Hãy chia sẻ cảm nhận của bạn!</p>
+                    <p th:if="${!canReview}" style="font-size: 14px; margin-bottom: 16px; color: #666;">
+                        Bạn vẫn có thể mở form để nhập đánh giá. Hệ thống sẽ kiểm tra điều kiện trước khi gửi.
+                    </p>
                     <a th:href="@{/products/{id}/reviews/form(id=${product.productId})}" class="btn btn--outline" style="text-decoration: none;">Viết đánh giá</a>
+                </div>
+                <div th:unless="${isAuthenticated}" style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 32px;">
+                    <a th:href="@{/login}" class="btn btn--outline" style="text-decoration: none;">Đăng nhập để đánh giá</a>
                 </div>
             </div>
         </div>

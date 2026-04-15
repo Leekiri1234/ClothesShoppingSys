@@ -3,6 +3,7 @@ package com.clothshop.domain.repositories.product;
 import com.clothshop.domain.models.product.Product;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -32,6 +33,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @EntityGraph(attributePaths = {"category"})
     @Query("SELECT p FROM Product p WHERE p.isActive = true")
     Page<Product> findAllByIsActiveTrue(Pageable pageable);
+    List<Product> findAllByIsActiveTrue(Sort sort);
 
     @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.prodStatus = com.clothshop.domain.enums.ProductStatus.ACTIVE")
     Page<Product> findAllActive(Pageable pageable);
@@ -39,6 +41,7 @@ public interface ProductRepository extends JpaRepository<Product, Long>, JpaSpec
     @EntityGraph(attributePaths = {"category"})
     @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId AND p.isActive = true")
     Page<Product> findByCategory_IdAndIsActiveTrue(@Param("categoryId") Long categoryId, Pageable pageable);
+    List<Product> findByCategory_IdAndIsActiveTrue(Long categoryId, Sort sort);
 
     @EntityGraph(attributePaths = {"category"})
     @Query("SELECT ci.product FROM CollectionItem ci WHERE ci.collection.slug = :slug AND ci.product.isActive = true")
