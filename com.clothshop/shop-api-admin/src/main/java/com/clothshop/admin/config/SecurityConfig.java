@@ -63,6 +63,7 @@ public class SecurityConfig {
             // Spring Security 6: Need CsrfTokenRequestAttributeHandler for proper cookie-based CSRF
             .csrf(csrf -> {
                 CookieCsrfTokenRepository tokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+                tokenRepository.setCookieName("ADMIN-XSRF-TOKEN");
                 CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
                 // Make CSRF token available as request attribute (for Thymeleaf meta tags)
                 requestHandler.setCsrfRequestAttributeName("_csrf");
@@ -101,7 +102,7 @@ public class SecurityConfig {
                 .logoutUrl("/admin/logout")
                 .logoutSuccessUrl("/admin/login?logout")
                 .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID")
+                .deleteCookies("ADMINSESSIONID", "clothshop-admin-remember-me", "ADMIN-XSRF-TOKEN")
                 .permitAll()
             );
 

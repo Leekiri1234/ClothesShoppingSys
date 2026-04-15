@@ -303,7 +303,8 @@ function goToPage(page) {
 
 // Toggle staff status via API (shared by deactivate & reactivate)
 function callToggleStatus(staffId, successMsg, errorMsg) {
-    const csrfToken = getCookie('XSRF-TOKEN')
+    const csrfToken = getCookie('ADMIN-XSRF-TOKEN')
+        || getCookie('XSRF-TOKEN')
         || document.querySelector('meta[name="_csrf"]')?.content;
     const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-XSRF-TOKEN';
 

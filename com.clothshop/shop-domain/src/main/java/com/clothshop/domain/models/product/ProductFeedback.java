@@ -15,7 +15,15 @@ import java.time.LocalDateTime;
  * Product Feedback - Đánh giá sản phẩm từ khách hàng.
  */
 @Entity
-@Table(name = "product_feedback")
+@Table(
+        name = "product_feedback",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_product_feedback_product_customer",
+                        columnNames = {"product_id", "customer_id"}
+                )
+        }
+)
 @SQLDelete(sql = "UPDATE product_feedback SET is_active = false WHERE id = ?")
 @SQLRestriction("is_active = true")
 @AttributeOverride(name = "id", column = @Column(name = "feedback_id"))

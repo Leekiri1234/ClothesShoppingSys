@@ -26,7 +26,7 @@
 
     /* ──────────────────────────────────────────────
        CSRF TOKEN (bắt buộc vì SecurityConfig dùng CookieCsrfTokenRepository)
-       Spring đặt token trong cookie "XSRF-TOKEN", gửi lại qua header "X-XSRF-TOKEN"
+       Ưu tiên token từ meta tag, fallback cookie để tương thích.
     ────────────────────────────────────────────── */
    function getCsrfMeta() {
        const tokenMeta = document.querySelector('meta[name="_csrf"]');
@@ -39,8 +39,10 @@
    }
 
    function getCsrfTokenFromCookie() {
-       const match = document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
-       return match ? decodeURIComponent(match[1]) : null;
+       const cookieMatch =
+           document.cookie.match(/(?:^|;\s*)CLIENT-XSRF-TOKEN=([^;]+)/)
+           || document.cookie.match(/(?:^|;\s*)XSRF-TOKEN=([^;]+)/);
+       return cookieMatch ? decodeURIComponent(cookieMatch[1]) : null;
    }
 
    function csrfHeaders() {

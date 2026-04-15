@@ -333,8 +333,8 @@ function toggleStaffStatus(action, staffId) {
         return;
     }
 
-    // Read CSRF token from cookie (CookieCsrfTokenRepository stores it in XSRF-TOKEN cookie)
-    const csrfToken = getCookie('XSRF-TOKEN');
+    // Read CSRF token from cookie, fallback legacy cookie name
+    const csrfToken = getCookie('ADMIN-XSRF-TOKEN') || getCookie('XSRF-TOKEN');
     console.log('🟢 CSRF Token from cookie:', csrfToken ? '✅ Found' : '❌ NOT FOUND');
 
     if (!csrfToken) {
@@ -346,11 +346,12 @@ function toggleStaffStatus(action, staffId) {
     const endpoint = `/admin/staff/toggle/${staffId}`;
     console.log('🟢 Calling endpoint:', endpoint);
 
-    // Send CSRF token via header X-XSRF-TOKEN (required by CookieCsrfTokenRepository)
+    // Send CSRF token via configured CSRF header
+    const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-XSRF-TOKEN';
     fetch(endpoint, {
         method: 'POST',
         headers: {
-            'X-XSRF-TOKEN': csrfToken,
+            [csrfHeader]: csrfToken,
             'Content-Type': 'application/x-www-form-urlencoded'
         }
     })
