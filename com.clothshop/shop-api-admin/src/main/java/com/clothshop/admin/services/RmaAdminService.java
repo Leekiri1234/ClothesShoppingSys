@@ -96,8 +96,13 @@ public class RmaAdminService {
             String content = String.format("Yêu cầu trả hàng cho đơn %s đã được cập nhật thành: %s.%s",
                     rmaOrder.getOrderInvoice(), newStatus.getDisplayName(),
                     (request.getAdminNote() != null && !request.getAdminNote().trim().isEmpty() ? " Ghi chú: " + request.getAdminNote() : ""));
-            
-            notificationService.sendUserNotification(account, title, content, NotificationType.ORDER_UPDATE);
+            String actionUrl = "/orders/" + rmaOrder.getOrderInvoice();
+
+            try {
+                notificationService.sendUserNotification(account, title, content, NotificationType.ORDER_UPDATE, actionUrl);
+            } catch (Exception e) {
+                log.error("Failed to send notification for RMA {}: {}", savedRma.getId(), e.getMessage());
+            }
         }
 
         return rmaMapper.toResponse(savedRma);

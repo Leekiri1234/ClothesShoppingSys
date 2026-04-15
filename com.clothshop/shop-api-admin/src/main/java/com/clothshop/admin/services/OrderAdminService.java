@@ -131,8 +131,13 @@ public class OrderAdminService {
             String content = String.format("Đơn hàng %s của bạn đã được cập nhật thành: %s.%s",
                     order.getOrderInvoice(), newStatus.getDisplayName(),
                     (note != null && !note.trim().isEmpty() ? " Ghi chú: " + note : ""));
-            
-            notificationService.sendUserNotification(account, title, content, NotificationType.ORDER_UPDATE);
+            String actionUrl = "/orders/" + order.getOrderInvoice();
+
+            try {
+                notificationService.sendUserNotification(account, title, content, NotificationType.ORDER_UPDATE, actionUrl);
+            } catch (Exception e) {
+                log.error("Failed to send notification for order {}: {}", order.getOrderInvoice(), e.getMessage());
+            }
         }
     }
 
@@ -199,3 +204,4 @@ public class OrderAdminService {
         }
     }
 }
+

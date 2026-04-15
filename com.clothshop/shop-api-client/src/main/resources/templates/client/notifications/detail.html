@@ -26,6 +26,14 @@
                  th:utext="${detail.notification.content}"
                  style="line-height: 1.8; color: #444; font-size: 16px;">
             </div>
+
+            <div th:if="${detail.notification.actionUrl != null}" style="margin-top: 30px; text-align: left;">
+                <a th:href="${detail.notification.actionUrl}"
+                   style="display: inline-block; padding: 12px 24px; background-color: #000; color: #fff; text-decoration: none; font-size: 14px; font-weight: 500; border-radius: 4px; transition: background-color 0.3s;"
+                   onmouseover="this.style.backgroundColor='#333'" onmouseout="this.style.backgroundColor='#000'">
+                    Xem chi tiết tại đây
+                </a>
+            </div>
         </article>
     </main>
 </div>
