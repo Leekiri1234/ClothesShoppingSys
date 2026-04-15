@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Kiểm duyệt đánh giá</title>
+</head>
+
+<th:block layout:fragment="page-title">
+    Đánh giá khách hàng
+</th:block>
+
+<div layout:fragment="content">
+    <div class="dashboard-card" style="margin-bottom: 20px;">
+        <div class="card-header">
+            <h3 style="font-size: 14px; font-weight: 600; margin: 0;">Bộ lọc trạng thái</h3>
+        </div>
+        <div th:if="${selectedProductId != null}" style="margin: 8px 0 12px; color: var(--muted); font-size: 13px;">
+            Đang lọc theo sản phẩm ID: <strong th:text="${selectedProductId}">1</strong>
+        </div>
+        <form th:action="@{/admin/reviews}" method="get">
+            <input type="hidden" name="productId" th:value="${selectedProductId}"/>
+            <div class="filter-bar" style="flex-wrap: wrap;">
+                <div style="min-width: 220px;">
+                    <select class="filter-select" name="status" style="width: 100%;">
+                        <option value="">Tất cả trạng thái</option>
+                        <option th:each="st : ${reviewStatuses}"
+                                th:value="${st}"
+                                th:text="${st}"
+                                th:selected="${selectedStatus == st}"></option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <a th:href="${selectedProductId != null ? '/admin/reviews?productId=' + selectedProductId : '/admin/reviews'}" class="btn btn-outline">Reset</a>
+                    <button type="submit" class="btn btn-primary">Áp dụng</button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <div class="dashboard-card">
+        <table class="admin-table">
+            <thead>
+            <tr>
+                <th>Sản phẩm</th>
+                <th>Khách hàng</th>
+                <th>Điểm</th>
+                <th>Nội dung</th>
+                <th>Trạng thái</th>
+                <th style="width: 280px;">Thao tác</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="review : ${reviews.content}">
+                <td th:text="${review.productName}">Product</td>
+                <td th:text="${review.customerName}">Customer</td>
+                <td th:text="${review.rating}">5</td>
+                <td>
+                    <div th:text="${review.comment}">Comment</div>
+                    <small th:if="${review.hideReason != null and !#strings.isEmpty(review.hideReason)}"
+                           style="color: var(--muted); display: block; margin-top: 6px;"
+                           th:text="'Lý do ẩn: ' + ${review.hideReason}">
+                        Lý do ẩn
+                    </small>
+                </td>
+                <td>
+                    <span class="badge"
+                          th:classappend="${review.status == 'APPROVED' ? 'badge-success' : (review.status == 'HIDDEN' ? 'badge-danger' : 'badge-warning')}"
+                          th:text="${review.status}">
+                        PENDING
+                    </span>
+                </td>
+                <td>
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <form th:action="@{/admin/reviews/{id}/approve(id=${review.reviewId})}" method="post"
+                              style="display: inline-flex; gap: 8px; align-items: center;">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <input type="hidden" name="status" th:value="${selectedStatus}"/>
+                            <input type="hidden" name="productId" th:value="${selectedProductId}"/>
+                            <input type="hidden" name="page" th:value="${reviews.number}"/>
+                            <button type="submit" class="btn btn-sm btn-primary">Approve</button>
+                        </form>
+
+                        <form th:action="@{/admin/reviews/{id}/hide(id=${review.reviewId})}" method="post"
+                              style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                            <input type="hidden" name="status" th:value="${selectedStatus}"/>
+                            <input type="hidden" name="productId" th:value="${selectedProductId}"/>
+                            <input type="hidden" name="page" th:value="${reviews.number}"/>
+                            <input type="text" name="reason" class="filter-input"
+                                   placeholder="Lý do ẩn" style="flex: 1; min-width: 140px;">
+                            <button type="submit" class="btn btn-sm btn-outline">Hide</button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            <tr th:if="${reviews.totalElements == 0}">
+                <td colspan="6" class="empty-state">Chưa có đánh giá nào phù hợp.</td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div th:if="${reviews.totalPages > 1}" class="pagination">
+            <button class="page-btn"
+                    th:disabled="${reviews.first}"
+                    th:onclick="'window.location.href=\'' + @{/admin/reviews(page=${reviews.number - 1}, status=${selectedStatus}, productId=${selectedProductId})} + '\''">
+                ‹
+            </button>
+            <th:block th:each="i : ${#numbers.sequence(0, reviews.totalPages - 1)}">
+                <button class="page-btn"
+                        th:classappend="${i == reviews.number} ? 'active'"
+                        th:text="${i + 1}"
+                        th:onclick="'window.location.href=\'' + @{/admin/reviews(page=${i}, status=${selectedStatus}, productId=${selectedProductId})} + '\''">
+                    1
+                </button>
+            </th:block>
+            <button class="page-btn"
+                    th:disabled="${reviews.last}"
+                    th:onclick="'window.location.href=\'' + @{/admin/reviews(page=${reviews.number + 1}, status=${selectedStatus}, productId=${selectedProductId})} + '\''">
+                ›
+            </button>
+        </div>
+    </div>
+</div>
+</html>

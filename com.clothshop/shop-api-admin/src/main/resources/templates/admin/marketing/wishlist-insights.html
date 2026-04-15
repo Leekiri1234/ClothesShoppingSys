@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Wishlist Insights</title>
+</head>
+<body>
+<h1 layout:fragment="page-title">Wishlist Insights</h1>
+
+<div layout:fragment="content">
+    <div class="dashboard-card" style="margin-bottom: 20px;">
+        <div class="card-header">
+            <h3>Bộ lọc phân tích</h3>
+        </div>
+        <form method="get" th:action="@{/admin/marketing/wishlist-insights}" style="display: grid; grid-template-columns: repeat(5, minmax(140px, 1fr)); gap: 12px; align-items: end;">
+            <div>
+                <label for="startDate" style="font-weight: 500; margin-bottom: 4px; display: block;">Từ ngày</label>
+                <input id="startDate" name="startDate" type="date" th:value="${insights.startDate}" class="form-control"/>
+            </div>
+            <div>
+                <label for="endDate" style="font-weight: 500; margin-bottom: 4px; display: block;">Đến ngày</label>
+                <input id="endDate" name="endDate" type="date" th:value="${insights.endDate}" class="form-control"/>
+            </div>
+            <div>
+                <label for="categoryId" style="font-weight: 500; margin-bottom: 4px; display: block;">Danh mục</label>
+                <select id="categoryId" name="categoryId" class="form-select">
+                    <option value="">Tất cả danh mục</option>
+                    <option th:each="c : ${insights.categoryOptions}"
+                            th:value="${c.id}"
+                            th:selected="${insights.selectedCategoryId != null and insights.selectedCategoryId == c.id}"
+                            th:text="${c.name}">
+                    </option>
+                </select>
+            </div>
+            <div>
+                <label for="productId" style="font-weight: 500; margin-bottom: 4px; display: block;">Sản phẩm</label>
+                <select id="productId" name="productId" class="form-select">
+                    <option value="">Tất cả sản phẩm</option>
+                    <option th:each="p : ${insights.productOptions}"
+                            th:value="${p.id}"
+                            th:selected="${insights.selectedProductId != null and insights.selectedProductId == p.id}"
+                            th:text="${p.name}">
+                    </option>
+                </select>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button class="btn btn-primary" type="submit">Lọc</button>
+                <a class="btn btn-outline-secondary"
+                   th:href="@{/admin/marketing/wishlist-insights/export(
+                        startDate=${insights.startDate},
+                        endDate=${insights.endDate},
+                        categoryId=${insights.selectedCategoryId},
+                        productId=${insights.selectedProductId})}">
+                    Export CSV
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="stat-cards" style="margin-bottom: 20px;">
+        <div class="stat-card">
+            <div class="stat-body">
+                <div class="stat-label">Tổng lượt wishlist</div>
+                <div class="stat-value" th:text="${insights.totalWishlistItems}">0</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-body">
+                <div class="stat-label">Sản phẩm được wishlist</div>
+                <div class="stat-value" th:text="${insights.totalWishlistedProducts}">0</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-body">
+                <div class="stat-label">Khách hàng tham gia</div>
+                <div class="stat-value" th:text="${insights.totalCustomers}">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-card" th:if="${insights.totalWishlistItems == 0}">
+        <div style="padding: 24px; text-align: center; color: #6b7280;">
+            Không có dữ liệu trong khoảng thời gian đã chọn. Vui lòng thử lại với bộ lọc khác.
+        </div>
+    </div>
+
+    <div th:if="${insights.totalWishlistItems > 0}" style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px;">
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h3>Top sản phẩm được wishlist</h3>
+            </div>
+            <table class="admin-table">
+                <thead>
+                <tr>
+                    <th>Hạng</th>
+                    <th>Sản phẩm</th>
+                    <th>Danh mục</th>
+                    <th>Lượt wishlist</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="row, stat : ${insights.topProducts}">
+                    <td th:text="${stat.count}">1</td>
+                    <td>
+                        <a th:href="@{/admin/marketing/wishlist-insights/products/{productId}(
+                                    productId=${row.productId},
+                                    startDate=${insights.startDate},
+                                    endDate=${insights.endDate})}"
+                           th:text="${row.productName}">
+                            Product
+                        </a>
+                    </td>
+                    <td th:text="${row.categoryName != null ? row.categoryName : 'Chưa phân loại'}">Danh mục</td>
+                    <td th:text="${row.wishlistCount}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="card-header">
+                <h3>Xu hướng theo ngày</h3>
+            </div>
+            <table class="admin-table">
+                <thead>
+                <tr>
+                    <th>Ngày</th>
+                    <th>Lượt wishlist</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="point : ${insights.trend}">
+                    <td th:text="${#temporals.format(point.date, 'dd/MM/yyyy')}">01/01/2026</td>
+                    <td th:text="${point.wishlistCount}">0</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+</body>
+</html>
