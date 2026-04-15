@@ -161,19 +161,12 @@
                         </span>
                     </td>
                     <td>
-                        <span th:if="${cat.isActive && cat.status == 'ACTIVE'}"
-                              class="status-badge status-active">
-                            <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
-                                <circle cx="12" cy="12" r="10"/>
-                            </svg>
-                            Hoạt động
-                        </span>
                         <span th:if="${cat.isActive && cat.status != 'ACTIVE'}"
                               class="status-badge status-pending">
                             <svg style="width: 10px; height: 10px;" viewBox="0 0 24 24" fill="currentColor">
                                 <circle cx="12" cy="12" r="10"/>
                             </svg>
-                            Tạm ẩn
+                            Đang hoạt động
                         </span>
                         <span th:unless="${cat.isActive}"
                               class="status-badge status-deleted">
