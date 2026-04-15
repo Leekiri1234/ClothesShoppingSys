@@ -79,7 +79,7 @@ public class CollectionAdminController {
             request.setName(collection.getName());
             request.setDescription(collection.getDescription());
             request.setIsActive(collection.getIsActive());
-            request.setImageUrl(collection.getBannerUrl());
+            request.setImageUrl(collection.getImageUrl());
             model.addAttribute("pageTitle", "Chỉnh sửa Bộ sưu tập");
         } else {
             // Chế độ Create

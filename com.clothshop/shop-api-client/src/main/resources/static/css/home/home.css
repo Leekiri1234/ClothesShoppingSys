@@ -735,3 +735,34 @@
     fill: currentColor;
     stroke: currentColor;
 }
+/* ===== FIX: Hiện product-grid trên mobile ===== */
+@media (max-width: 768px) {
+    .best-sellers .product-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 16px !important;
+    }
+
+    .products-scroll-mobile {
+        display: none !important;
+    }
+}
+@media (max-width: 768px) {
+    .product-card-actions {
+        display: flex !important;
+        position: absolute;
+        top: auto !important;
+        right: auto !important;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        flex-direction: row !important;
+        justify-content: center;
+        gap: 6px;
+        padding: 8px;
+        background: rgba(250, 250, 248, 0.93);
+        backdrop-filter: blur(4px);
+        opacity: 1 !important;
+        transform: none !important;
+    }
+}

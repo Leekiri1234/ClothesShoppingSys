@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Quản lý Khách hàng</title>
+</head>
+<body>
+
+<h1 layout:fragment="page-title">Quản lý Khách hàng</h1>
+
+<div layout:fragment="content">
+    <style>
+        .inactive-row {
+            opacity: 0.55;
+            background-color: #f8f9fa;
+        }
+    </style>
+
+    <div class="dashboard-card shadow-sm mb-3">
+        <form th:action="@{/admin/customers}" method="get" class="d-flex" style="gap: 10px; flex-wrap: wrap; align-items: end;">
+            <div style="flex: 1; min-width: 240px;">
+                <label for="keyword" class="mb-1" style="font-size: 12px; color: var(--muted);">Tìm kiếm</label>
+                <input id="keyword" name="keyword" class="form-control"
+                       th:value="${keyword}"
+                       placeholder="Tên, email, username...">
+            </div>
+            <div style="min-width: 180px;">
+                <label for="status" class="mb-1" style="font-size: 12px; color: var(--muted);">Lọc trạng thái</label>
+                <select id="status" name="status" class="form-control">
+                    <option value="ALL" th:selected="${status == null or status == 'ALL'}">Tất cả</option>
+                    <option value="ACTIVE" th:selected="${status == 'ACTIVE'}">Đang hoạt động</option>
+                    <option value="INACTIVE" th:selected="${status == 'INACTIVE'}">Đã khóa</option>
+                </select>
+            </div>
+            <div style="min-width: 170px;">
+                <label for="createdFrom" class="mb-1" style="font-size: 12px; color: var(--muted);">Từ ngày tạo</label>
+                <input id="createdFrom" name="createdFrom" type="date" class="form-control" th:value="${createdFrom}">
+            </div>
+            <div style="min-width: 170px;">
+                <label for="createdTo" class="mb-1" style="font-size: 12px; color: var(--muted);">Đến ngày tạo</label>
+                <input id="createdTo" name="createdTo" type="date" class="form-control" th:value="${createdTo}">
+            </div>
+            <div class="d-flex" style="gap: 8px;">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search mr-1"></i> Lọc
+                </button>
+                <a th:href="@{/admin/customers}" class="btn btn-outline">Đặt lại</a>
+            </div>
+        </form>
+    </div>
+
+    <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <span th:text="${success}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <span th:text="${error}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div class="dashboard-card shadow-sm">
+        <table class="admin-table">
+            <thead>
+            <tr>
+                <th style="width: 80px;">ID</th>
+                <th>Họ và tên</th>
+                <th>Email / Tên đăng nhập</th>
+                <th>Số điện thoại</th>
+                <th style="width: 150px;">Trạng thái</th>
+                <th style="width: 180px;">Ngày tham gia</th>
+                <th style="width: 150px; text-align: center;">Hành động</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="customer : ${customers.content}"
+                th:classappend="${!customer.isActive} ? 'inactive-row' : ''">
+                <td th:text="${customer.id}" class="font-weight-600 text-muted"></td>
+                <td>
+                    <div style="font-weight: 600;" th:text="${customer.fullName}"></div>
+                </td>
+                <td>
+                    <div th:text="${customer.email}" style="font-size: 13px;"></div>
+                    <div th:text="'@' + ${customer.username}" style="font-size: 12px; color: var(--primary);"></div>
+                </td>
+                <td th:text="${customer.phoneNumber ?: 'Chưa cập nhật'}"></td>
+                <td>
+                        <span th:if="${customer.isActive}" class="badge badge-success">
+                             <i class="fas fa-check-circle mr-1"></i> Đang hoạt động
+                        </span>
+                    <span th:unless="${customer.isActive}" class="badge badge-danger">
+                             <i class="fas fa-lock mr-1"></i> Đã khóa
+                        </span>
+                </td>
+                <td th:text="${#temporals.format(customer.createdAt, 'dd/MM/yyyy HH:mm')}"></td>
+                <td style="text-align: center;">
+                    <form th:action="@{/admin/customers/{id}/toggle-status(id=${customer.id})}"
+                          method="post"
+                          th:data-name="${customer.fullName}"
+                          th:data-status="${customer.isActive}"
+                          onsubmit="return confirmToggle(this);">
+
+                        <button type="submit" class="btn btn-xs"
+                                th:classappend="${customer.isActive} ? 'btn-outline-danger' : 'btn-outline-success'"
+                                th:title="${customer.isActive} ? 'Vô hiệu hóa tài khoản' : 'Kích hoạt tài khoản'">
+
+                                <span th:if="${customer.isActive}">
+                                    <svg style="width:14px;height:14px;margin-right:4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                                    Khóa
+                                </span>
+                            <span th:unless="${customer.isActive}">
+                                    <svg style="width:14px;height:14px;margin-right:4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 11V7a5 5 0 0 1 9.9-1"/><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/></svg>
+                                    Kích hoạt lại
+                                </span>
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div th:if="${customers.totalPages > 1}" class="pagination mt-4">
+            <a th:if="${customers.hasPrevious()}"
+               th:href="@{/admin/customers(page=${customers.number - 1}, keyword=${keyword}, status=${status}, createdFrom=${createdFrom}, createdTo=${createdTo})}" class="page-btn">‹</a>
+
+            <th:block th:each="i : ${#numbers.sequence(0, customers.totalPages - 1)}">
+                <a th:href="@{/admin/customers(page=${i}, keyword=${keyword}, status=${status}, createdFrom=${createdFrom}, createdTo=${createdTo})}"
+                   class="page-btn"
+                   th:classappend="${i == customers.number} ? 'active'"
+                   th:text="${i + 1}"></a>
+            </th:block>
+
+            <a th:if="${customers.hasNext()}"
+               th:href="@{/admin/customers(page=${customers.number + 1}, keyword=${keyword}, status=${status}, createdFrom=${createdFrom}, createdTo=${createdTo})}" class="page-btn">›</a>
+        </div>
+    </div>
+</div>
+
+<th:block layout:fragment="scripts">
+    <script th:inline="javascript">
+        function confirmToggle(form) {
+            const customerName = form.getAttribute('data-name');
+            const isActive = form.getAttribute('data-status') === 'true';
+
+            const message = isActive
+                ? `CẢNH BÁO: Bạn có chắc chắn muốn KHÓA tài khoản của khách hàng "${customerName}"?\n\nSau khi khóa, khách hàng này sẽ không thể đăng nhập vào hệ thống.`
+                : `XÁC NHẬN: Bạn muốn MỞ KHÓA tài khoản cho khách hàng "${customerName}"?`;
+
+            return confirm(message);
+        }
+    </script>
+</th:block>
+
+</body>
+</html>

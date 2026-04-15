@@ -419,7 +419,44 @@ async function wishlistToggle(button, event) {
 
 // ── Khởi tạo khi trang load ───────────────────
 
+function initHeroBannerSlider() {
+    const slider = document.querySelector('.banner-slider');
+    if (!slider) return;
+
+    const slides = slider.querySelectorAll('.banner-slide');
+    if (!slides || slides.length <= 1) return;
+
+    let currentIndex = 0;
+    let timer = null;
+
+    const goToSlide = (index) => {
+        currentIndex = index;
+        slider.style.transform = `translateX(-${currentIndex * 100}%)`;
+    };
+
+    const startAutoPlay = () => {
+        if (timer) clearInterval(timer);
+        timer = setInterval(() => {
+            const next = (currentIndex + 1) % slides.length;
+            goToSlide(next);
+        }, 4000);
+    };
+
+    slider.addEventListener('mouseenter', () => {
+        if (timer) clearInterval(timer);
+    });
+
+    slider.addEventListener('mouseleave', () => {
+        startAutoPlay();
+    });
+
+    goToSlide(0);
+    startAutoPlay();
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+    initHeroBannerSlider();
+
     // Chỉ load data, KHÔNG mở sidebar
     loadCartSidebar();
     const sidebar = document.getElementById("cart-sidebar");
