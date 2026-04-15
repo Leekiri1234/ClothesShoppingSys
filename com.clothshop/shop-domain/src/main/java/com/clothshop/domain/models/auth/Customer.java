@@ -5,12 +5,10 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.SQLDelete;
-import org.hibernate.annotations.SQLRestriction;
 
 @Entity
 @Table(name = "customers")
-@SQLDelete(sql = "UPDATE customers SET is_active = false WHERE id = ?")
-@SQLRestriction("is_active = true")
+@SQLDelete(sql = "UPDATE customers SET is_active = false WHERE customer_id = ?")
 @AttributeOverride(name = "id", column = @Column(name = "customer_id"))
 @Getter @Setter @NoArgsConstructor @AllArgsConstructor @SuperBuilder
 public class Customer extends BaseEntity {

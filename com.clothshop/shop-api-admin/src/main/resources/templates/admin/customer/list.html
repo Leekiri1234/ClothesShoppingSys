@@ -19,6 +19,8 @@
 
     <div class="dashboard-card shadow-sm mb-3">
         <form th:action="@{/admin/customers}" method="get" class="d-flex" style="gap: 10px; flex-wrap: wrap; align-items: end;">
+            <input type="hidden" name="page" value="0">
+            <input type="hidden" name="size" th:value="${size}">
             <div style="flex: 1; min-width: 240px;">
                 <label for="keyword" class="mb-1" style="font-size: 12px; color: var(--muted);">Tìm kiếm</label>
                 <input id="keyword" name="keyword" class="form-control"
@@ -99,6 +101,12 @@
                           th:data-name="${customer.fullName}"
                           th:data-status="${customer.isActive}"
                           onsubmit="return confirmToggle(this);">
+                        <input type="hidden" name="page" th:value="${customers.number}">
+                        <input type="hidden" name="size" th:value="${size}">
+                        <input type="hidden" name="keyword" th:value="${keyword}">
+                        <input type="hidden" name="status" th:value="${status}">
+                        <input type="hidden" name="createdFrom" th:value="${createdFrom}">
+                        <input type="hidden" name="createdTo" th:value="${createdTo}">
 
                         <button type="submit" class="btn btn-xs"
                                 th:classappend="${customer.isActive} ? 'btn-outline-danger' : 'btn-outline-success'"
@@ -121,17 +129,17 @@
 
         <div th:if="${customers.totalPages > 1}" class="pagination mt-4">
             <a th:if="${customers.hasPrevious()}"
-               th:href="@{/admin/customers(page=${customers.number - 1}, keyword=${keyword}, status=${status}, createdFrom=${createdFrom}, createdTo=${createdTo})}" class="page-btn">‹</a>
+               th:href="@{/admin/customers(page=${customers.number - 1}, size=${size}, keyword=${keyword}, status=${status}, createdFrom=${createdFrom}, createdTo=${createdTo})}" class="page-btn">‹</a>
 
             <th:block th:each="i : ${#numbers.sequence(0, customers.totalPages - 1)}">
-                <a th:href="@{/admin/customers(page=${i}, keyword=${keyword}, status=${status}, createdFrom=${createdFrom}, createdTo=${createdTo})}"
+                <a th:href="@{/admin/customers(page=${i}, size=${size}, keyword=${keyword}, status=${status}, createdFrom=${createdFrom}, createdTo=${createdTo})}"
                    class="page-btn"
                    th:classappend="${i == customers.number} ? 'active'"
                    th:text="${i + 1}"></a>
             </th:block>
 
             <a th:if="${customers.hasNext()}"
-               th:href="@{/admin/customers(page=${customers.number + 1}, keyword=${keyword}, status=${status}, createdFrom=${createdFrom}, createdTo=${createdTo})}" class="page-btn">›</a>
+               th:href="@{/admin/customers(page=${customers.number + 1}, size=${size}, keyword=${keyword}, status=${status}, createdFrom=${createdFrom}, createdTo=${createdTo})}" class="page-btn">›</a>
         </div>
     </div>
 </div>

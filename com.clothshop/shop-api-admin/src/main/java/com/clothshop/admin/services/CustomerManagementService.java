@@ -16,6 +16,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.Locale;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -26,12 +31,33 @@ public class CustomerManagementService {
     private final CustomerAdminMapper customerMapper;
 
     /**
-     * Lấy danh sách khách hàng phân trang (Chỉ lấy những khách đang active theo mặc định)
+     * Lấy danh sách khách hàng phân trang theo bộ lọc.
      */
     @Transactional(readOnly = true)
-    public Page<CustomerAdminResponse> getAllCustomers(Pageable pageable) {
-        return customerRepository.findAll(pageable)
+    public Page<CustomerAdminResponse> getAllCustomers(Pageable pageable,
+                                                       String keyword,
+                                                       String status,
+                                                       LocalDate createdFrom,
+                                                       LocalDate createdTo) {
+        String normalizedKeyword = (keyword == null || keyword.trim().isEmpty()) ? null : keyword.trim();
+        Boolean isActive = mapStatus(status);
+        LocalDateTime fromDateTime = createdFrom != null ? createdFrom.atStartOfDay() : null;
+        LocalDateTime toDateTime = createdTo != null ? createdTo.atTime(LocalTime.MAX) : null;
+
+        return customerRepository.findAllWithFilter(normalizedKeyword, isActive, fromDateTime, toDateTime, pageable)
                 .map(customerMapper::toResponse);
+    }
+
+    private Boolean mapStatus(String status) {
+        if (status == null || status.trim().isEmpty()) {
+            return null;
+        }
+
+        return switch (status.trim().toUpperCase(Locale.ROOT)) {
+            case "ACTIVE" -> true;
+            case "INACTIVE" -> false;
+            default -> null;
+        };
     }
 
     /**
