@@ -41,6 +41,51 @@
                 <h1 style="font-weight: 300; font-size: 32px; margin-bottom: 16px;" th:text="${product.productName}"></h1>
                 <p style="font-size: 20px; font-weight: 500; margin-bottom: 32px;" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT') + '₫'}"></p>
 
+                <!-- Begin Add to cart section -->
+                <div style="margin-bottom: 30px;" th:if="${product.variants != null and !product.variants.isEmpty()}">
+                    <!-- Variant selector (Color) -->
+                    <div style="margin-bottom: 20px;" th:if="${product.availableColors != null and !product.availableColors.isEmpty()}">
+                        <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 12px;">Màu sắc <span id="detailSelectedColor" style="color: #666; font-weight: normal; margin-left: 8px;"></span></h4>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="detailColorList">
+                            <button type="button" th:each="color : ${product.availableColors}"
+                                    class="detail-option-btn color-btn"
+                                    th:data-color="${color}"
+                                    th:text="${color}"
+                                    style="padding: 8px 16px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 4px; transition: all 0.2s;">
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Size selector -->
+                    <div style="margin-bottom: 20px;" th:if="${product.availableSizes != null and !product.availableSizes.isEmpty()}">
+                        <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 12px;">Kích cỡ <span id="detailSelectedSize" style="color: #666; font-weight: normal; margin-left: 8px;"></span></h4>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;" id="detailSizeList">
+                            <button type="button" th:each="size : ${product.availableSizes}"
+                                    class="detail-option-btn size-btn"
+                                    th:data-size="${size}"
+                                    th:text="${size}"
+                                    style="padding: 8px 16px; border: 1px solid #ddd; background: #fff; cursor: pointer; border-radius: 4px; transition: all 0.2s;">
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quantity & Validation -->
+                    <div id="detailStockHint" style="font-size: 13px; color: #d94f4f; margin-bottom: 12px;"></div>
+
+                    <div style="display: flex; align-items: center; gap: 20px; margin-bottom: 30px;">
+                        <div style="display: flex; align-items: center; border: 1px solid #ddd; border-radius: 4px;">
+                            <button type="button" id="detailQtyMinus" style="width: 40px; height: 40px; border: none; background: none; cursor: pointer;">-</button>
+                            <span id="detailQtyDisplay" style="width: 40px; text-align: center; font-size: 14px;">1</span>
+                            <button type="button" id="detailQtyPlus" style="width: 40px; height: 40px; border: none; background: none; cursor: pointer;">+</button>
+                        </div>
+                    </div>
+
+                    <button type="button" id="detailAddToCartBtn" class="btn btn--primary" style="width: 100%; padding: 16px; font-size: 15px; border-radius: 4px;">
+                        Thêm vào giỏ hàng
+                    </button>
+                </div>
+                <!-- End Add to cart section -->
+
                 <div style="margin-bottom: 40px;">
                     <h4 style="font-size: 14px; font-weight: 500; margin-bottom: 12px;">Mô tả</h4>
                     <p style="font-size: 14px; color: #666; line-height: 1.6;" th:text="${product.description}"></p>
@@ -92,6 +137,201 @@
             </div>
         </section>
     </main>
+
+    <th:block layout:fragment="scripts">
+        <script th:src="@{/js/product-actions.js}"></script>
+        <script th:inline="javascript">
+            document.addEventListener('DOMContentLoaded', function() {
+                const variants = /*[[${product.variants}]]*/ [];
+                const colors = /*[[${product.availableColors}]]*/ [];
+                const sizes = /*[[${product.availableSizes}]]*/ [];
+
+                let detailState = {
+                    selectedColor: null,
+                    selectedSize: null,
+                    selectedVariantId: null,
+                    quantity: 1,
+                    maxStock: 99
+                };
+
+                const hasColors = colors && colors.length > 0;
+                const hasSizes = sizes && sizes.length > 0;
+
+                const colorBtns = document.querySelectorAll('.color-btn');
+                const sizeBtns = document.querySelectorAll('.size-btn');
+                const addBtn = document.getElementById('detailAddToCartBtn');
+                const stockHint = document.getElementById('detailStockHint');
+                const qtyDisplay = document.getElementById('detailQtyDisplay');
+
+                if (variants.length === 1 && !hasColors && !hasSizes) {
+                    detailState.selectedVariantId = variants[0].id;
+                    detailState.maxStock = variants[0].stockQuantity;
+                    refreshDetailState();
+                }
+
+                colorBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        colorBtns.forEach(b => b.style.borderColor = '#ddd');
+                        btn.style.borderColor = '#000';
+                        detailState.selectedColor = btn.getAttribute('data-color');
+                        document.getElementById('detailSelectedColor').textContent = detailState.selectedColor;
+                        detailState.selectedVariantId = null;
+                        refreshDetailState();
+                        updateSizeAvailability();
+                    });
+                });
+
+                sizeBtns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        if (btn.classList.contains('disabled')) return;
+                        sizeBtns.forEach(b => b.style.borderColor = '#ddd');
+                        btn.style.borderColor = '#000';
+                        detailState.selectedSize = btn.getAttribute('data-size');
+                        document.getElementById('detailSelectedSize').textContent = detailState.selectedSize;
+                        refreshDetailState();
+                    });
+                });
+
+                function updateSizeAvailability() {
+                    if (!hasSizes) return;
+                    sizeBtns.forEach(btn => {
+                        const s = btn.getAttribute('data-size');
+                        const matched = variants.find(v => {
+                            const cMatch = !hasColors || v.color === detailState.selectedColor;
+                            return cMatch && v.sizeValue === s;
+                        });
+                        if (!matched || matched.stockQuantity <= 0) {
+                            btn.classList.add('disabled');
+                            btn.style.opacity = '0.3';
+                            btn.style.cursor = 'not-allowed';
+                            if (detailState.selectedSize === s) {
+                                detailState.selectedSize = null;
+                                document.getElementById('detailSelectedSize').textContent = '';
+                                btn.style.borderColor = '#ddd';
+                            }
+                        } else {
+                            btn.classList.remove('disabled');
+                            btn.style.opacity = '1';
+                            btn.style.cursor = 'pointer';
+                        }
+                    });
+                }
+
+                function refreshDetailState() {
+                    const colorPicked = !hasColors || detailState.selectedColor;
+                    const sizePicked = !hasSizes || detailState.selectedSize;
+
+                    if (colorPicked && sizePicked && variants.length > 0) {
+                        const matched = variants.find(v => {
+                            const cMatch = !hasColors || v.color === detailState.selectedColor;
+                            const sMatch = !hasSizes || v.sizeValue === detailState.selectedSize;
+                            return cMatch && sMatch;
+                        });
+                        if (matched) {
+                            detailState.selectedVariantId = matched.id;
+                            detailState.maxStock = matched.stockQuantity;
+                            if (detailState.quantity > detailState.maxStock) {
+                                detailState.quantity = Math.max(1, detailState.maxStock);
+                                updateQtyUI();
+                            }
+                            if (matched.stockQuantity <= 10 && matched.stockQuantity > 0) {
+                                stockHint.textContent = `Chỉ còn ${matched.stockQuantity} sản phẩm`;
+                            } else {
+                                stockHint.textContent = '';
+                            }
+
+                            addBtn.disabled = matched.stockQuantity <= 0;
+                            addBtn.textContent = matched.stockQuantity <= 0 ? 'Hết hàng' : 'Thêm vào giỏ hàng';
+                            return;
+                        }
+                    }
+
+                    detailState.selectedVariantId = null;
+                    addBtn.disabled = false;
+                    addBtn.textContent = 'Chọn phân loại để thêm vào giỏ';
+                    stockHint.textContent = '';
+                }
+
+                function updateQtyUI() {
+                    qtyDisplay.textContent = detailState.quantity;
+                }
+
+                document.getElementById('detailQtyMinus')?.addEventListener('click', () => {
+                    if (detailState.quantity > 1) {
+                        detailState.quantity--;
+                        updateQtyUI();
+                    }
+                });
+
+                document.getElementById('detailQtyPlus')?.addEventListener('click', () => {
+                    if (detailState.quantity < detailState.maxStock) {
+                        detailState.quantity++;
+                        updateQtyUI();
+                    }
+                });
+
+                addBtn?.addEventListener('click', () => {
+                    if (!detailState.selectedVariantId) {
+                        if (window.showToast) window.showToast('Vui lòng chọn màu sắc, kích cỡ trước khi thêm vào giỏ!', true);
+                        else alert('Vui lòng chọn màu sắc, kích cỡ trước khi thêm vào giỏ!');
+                        return;
+                    }
+
+                    const originalText = addBtn.textContent;
+                    addBtn.disabled = true;
+                    addBtn.textContent = 'Đang thêm...';
+
+                    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+                    const csrfHeaderName = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-XSRF-TOKEN';
+
+                    const headers = {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    };
+                    if (csrfToken) {
+                        headers[csrfHeaderName] = csrfToken;
+                    }
+
+                    fetch('/cart/add', {
+                        method: 'POST',
+                        headers: headers,
+                        body: JSON.stringify({ variantId: detailState.selectedVariantId, quantity: detailState.quantity })
+                    })
+                    .then(res => {
+                        if (res.status === 401 || res.redirected && res.url.includes('/login')) {
+                            window.location.href = '/login';
+                            throw new Error('redirect');
+                        }
+                        if (!res.ok) return res.json().then(d => { throw new Error(d.message || 'Lỗi thêm vào giỏ hàng.'); });
+                        return res.json().catch(() => ({}));
+                    })
+                    .then(data => {
+                        if (window.showToast) {
+                            window.showToast('Đã thêm vào giỏ hàng!', false);
+                        }
+
+                        // Cập nhật số lượng đếm trên layout header
+                        if (window.loadCartCount) window.loadCartCount();
+
+                        // Mở Cart Sidebar Popup ngay khi thêm xong giống code của modal
+                        if (window.toggleCartSidebar) {
+                            window.toggleCartSidebar(true);
+                        }
+                    })
+                    .catch(err => {
+                        if (err.message !== 'redirect') {
+                            if (window.showToast) window.showToast(err.message, true);
+                            else alert(err.message);
+                        }
+                    })
+                    .finally(() => {
+                        if (detailState.selectedVariantId) addBtn.disabled = false;
+                        addBtn.textContent = originalText;
+                    });
+                });
+            });
+        </script>
+    </th:block>
 </body>
 
 </html>

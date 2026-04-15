@@ -138,7 +138,7 @@
                                         <!-- Quick Cart Button -->
                                         <button class="product-card-action-btn quick-view-btn"
                                                 th:data-product-slug="${p.slug != null ? p.slug : p.productSlug}"
-                                                onclick="openQuickViewModal(this, event)" title="Thêm vào giỏ">
+                                                onclick="event.stopPropagation(); event.preventDefault(); openQuickViewModal(this, event)" title="Thêm vào giỏ">
                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                 <circle cx="9" cy="21" r="1"/>
                                                 <circle cx="20" cy="21" r="1"/>
@@ -181,70 +181,22 @@
         </div>
     </div>
 
-    <link rel="js-implementation" th:href="@{/js/product-actions.js}">
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            // ========== FILTER FORM INITIALIZATION ==========
-            const filterForm = document.getElementById('filterForm');
-            const filterInputs = document.querySelectorAll('.filter-input');
-            const clearFilterBtn = document.getElementById('clearFilterBtn');
+    <!-- Fix scripts import here -->
+    <th:block layout:fragment="scripts">
+        <script th:src="@{/js/product-actions.js}"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // ========== FILTER FORM INITIALIZATION ==========
+                const filterForm = document.getElementById('filterForm');
+                const filterInputs = document.querySelectorAll('.filter-input');
+                const clearFilterBtn = document.getElementById('clearFilterBtn');
 
-            if (filterForm && filterInputs.length > 0) {
-                // Add change event listener to all filter inputs
-                filterInputs.forEach(input => {
-                    input.addEventListener('change', function() {
-                        console.log('Filter changed:', input.name, '=', input.value);
-                        // Submit form after a short delay to allow all changes to be captured
-                        setTimeout(() => {
-                            filterForm.submit();
-                        }, 100);
-                    });
-                });
-
-                // Also listen for input events on number fields (min/max price)
-                document.getElementById('minPrice')?.addEventListener('change', () => {
-                    console.log('Min price changed');
-                    setTimeout(() => filterForm.submit(), 100);
-                });
-
-                document.getElementById('maxPrice')?.addEventListener('change', () => {
-                    console.log('Max price changed');
-                    setTimeout(() => filterForm.submit(), 100);
-                });
-            }
-
-            // Clear filter button handler
-            if (clearFilterBtn) {
-                clearFilterBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    // Reset all filter inputs
-                    if (filterForm) {
-                        filterForm.reset();
-                        // Clear the keyword hidden field and submit
-                        document.querySelector('input[name="keyword"]').value = '';
-                        setTimeout(() => {
-                            window.location.href = window.location.pathname;
-                        }, 50);
-                    }
-                });
-            }
-
-            // Load product actions script
-            const link = document.querySelector('link[rel="js-implementation"]');
-            if (link) {
-                const script = document.createElement('script');
-                script.src = link.href;
-                script.async = true;
-                script.onload = function() {
-                    if (window.__REFLECT_DATA__ && typeof window.__REFLECT_DATA__.init === 'function') {
-                        window.__REFLECT_DATA__.init();
-                    }
-                };
-                document.body.appendChild(script);
-            }
-        });
-    </script>
-</main>
-</body>
-</html>
+                if (filterForm && filterInputs.length > 0) {
+                    // Add change event listener to all filter inputs
+                    filterInputs.forEach(input => {
+                        input.addEventListener('change', function() {
+                            console.log('Filter changed:', input.name, '=', input.value);
+                            // Submit form after a short delay to allow all changes to be captured
+                            setTimeout(() => {
+                                filterForm.submit();
 

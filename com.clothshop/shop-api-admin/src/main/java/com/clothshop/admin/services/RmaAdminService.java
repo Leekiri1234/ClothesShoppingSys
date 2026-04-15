@@ -96,7 +96,7 @@ public class RmaAdminService {
             String content = String.format("Yêu cầu trả hàng cho đơn %s đã được cập nhật thành: %s.%s",
                     rmaOrder.getOrderInvoice(), newStatus.getDisplayName(),
                     (request.getAdminNote() != null && !request.getAdminNote().trim().isEmpty() ? " Ghi chú: " + request.getAdminNote() : ""));
-            String actionUrl = "/orders/" + rmaOrder.getOrderInvoice();
+            String actionUrl = "/rma-management/" + savedRma.getId();
 
             try {
                 notificationService.sendUserNotification(account, title, content, NotificationType.ORDER_UPDATE, actionUrl);
