@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}">
+<head>
+    <title>Chi tiết thông báo</title>
+</head>
+<body>
+<div layout:fragment="content">
+    <main class="container" style="max-width: 650px; margin: 150px auto 100px; padding: 0 20px;">
+        <a href="/profile/notifications" style="text-decoration: none; color: #999; font-size: 11px; text-transform: uppercase; letter-spacing: 1px;">
+            ← Quay lại danh sách
+        </a>
+
+        <article style="margin-top: 40px;">
+            <h1 th:text="${detail.notification.title}"
+                style="font-weight: 400; font-size: 32px; line-height: 1.2; margin-bottom: 20px; letter-spacing: -1px;">
+            </h1>
+
+            <div style="color: #999; font-size: 12px; margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+                Nhận lúc: <span th:text="${#temporals.format(detail.createdAt, 'HH:mm - dd/MM/yyyy')}"></span>
+            </div>
+
+            <div class="noti-content"
+                 th:utext="${detail.notification.content}"
+                 style="line-height: 1.8; color: #444; font-size: 16px;">
+            </div>
+        </article>
+    </main>
+</div>
+</body>
+</html>

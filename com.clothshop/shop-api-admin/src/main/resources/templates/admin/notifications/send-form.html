@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout}"> <head>
+  <title>Gửi thông báo hệ thống</title>
+</head>
+<body>
+
+<h1 layout:fragment="page-title">Quản lý Thông báo</h1>
+
+<div layout:fragment="content">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+          <h5 class="card-title mb-4">Gửi thông báo thủ công tới RAM</h5>
+
+          <div class="mb-3">
+            <label class="form-label text-uppercase fw-bold small">Tiêu đề thông báo</label>
+            <input type="text" id="title" class="form-control rounded-0" placeholder="Nhập tiêu đề...">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label text-uppercase fw-bold small">Nội dung chi tiết</label>
+            <textarea id="content" class="form-control rounded-0" rows="4" placeholder="Nhập nội dung thông báo..."></textarea>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label text-uppercase fw-bold small">Loại thông báo</label>
+            <select id="type" class="form-select rounded-0">
+              <option value="PROMOTION">Khuyến mãi (PROMOTION)</option>
+              <option value="SYSTEM">Hệ thống (SYSTEM)</option>
+              <option value="ORDER">Đơn hàng (ORDER)</option>
+            </select>
+          </div>
+
+          <button type="button" class="btn btn-dark w-100 rounded-0 py-2" onclick="sendToRAM()">
+            <i class="fa-solid fa-paper-plane me-2"></i> PHÁT TÍN HIỆU ĐỒNG BỘ
+          </button>
+
+          <div id="statusMessage" class="mt-3 text-center small" style="display: none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<th:block layout:fragment="scripts">
+  <script th:inline="javascript">
+    async function sendToRAM() {
+      const btn = event.currentTarget;
+      const status = document.getElementById('statusMessage');
+
+      // Lấy CSRF token từ layout của bạn
+      const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+      const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+      const data = {
+        title: document.getElementById('title').value,
+        content: document.getElementById('content').value,
+        type: document.getElementById('type').value
+      };
+
+      if (!data.title || !data.content) {
+        alert("Vui lòng nhập đầy đủ tiêu đề và nội dung!");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Đang gửi...';
+
+      try {
+        const response = await fetch('/api/admin/notifications/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            [csrfHeader]: csrfToken
+          },
+          body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+          status.innerHTML = '<span class="text-success fw-bold">✅ Thành công! Tín hiệu đã được đẩy vào RAM.</span>';
+          status.style.display = "block";
+          // Reset form
+          document.getElementById('title').value = '';
+          document.getElementById('content').value = '';
+        } else {
+          throw new Error("Lỗi Server");
+        }
+      } catch (e) {
+        status.innerHTML = '<span class="text-danger">❌ Lỗi: Không thể kết nối tới Service RAM.</span>';
+        status.style.display = "block";
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane me-2"></i> PHÁT TÍN HIỆU ĐỒNG BỘ';
+      }
+    }
+  </script>
+</th:block>
+
+</body>
+</html>
