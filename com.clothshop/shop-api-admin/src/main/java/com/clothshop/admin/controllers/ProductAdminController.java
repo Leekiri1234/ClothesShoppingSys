@@ -21,6 +21,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.security.Principal;
@@ -86,18 +87,19 @@ public class ProductAdminController {
     public String createProduct(
             @Valid @ModelAttribute("product") ProductCreateRequest request,
             BindingResult bindingResult,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             RedirectAttributes redirectAttributes,
             Model model) {
 
         if (bindingResult.hasErrors()) {
-            // Cần add lại categories nếu form lỗi để dropdown không bị trống
+            // Cn add li categories nu form l—i ‘ƒ dropdown khng b‹ tr‘ng
             model.addAttribute("categories", categoryService.getAllCategories());
             return "admin/products/create";
         }
 
-        ProductAdminResponse createdProduct = productAdminService.createProduct(request);
+        ProductAdminResponse createdProduct = productAdminService.createProduct(request, imageFile);
         redirectAttributes.addFlashAttribute("successMessage",
-                "Đã tạo sản phẩm thành công: " + createdProduct.getProductName());
+                " Đã tạo sản phẩm thành công: " + createdProduct.getProductName());
         return "redirect:/admin/products";
     }
 
@@ -114,6 +116,7 @@ public class ProductAdminController {
             @PathVariable Long id,
             @Valid @ModelAttribute("product") ProductUpdateRequest request,
             BindingResult bindingResult,
+            @RequestParam(value = "imageFile", required = false) MultipartFile imageFile,
             RedirectAttributes redirectAttributes,
             Model model) {
 
@@ -122,9 +125,9 @@ public class ProductAdminController {
             return "admin/products/edit";
         }
 
-        ProductAdminResponse updatedProduct = productAdminService.updateProduct(id, request);
+        ProductAdminResponse updatedProduct = productAdminService.updateProduct(id, request, imageFile);
         redirectAttributes.addFlashAttribute("successMessage",
-                "Đã cập nhật sản phẩm thành công: " + updatedProduct.getProductName());
+                " Cập nhật sản phẩm thành công: " + updatedProduct.getProductName());
         return "redirect:/admin/products";
     }
 

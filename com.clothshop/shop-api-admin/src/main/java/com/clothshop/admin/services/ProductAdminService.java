@@ -8,11 +8,14 @@ import com.clothshop.common.dtos.request.PagingRequest;
 import com.clothshop.common.dtos.response.PageResponse;
 import com.clothshop.common.exceptions.BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
+import com.clothshop.common.utils.FileUploadUtil;
 import com.clothshop.common.utils.SlugUtils;
 import com.clothshop.domain.models.product.Category;
 import com.clothshop.domain.models.product.Product;
+import com.clothshop.domain.models.product.ProductImage;
 import com.clothshop.domain.enums.ProductStatus;
 import com.clothshop.domain.repositories.product.CategoryRepository;
+import com.clothshop.domain.repositories.product.ProductImageRepository;
 import com.clothshop.domain.repositories.product.ProductRepository;
 import com.clothshop.domain.repositories.product.ProductVariantRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +26,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -46,6 +50,8 @@ public class ProductAdminService {
     private final CategoryRepository categoryRepository;
     private final ProductAdminMapper productMapper;
     private final ProductVariantRepository productVariantRepository;
+    private final ProductImageRepository productImageRepository;
+    private final FileUploadUtil fileUploadUtil;
 
     /**
      * Create new product with automatic slug generation.
@@ -55,7 +61,7 @@ public class ProductAdminService {
      * - Slug is auto-generated from name
      */
     @Transactional
-    public ProductAdminResponse createProduct(ProductCreateRequest request) {
+    public ProductAdminResponse createProduct(ProductCreateRequest request, MultipartFile imageFile) {
         log.info("Creating new product: {}", request.getProductName());
 
         // Validate category exists
@@ -75,6 +81,14 @@ public class ProductAdminService {
         Product savedProduct = productRepository.save(product);
         log.info("Product created successfully with ID: {}", savedProduct.getId());
 
+        // Handle image upload overriding string url
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String fileUrl = fileUploadUtil.upload(imageFile, "products");
+            updateMainProductImage(savedProduct, fileUrl);
+        } else if (request.getImageUrl() != null && !request.getImageUrl().isEmpty()) {
+            updateMainProductImage(savedProduct, request.getImageUrl());
+        }
+
         return productMapper.toResponse(savedProduct);
     }
 
@@ -83,7 +97,7 @@ public class ProductAdminService {
      * Supports partial updates (only non-null fields are updated).
      */
     @Transactional
-    public ProductAdminResponse updateProduct(Long productId, ProductUpdateRequest request) {
+    public ProductAdminResponse updateProduct(Long productId, ProductUpdateRequest request, MultipartFile imageFile) {
         log.info("Updating product ID: {}", productId);
 
         // Find existing product
@@ -110,6 +124,14 @@ public class ProductAdminService {
         Product updatedProduct = productRepository.save(product);
         log.info("Product updated successfully: {}", productId);
 
+        // Handle image upload overriding string url
+        if (imageFile != null && !imageFile.isEmpty()) {
+            String fileUrl = fileUploadUtil.upload(imageFile, "products");
+            updateMainProductImage(updatedProduct, fileUrl);
+        } else if (request.getImageUrl() != null && !request.getImageUrl().isEmpty()) {
+            updateMainProductImage(updatedProduct, request.getImageUrl());
+        }
+
         return productMapper.toResponse(updatedProduct);
     }
 
@@ -125,6 +147,9 @@ public class ProductAdminService {
 
         // Logic tự động tính tổng stock dựa vào các variant đang hoạt động
         response.setStock(calculateTotalStock(product));
+        
+        productImageRepository.findByProductIdAndIsMainTrue(productId)
+                .ifPresent(img -> response.setImageUrl(img.getImageUrl()));
 
         return response;
     }
@@ -162,12 +187,23 @@ public class ProductAdminService {
                         row -> (Long) row[0],
                         row -> row[1] != null ? ((Number) row[1]).intValue() : 0
                 ));
+                
+        // Lấy main image url
+        Map<Long, String> imageUrlByProductId = productImageRepository.findAll()
+                .stream()
+                .filter(img -> productIds.contains(img.getProduct().getId()) && Boolean.TRUE.equals(img.getIsMain()))
+                .collect(Collectors.toMap(
+                        img -> img.getProduct().getId(),
+                        ProductImage::getImageUrl,
+                        (img1, img2) -> img1
+                ));
 
         // Convert to DTOs and set total stock from the aggregate map
         List<ProductAdminResponse> content = productPage.getContent().stream()
                 .map(product -> {
                     ProductAdminResponse response = productMapper.toResponse(product);
                     response.setStock(stockByProductId.getOrDefault(product.getId(), 0));
+                    response.setImageUrl(imageUrlByProductId.get(product.getId()));
                     return response;
                 })
                 .collect(Collectors.toList());
@@ -230,5 +266,27 @@ public class ProductAdminService {
             counter++;
         }
         return slug;
+    }
+
+    /**
+     * Update or create main product image.
+     */
+    private void updateMainProductImage(Product product, String imageUrl) {
+        ProductImage mainImage = productImageRepository.findByProductIdAndIsMainTrue(product.getId())
+                .orElse(null);
+
+        if (mainImage != null) {
+            mainImage.setImageUrl(imageUrl);
+            productImageRepository.save(mainImage);
+        } else {
+            ProductImage newImage = ProductImage.builder()
+                    .product(product)
+                    .imageUrl(imageUrl)
+                    .isMain(true)
+                    .sortOrder(0)
+                    .isActive(true)
+                    .build();
+            productImageRepository.save(newImage);
+        }
     }
 }
