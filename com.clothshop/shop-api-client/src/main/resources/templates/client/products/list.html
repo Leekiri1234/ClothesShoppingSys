@@ -183,7 +183,7 @@
 
     <!-- Fix scripts import here -->
     <th:block layout:fragment="scripts">
-        <script th:src="@{/js/product-actions.js}"></script>
+        <link rel="js-implementation" th:href="@{/js/product-actions.js}">
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 // ========== FILTER FORM INITIALIZATION ==========
@@ -199,4 +199,54 @@
                             // Submit form after a short delay to allow all changes to be captured
                             setTimeout(() => {
                                 filterForm.submit();
+                            }, 100);
+                        });
+                    });
 
+                    // Also listen for input events on number fields (min/max price)
+                    document.getElementById('minPrice')?.addEventListener('change', () => {
+                        console.log('Min price changed');
+                        setTimeout(() => filterForm.submit(), 100);
+                    });
+
+                    document.getElementById('maxPrice')?.addEventListener('change', () => {
+                        console.log('Max price changed');
+                        setTimeout(() => filterForm.submit(), 100);
+                    });
+                }
+
+                // Clear filter button handler
+                if (clearFilterBtn) {
+                    clearFilterBtn.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        // Reset all filter inputs
+                        if (filterForm) {
+                            filterForm.reset();
+                            // Clear the keyword hidden field and submit
+                            document.querySelector('input[name="keyword"]').value = '';
+                            setTimeout(() => {
+                                window.location.href = window.location.pathname;
+                            }, 50);
+                        }
+                    });
+                }
+
+                // Load product actions script
+                const link = document.querySelector('link[rel="js-implementation"]');
+                if (link) {
+                    const script = document.createElement('script');
+                    script.src = link.href;
+                    script.async = true;
+                    script.onload = function() {
+                        if (window.__REFLECT_DATA__ && typeof window.__REFLECT_DATA__.init === 'function') {
+                            window.__REFLECT_DATA__.init();
+                        }
+                    };
+                    document.body.appendChild(script);
+                }
+            });
+        </script>
+    </th:block>
+</main>
+</body>
+</html>
