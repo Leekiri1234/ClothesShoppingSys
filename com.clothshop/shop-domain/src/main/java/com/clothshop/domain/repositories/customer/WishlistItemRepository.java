@@ -30,12 +30,15 @@ public interface WishlistItemRepository extends JpaRepository<WishlistItem, Long
             "AND wi.createdAt BETWEEN :start AND :end " +
             "AND (:categoryId IS NULL OR cat.id = :categoryId) " +
             "AND (:productId IS NULL OR p.id = :productId) " +
+            "AND (:search IS NULL OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "    OR EXISTS (SELECT 1 FROM ProductVariant pv WHERE pv.product = p AND pv.isActive = true AND LOWER(pv.sku) LIKE LOWER(CONCAT('%', :search, '%')))) " +
             "GROUP BY p.id, p.productName, cat.categoryName " +
             "ORDER BY COUNT(wi.id) DESC, p.productName ASC")
     List<WishlistProductSummary> findTopWishlistedProducts(@Param("start") LocalDateTime start,
                                                            @Param("end") LocalDateTime end,
                                                            @Param("categoryId") Long categoryId,
                                                            @Param("productId") Long productId,
+                                                           @Param("search") String search,
                                                            Pageable pageable);
 
     @Query("SELECT COUNT(wi.id) " +
@@ -48,11 +51,14 @@ public interface WishlistItemRepository extends JpaRepository<WishlistItem, Long
             "AND p.isActive = true " +
             "AND wi.createdAt BETWEEN :start AND :end " +
             "AND (:categoryId IS NULL OR cat.id = :categoryId) " +
-            "AND (:productId IS NULL OR p.id = :productId)")
+            "AND (:productId IS NULL OR p.id = :productId) " +
+            "AND (:search IS NULL OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "    OR EXISTS (SELECT 1 FROM ProductVariant pv WHERE pv.product = p AND pv.isActive = true AND LOWER(pv.sku) LIKE LOWER(CONCAT('%', :search, '%'))))")
     Long countWishlists(@Param("start") LocalDateTime start,
                         @Param("end") LocalDateTime end,
                         @Param("categoryId") Long categoryId,
-                        @Param("productId") Long productId);
+                        @Param("productId") Long productId,
+                        @Param("search") String search);
 
     @Query("SELECT COUNT(DISTINCT c.id) " +
             "FROM WishlistItem wi " +
@@ -66,11 +72,14 @@ public interface WishlistItemRepository extends JpaRepository<WishlistItem, Long
             "AND p.isActive = true " +
             "AND wi.createdAt BETWEEN :start AND :end " +
             "AND (:categoryId IS NULL OR cat.id = :categoryId) " +
-            "AND (:productId IS NULL OR p.id = :productId)")
+            "AND (:productId IS NULL OR p.id = :productId) " +
+            "AND (:search IS NULL OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "    OR EXISTS (SELECT 1 FROM ProductVariant pv WHERE pv.product = p AND pv.isActive = true AND LOWER(pv.sku) LIKE LOWER(CONCAT('%', :search, '%'))))")
     Long countDistinctCustomers(@Param("start") LocalDateTime start,
                                 @Param("end") LocalDateTime end,
                                 @Param("categoryId") Long categoryId,
-                                @Param("productId") Long productId);
+                                @Param("productId") Long productId,
+                                @Param("search") String search);
 
     @Query("SELECT COUNT(DISTINCT p.id) " +
             "FROM WishlistItem wi " +
@@ -82,11 +91,14 @@ public interface WishlistItemRepository extends JpaRepository<WishlistItem, Long
             "AND p.isActive = true " +
             "AND wi.createdAt BETWEEN :start AND :end " +
             "AND (:categoryId IS NULL OR cat.id = :categoryId) " +
-            "AND (:productId IS NULL OR p.id = :productId)")
+            "AND (:productId IS NULL OR p.id = :productId) " +
+            "AND (:search IS NULL OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "    OR EXISTS (SELECT 1 FROM ProductVariant pv WHERE pv.product = p AND pv.isActive = true AND LOWER(pv.sku) LIKE LOWER(CONCAT('%', :search, '%'))))")
     Long countDistinctProducts(@Param("start") LocalDateTime start,
                                @Param("end") LocalDateTime end,
                                @Param("categoryId") Long categoryId,
-                               @Param("productId") Long productId);
+                               @Param("productId") Long productId,
+                               @Param("search") String search);
 
     @Query("SELECT FUNCTION('DATE', wi.createdAt) AS date, COUNT(wi.id) AS wishlistCount " +
             "FROM WishlistItem wi " +
@@ -99,12 +111,15 @@ public interface WishlistItemRepository extends JpaRepository<WishlistItem, Long
             "AND wi.createdAt BETWEEN :start AND :end " +
             "AND (:categoryId IS NULL OR cat.id = :categoryId) " +
             "AND (:productId IS NULL OR p.id = :productId) " +
+            "AND (:search IS NULL OR LOWER(p.productName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+            "    OR EXISTS (SELECT 1 FROM ProductVariant pv WHERE pv.product = p AND pv.isActive = true AND LOWER(pv.sku) LIKE LOWER(CONCAT('%', :search, '%')))) " +
             "GROUP BY FUNCTION('DATE', wi.createdAt) " +
             "ORDER BY FUNCTION('DATE', wi.createdAt)")
     List<WishlistTrendSummary> getWishlistTrend(@Param("start") LocalDateTime start,
                                                 @Param("end") LocalDateTime end,
                                                 @Param("categoryId") Long categoryId,
-                                                @Param("productId") Long productId);
+                                                @Param("productId") Long productId,
+                                                @Param("search") String search);
 
     @Query("SELECT c.id AS customerId, c.fullName AS customerName, c.email AS customerEmail, wi.createdAt AS wishlistedAt " +
             "FROM WishlistItem wi " +
