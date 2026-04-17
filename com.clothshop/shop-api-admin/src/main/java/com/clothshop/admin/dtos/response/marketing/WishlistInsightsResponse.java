@@ -13,6 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class WishlistInsightsResponse {
+    private String search;
     private LocalDate startDate;
     private LocalDate endDate;
     private Long selectedCategoryId;

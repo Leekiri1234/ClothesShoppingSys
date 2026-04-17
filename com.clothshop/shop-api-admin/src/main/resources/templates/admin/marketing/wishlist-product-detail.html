@@ -38,22 +38,11 @@
     <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 16px;">
         <div class="dashboard-card">
             <div class="card-header">
-                <h3>Xu hướng theo ngày</h3>
+                <h3>Xu hướng wishlist theo thời gian</h3>
             </div>
-            <table class="admin-table">
-                <thead>
-                <tr>
-                    <th>Ngày</th>
-                    <th>Lượt wishlist</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="point : ${detail.trend}">
-                    <td th:text="${#temporals.format(point.date, 'dd/MM/yyyy')}">01/01/2026</td>
-                    <td th:text="${point.wishlistCount}">0</td>
-                </tr>
-                </tbody>
-            </table>
+            <div style="padding: 16px; height: 320px; display: flex; align-items: center; justify-content: center;">
+                <canvas id="trendChart"></canvas>
+            </div>
         </div>
 
         <div class="dashboard-card">
@@ -86,5 +75,72 @@
         </div>
     </div>
 </div>
+<th:block layout:fragment="scripts">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lấy dữ liệu trend từ Controller
+            /*<![CDATA[*/
+            const trendData = /*[[${detail.trend}]]*/ [];
+            /*]]>*/
+
+            if (trendData && trendData.length > 0) {
+                const dates = trendData.map(t => {
+                    const d = new Date(t.date);
+                    return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+                });
+                const counts = trendData.map(t => t.wishlistCount);
+
+                const ctx = document.getElementById('trendChart').getContext('2d');
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: dates,
+                        datasets: [{
+                            label: 'Lượt wishlist',
+                            data: counts,
+                            backgroundColor: 'rgba(197,168,130,0.7)',
+                            borderColor: '#C5A882',
+                            borderWidth: 1,
+                            borderRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(28,28,26,0.9)',
+                                padding: 12,
+                                callbacks: {
+                                    label: context => context.parsed.y + ' lượt'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                ticks: { color: '#6B6B67' },
+                                grid: { display: false }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    precision: 0,
+                                    color: '#6B6B67'
+                                },
+                                grid: { color: '#E8E6E1' }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</th:block>
 </body>
 </html>

@@ -34,24 +34,25 @@ public class WishlistInsightsService {
     private final ProductRepository productRepository;
 
     @Transactional(readOnly = true)
-    public WishlistInsightsResponse getInsights(LocalDate startDate, LocalDate endDate, Long categoryId, Long productId) {
+    public WishlistInsightsResponse getInsights(String search, LocalDate startDate, LocalDate endDate, Long categoryId, Long productId) {
         DateRange dateRange = normalizeDateRange(startDate, endDate);
         validateFilterIds(categoryId, productId);
 
         List<WishlistProductSummary> topProducts = wishlistItemRepository.findTopWishlistedProducts(
-                dateRange.startDateTime, dateRange.endDateTime, categoryId, productId, PageRequest.of(0, TOP_LIMIT));
+                dateRange.startDateTime, dateRange.endDateTime, categoryId, productId, search, PageRequest.of(0, TOP_LIMIT));
 
         Long totalWishlistItems = safeLong(wishlistItemRepository.countWishlists(
-                dateRange.startDateTime, dateRange.endDateTime, categoryId, productId));
+                dateRange.startDateTime, dateRange.endDateTime, categoryId, productId, search));
         Long totalCustomers = safeLong(wishlistItemRepository.countDistinctCustomers(
-                dateRange.startDateTime, dateRange.endDateTime, categoryId, productId));
+                dateRange.startDateTime, dateRange.endDateTime, categoryId, productId, search));
         Long totalProducts = safeLong(wishlistItemRepository.countDistinctProducts(
-                dateRange.startDateTime, dateRange.endDateTime, categoryId, productId));
+                dateRange.startDateTime, dateRange.endDateTime, categoryId, productId, search));
 
         List<WishlistTrendSummary> trendSummary = wishlistItemRepository.getWishlistTrend(
-                dateRange.startDateTime, dateRange.endDateTime, categoryId, productId);
+                dateRange.startDateTime, dateRange.endDateTime, categoryId, productId, search);
 
         return WishlistInsightsResponse.builder()
+                .search(search)
                 .startDate(dateRange.startDate)
                 .endDate(dateRange.endDate)
                 .selectedCategoryId(categoryId)
@@ -73,12 +74,12 @@ public class WishlistInsightsService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.RESOURCE_NOT_FOUND, "Sản phẩm không tồn tại"));
 
         Long totalWishlistItems = safeLong(wishlistItemRepository.countWishlists(
-                dateRange.startDateTime, dateRange.endDateTime, null, productId));
+                dateRange.startDateTime, dateRange.endDateTime, null, productId, null));
         Long totalCustomers = safeLong(wishlistItemRepository.countDistinctCustomers(
-                dateRange.startDateTime, dateRange.endDateTime, null, productId));
+                dateRange.startDateTime, dateRange.endDateTime, null, productId, null));
 
         List<WishlistTrendSummary> trendSummary = wishlistItemRepository.getWishlistTrend(
-                dateRange.startDateTime, dateRange.endDateTime, null, productId);
+                dateRange.startDateTime, dateRange.endDateTime, null, productId, null);
         List<WishlistCustomerSummary> customers = wishlistItemRepository.findCustomersByProduct(
                 productId, dateRange.startDateTime, dateRange.endDateTime);
 
@@ -95,8 +96,8 @@ public class WishlistInsightsService {
     }
 
     @Transactional(readOnly = true)
-    public String exportTopProductsCsv(LocalDate startDate, LocalDate endDate, Long categoryId, Long productId) {
-        WishlistInsightsResponse insights = getInsights(startDate, endDate, categoryId, productId);
+    public String exportTopProductsCsv(String search, LocalDate startDate, LocalDate endDate, Long categoryId, Long productId) {
+        WishlistInsightsResponse insights = getInsights(search, startDate, endDate, categoryId, productId);
 
         StringBuilder csv = new StringBuilder();
         csv.append("Product ID,Product Name,Category,Wishlist Count\n");
