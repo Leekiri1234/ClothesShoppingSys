@@ -1,6 +1,7 @@
 package com.clothshop.admin.controllers;
 
 import com.clothshop.admin.dtos.NotificationDTO;
+import com.clothshop.domain.enums.NotificationType;
 import com.clothshop.domain.models.cms.Notification;
 import com.clothshop.domain.models.cms.NotificationRecipient;
 import com.clothshop.domain.models.auth.Account;
@@ -41,7 +42,7 @@ public class AdminNotificationController {
         for (Notification noti : allNotifications) {
 
             // Xử lý thông báo đơn hàng (ORDER_UPDATE)
-            if (noti.getType() == com.clothshop.domain.enums.NotificationType.ORDER_UPDATE) {
+            if (noti.getType() == NotificationType.ORDER_UPDATE) {
                 String title = noti.getTitle();
                 if (title != null && title.startsWith("Cập nhật trạng thái đơn hàng: ")) {
                     String invoice = title.substring("Cập nhật trạng thái đơn hàng: ".length()).trim();
@@ -81,7 +82,7 @@ public class AdminNotificationController {
             }
 
             // Chỉ đồng bộ cho các thông báo hệ thống (SYSTEM, PROMOTION, vv) cho toàn bộ user
-            if (noti.getType() != com.clothshop.domain.enums.NotificationType.PROMOTION && noti.getType() != com.clothshop.domain.enums.NotificationType.SYSTEM) {
+            if (noti.getType() != NotificationType.PROMOTION && noti.getType() != NotificationType.SYSTEM) {
                 continue;
             }
 

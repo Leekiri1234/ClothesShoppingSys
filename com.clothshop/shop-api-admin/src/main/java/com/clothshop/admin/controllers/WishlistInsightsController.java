@@ -30,13 +30,14 @@ public class WishlistInsightsController {
 
     @GetMapping
     public String viewInsights(
+            @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(value = "categoryId", required = false) Long categoryId,
             @RequestParam(value = "productId", required = false) Long productId,
             Model model
     ) {
-        WishlistInsightsResponse insights = wishlistInsightsService.getInsights(startDate, endDate, categoryId, productId);
+        WishlistInsightsResponse insights = wishlistInsightsService.getInsights(search, startDate, endDate, categoryId, productId);
         model.addAttribute("insights", insights);
         return "admin/marketing/wishlist-insights";
     }
@@ -55,12 +56,13 @@ public class WishlistInsightsController {
 
     @GetMapping("/export")
     public ResponseEntity<byte[]> exportCsv(
+            @RequestParam(value = "search", required = false) String search,
             @RequestParam(value = "startDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(value = "endDate", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(value = "categoryId", required = false) Long categoryId,
             @RequestParam(value = "productId", required = false) Long productId
     ) {
-        String csv = wishlistInsightsService.exportTopProductsCsv(startDate, endDate, categoryId, productId);
+        String csv = wishlistInsightsService.exportTopProductsCsv(search, startDate, endDate, categoryId, productId);
         byte[] payload = csv.getBytes(StandardCharsets.UTF_8);
 
         HttpHeaders headers = new HttpHeaders();

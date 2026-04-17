@@ -5,6 +5,7 @@ import com.clothshop.domain.models.auth.Account;
 import com.clothshop.domain.models.cms.NotificationRecipient;
 import com.clothshop.domain.repositories.auth.AccountRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -71,39 +72,39 @@ public class ClientNotificationController {
 
     @PostMapping("/mark-all-read")
     @ResponseBody
-    public org.springframework.http.ResponseEntity<?> markAllRead(Principal principal) {
+    public ResponseEntity<?> markAllRead(Principal principal) {
         Long currentUserId = getCurrentUserId(principal);
         if (currentUserId == null) return org.springframework.http.ResponseEntity.status(401).build();
 
         notificationService.markAllAsRead(currentUserId);
-        return org.springframework.http.ResponseEntity.ok().build();
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/unread-count")
     @ResponseBody
-    public org.springframework.http.ResponseEntity<?> getUnreadCount(Principal principal) {
+    public ResponseEntity<?> getUnreadCount(Principal principal) {
         Long currentUserId = getCurrentUserId(principal);
         if (currentUserId == null) return org.springframework.http.ResponseEntity.ok(0);
 
         long count = notificationService.countUnread(currentUserId);
-        return org.springframework.http.ResponseEntity.ok(count);
+        return ResponseEntity.ok(count);
     }
 
     @GetMapping("/latest")
     @ResponseBody
-    public org.springframework.http.ResponseEntity<?> getLatest(Principal principal) {
+    public ResponseEntity<?> getLatest(Principal principal) {
         Long currentUserId = getCurrentUserId(principal);
-        if (currentUserId == null) return org.springframework.http.ResponseEntity.status(401).build();
+        if (currentUserId == null) return ResponseEntity.status(401).build();
 
         List<NotificationRecipient> top = notificationService.getTop5ForUser(currentUserId);
         if (top != null && !top.isEmpty()) {
             NotificationRecipient latest = top.get(0);
-            return org.springframework.http.ResponseEntity.ok(java.util.Map.of(
+            return ResponseEntity.ok(java.util.Map.of(
                 "newId", latest.getNotification().getId(),
                 "title", latest.getNotification().getTitle(),
                 "isRead", latest.getIsRead()
             ));
         }
-        return org.springframework.http.ResponseEntity.ok(null);
+        return ResponseEntity.ok(null);
     }
 }
