@@ -6,6 +6,9 @@ import com.clothshop.common.exceptions.BusinessException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -42,6 +45,11 @@ public class CustomerAuthController {
      */
     @GetMapping("/login")
     public String showLoginPage(String error, String logout, Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
+            return "redirect:/";
+        }
+
         if (error != null) {
             model.addAttribute("error", "Invalid username or password");
         }
@@ -59,6 +67,11 @@ public class CustomerAuthController {
      */
     @GetMapping("/register")
     public String showRegisterPage(Model model) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !(auth instanceof AnonymousAuthenticationToken)) {
+            return "redirect:/";
+        }
+
         model.addAttribute("registerRequest", new RegisterRequest());
         return "client/auth/register";
     }
@@ -192,4 +205,3 @@ public class CustomerAuthController {
         }
     }
 }
-
