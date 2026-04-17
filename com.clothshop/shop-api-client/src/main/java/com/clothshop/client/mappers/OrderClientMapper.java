@@ -23,10 +23,31 @@ public interface OrderClientMapper {
     @Mapping(source = "variant.product.productName", target = "productName")
     @Mapping(source = "variant.product.productSlug", target = "productSlug")
     @Mapping(expression = "java(item.getVariant().getColor() + \" | Size: \" + item.getVariant().getSizeValue())", target = "variantInfo")
-    @Mapping(source = "variant.imageUrl", target = "imageUrl")
+    @Mapping(target = "imageUrl", expression = "java(getOrderItemImage(item))")
     @Mapping(expression = "java(item.getUnitPrice().doubleValue() * item.getQuantity())", target = "subtotal")
     OrderDetailResponse.OrderItemClientResponse toOrderItemResponse(OrderItem item);
 
     @Mapping(source = "newStatus", target = "statusId")
     OrderDetailResponse.OrderHistoryClientResponse toHistoryResponse(OrderStatusHistory history);
+
+    @org.mapstruct.Named("getOrderItemImage")
+    default String getOrderItemImage(OrderItem item) {
+        if (item == null || item.getVariant() == null) return "/images/no-image.png";
+        
+        if (item.getVariant().getProduct() != null && 
+            item.getVariant().getProduct().getImages() != null && 
+            !item.getVariant().getProduct().getImages().isEmpty()) {
+            return item.getVariant().getProduct().getImages().stream()
+                    .findFirst()
+                    .map(com.clothshop.domain.models.product.ProductImage::getImageUrl)
+                    .orElse("/images/no-image.png");
+        }
+
+        String variantImage = item.getVariant().getImageUrl();
+        if (variantImage != null && !variantImage.trim().isEmpty()) {
+            return variantImage;
+        }
+        
+        return "/images/no-image.png";
+    }
 }
