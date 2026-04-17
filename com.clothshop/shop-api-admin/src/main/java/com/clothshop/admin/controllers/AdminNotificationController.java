@@ -7,7 +7,10 @@ import com.clothshop.domain.models.auth.Account;
 import com.clothshop.domain.repositories.cms.NotificationRepository;
 import com.clothshop.domain.repositories.cms.NotificationRecipientRepository;
 import com.clothshop.domain.repositories.auth.AccountRepository;
+import com.clothshop.domain.repositories.order.OrderRepository;
+import com.clothshop.domain.repositories.order.RmaRequestRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -21,11 +24,14 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/admin/notifications")
 @RequiredArgsConstructor
+@Slf4j
 public class AdminNotificationController {
 
     private final NotificationRepository notificationRepository;
     private final NotificationRecipientRepository notificationRecipientRepository;
     private final AccountRepository accountRepository;
+    private final OrderRepository orderRepository;
+    private final RmaRequestRepository rmaRequestRepository;
 
     // Tự động fix đồng bộ dữ liệu cũ lúc test, không bỏ sot thông báo cũ trong NotificationRecipient
     @PostConstruct
@@ -33,6 +39,52 @@ public class AdminNotificationController {
         List<Notification> allNotifications = notificationRepository.findAll();
         List<Account> allAccounts = accountRepository.findAll();
         for (Notification noti : allNotifications) {
+
+            // Xử lý thông báo đơn hàng (ORDER_UPDATE)
+            if (noti.getType() == com.clothshop.domain.enums.NotificationType.ORDER_UPDATE) {
+                String title = noti.getTitle();
+                if (title != null && title.startsWith("Cập nhật trạng thái đơn hàng: ")) {
+                    String invoice = title.substring("Cập nhật trạng thái đơn hàng: ".length()).trim();
+                    orderRepository.findByOrderInvoice(invoice).ifPresent(order -> {
+                        if (order.getCustomer() != null && order.getCustomer().getAccount() != null) {
+                            Account ownerAccount = order.getCustomer().getAccount();
+                            // Chỉ tạo thông báo cho ĐÚNG owner
+                            if (notificationRecipientRepository.findByNotificationIdAndAccountId(noti.getId(), ownerAccount.getId()).isEmpty()) {
+                                NotificationRecipient recipient = new NotificationRecipient();
+                                recipient.setNotification(noti);
+                                recipient.setAccount(ownerAccount);
+                                recipient.setIsRead(false);
+                                notificationRecipientRepository.save(recipient);
+                            }
+                        }
+                    });
+                } else if (title != null && title.startsWith("Cập nhật yêu cầu trả hàng: ")) {
+                    try {
+                        Long rmaId = Long.parseLong(title.substring("Cập nhật yêu cầu trả hàng: ".length()).trim());
+                        rmaRequestRepository.findById(rmaId).ifPresent(rma -> {
+                            if (rma.getCustomer() != null && rma.getCustomer().getAccount() != null) {
+                                Account ownerAccount = rma.getCustomer().getAccount();
+                                if (notificationRecipientRepository.findByNotificationIdAndAccountId(noti.getId(), ownerAccount.getId()).isEmpty()) {
+                                    NotificationRecipient recipient = new NotificationRecipient();
+                                    recipient.setNotification(noti);
+                                    recipient.setAccount(ownerAccount);
+                                    recipient.setIsRead(false);
+                                    notificationRecipientRepository.save(recipient);
+                                }
+                            }
+                        });
+                    } catch (NumberFormatException e) {
+                        // ignore invalid ID format
+                    }
+                }
+                continue; // Bỏ qua không đồng bộ cho mọi người
+            }
+
+            // Chỉ đồng bộ cho các thông báo hệ thống (SYSTEM, PROMOTION, vv) cho toàn bộ user
+            if (noti.getType() != com.clothshop.domain.enums.NotificationType.PROMOTION && noti.getType() != com.clothshop.domain.enums.NotificationType.SYSTEM) {
+                continue;
+            }
+
             for (Account acc : allAccounts) {
                 if (notificationRecipientRepository.findByNotificationIdAndAccountId(noti.getId(), acc.getId()).isEmpty()) {
                     NotificationRecipient recipient = new NotificationRecipient();
