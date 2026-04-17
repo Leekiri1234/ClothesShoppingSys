@@ -25,7 +25,7 @@
         </div>
 
         <!-- QUẢN LÝ ĐƠN -->
-        <div class="nav-group" sec:authorize="hasAnyRole('SUPER_ADMIN', 'SALE_PRODUCT_STAFF')">
+        <div class="nav-group" sec:authorize="hasAnyRole('SUPER_ADMIN', 'CUSTOMER_SERVICE')">
             <span class="nav-group-label">QUẢN LÝ ĐƠN</span>
             <a class="nav-link" th:href="@{/admin/orders}"
                th:classappend="${currentPath != null and #strings.contains(currentPath, '/orders')} ? 'active' : ''">
@@ -39,7 +39,6 @@
                 <span>Đơn hàng</span>
             </a>
             <a class="nav-link" th:href="@{/admin/rma}"
-               sec:authorize="hasAnyRole('SUPER_ADMIN', 'CUSTOMER_SERVICE')"
                th:classappend="${currentPath != null and #strings.contains(currentPath, '/rma')} ? 'active' : ''">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M21 8v13H3V8"></path>
@@ -52,9 +51,10 @@
         </div>
 
         <!-- BÁN HÀNG -->
-        <div class="nav-group">
+        <div class="nav-group" sec:authorize="hasAnyRole('SUPER_ADMIN', 'SALE_PRODUCT_STAFF', 'CUSTOMER_SERVICE')">
             <span class="nav-group-label">BÁN HÀNG</span>
             <a class="nav-link" th:href="@{/admin/products}"
+               sec:authorize="hasAnyRole('SUPER_ADMIN', 'SALE_PRODUCT_STAFF')"
                th:classappend="${currentPath != null and #strings.contains(currentPath, '/products')} ? 'active' : ''">
                 <svg class="nav-icon" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
                 <span>Sản phẩm</span>
@@ -78,7 +78,7 @@
         </div>
 
         <!-- MARKETING -->
-        <div class="nav-group">
+        <div class="nav-group" sec:authorize="hasAnyRole('SUPER_ADMIN', 'MARKETING_STAFF')">
             <span class="nav-group-label">MARKETING</span>
             <a class="nav-link" th:href="@{/admin/collections}"
                th:classappend="${currentPath != null and #strings.contains(currentPath, '/collections')} ? 'active' : ''">
@@ -96,7 +96,6 @@
                 <span>Sản phẩm nổi bật</span>
             </a>
             <a class="nav-link" th:href="@{/admin/marketing/wishlist-insights}"
-               sec:authorize="hasAnyRole('SUPER_ADMIN', 'MARKETING_STAFF')"
                th:classappend="${currentPath != null and #strings.contains(currentPath, '/marketing/wishlist-insights')} ? 'active' : ''">
                 <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 1 0-7.78 7.78L12 21.23l8.84-8.84a5.5 5.5 0 0 0 0-7.78z"></path>
