@@ -7,7 +7,7 @@
         input[type="radio"]:checked + .size-btn { background-color: #000 !important; color: #fff !important; border-color: #000 !important; }
 
         .disabled-size { opacity: 0.4; cursor: not-allowed !important; pointer-events: none; background-color: #f9f9f9; color: #ccc !important; border-color: #eee !important; text-decoration: line-through; }
-        .disabled-action-btn { opacity: 0.5; pointer-events: none; background-color: #ccc !important; border-color: #ccc !important; color: #fff !important; cursor: not-allowed; }
+        .disabled-action-btn { opacity: 0.5; background-color: #ccc !important; border-color: #ccc !important; color: #fff !important; cursor: not-allowed; }
 
         .product-detail-wrap { display: flex; flex-wrap: wrap; gap: 40px; margin: 40px 0; }
         .product-gallery { flex: 1; min-width: 300px; display: flex; gap: 15px; }
@@ -37,8 +37,11 @@
         .btn-buy-now { background: #000; color: #fff; }
         .btn-buy-now:hover:not(.disabled-action-btn) { background: #333; }
 
-        #cart-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: #000; color: #fff; padding: 14px 28px; font-size: 13px; font-weight: 500; letter-spacing: 0.5px; z-index: 9999; opacity: 0; transition: transform 0.35s ease, opacity 0.35s ease; pointer-events: none; }
+        #cart-toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(80px); background: #1a7f45; color: #fff; padding: 14px 28px; font-size: 13px; font-weight: 600; letter-spacing: 0.5px; z-index: 9999; opacity: 0; transition: transform 0.35s ease, opacity 0.35s ease; pointer-events: none; border-radius: 3px; box-shadow: 0 8px 24px rgba(0,0,0,0.18); }
         #cart-toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+        #cart-toast.toast-success { background: #1a7f45; }
+        #cart-toast.toast-error { background: #b42318; }
+        .btn-add-cart.added-feedback { background: #1a7f45 !important; color: #fff !important; border-color: #1a7f45 !important; }
 
         .accordion-item { border-bottom: 1px solid #eee; }
         .accordion-header { padding: 15px 0; font-size: 13px; font-weight: 600; text-transform: uppercase; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
@@ -83,7 +86,7 @@
 </head>
 <body>
 
-<div id="cart-toast"></div>
+<div id="cart-toast" aria-live="polite"></div>
 
 <section layout:fragment="content">
     <div class="container">
@@ -117,7 +120,7 @@
                 <div id="product-price" class="product-price"
                      th:text="${product.price != null ? #numbers.formatDecimal(product.price, 0, 'POINT', 0, 'COMMA') + '₫' : 'Đang cập nhật'}"></div>
 
-                <form id="productForm" th:action="@{/cart/add}" method="post">
+                <form id="productForm" th:action="@{/cart/add}" method="post" onsubmit="return false;">
                     <input type="hidden" name="productId" th:value="${product.productId}" id="productId">
                     <input type="hidden" name="variantId" id="selectedVariantId" value="">
 
@@ -160,7 +163,7 @@
                     </div>
 
                     <div style="display: flex; gap: 15px;">
-                        <button type="button" id="btn-add-cart" class="action-btn btn-add-cart disabled-action-btn" onclick="addToCart()">
+                        <button type="button" id="btn-add-cart" class="action-btn btn-add-cart disabled-action-btn" onclick="return addToCart(event)" disabled>
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
                                 <line x1="3" y1="6" x2="21" y2="6"></line>
@@ -169,13 +172,13 @@
                             THÊM VÀO GIỎ
                         </button>
                         <button type="button" class="action-btn btn-add-cart btn-wishlist"
-                                style="flex: 0 0 50px; padding: 0;" onclick="toggleWishlist(this)" title="Thêm vào yêu thích">
+                                style="flex: 0 0 50px; padding: 0;" onclick="return toggleWishlist(this, event)" title="Thêm vào yêu thích">
                             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="transition: all 0.2s;">
                                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                             </svg>
                         </button>
                     </div>
-                    <button type="button" id="btn-buy-now" class="action-btn btn-buy-now disabled-action-btn" onclick="buyNow()">MUA NGAY</button>
+                    <button type="button" id="btn-buy-now" class="action-btn btn-buy-now disabled-action-btn" onclick="return buyNow(event)" disabled>MUA NGAY</button>
                 </form>
 
                 <div style="margin-top: 20px; display: flex;">
@@ -275,30 +278,66 @@
         const variantsData = /*[[${product.variants}]]*/ [];
         const productId = document.getElementById('productId')?.value;
         const SESSION_KEY = `product_selection_${productId}`;
+        let toastTimer = null;
+        let addBtnFeedbackTimer = null;
 
         function getCsrfTokenFromCookie() {
-            const name = 'XSRF-TOKEN=';
-            for (let c of decodeURIComponent(document.cookie).split(';')) {
-                c = c.trim();
-                if (c.startsWith(name)) return c.substring(name.length);
-            }
-            return "";
+            const decoded = decodeURIComponent(document.cookie || '');
+            const pairs = decoded.split(';').map(c => c.trim());
+            const tokenPair = pairs.find(c => c.startsWith('CLIENT-XSRF-TOKEN='))
+                || pairs.find(c => c.startsWith('XSRF-TOKEN='));
+            return tokenPair ? tokenPair.substring(tokenPair.indexOf('=') + 1) : '';
         }
 
         function getSecurityHeaders() {
-            const csrf = getCsrfTokenFromCookie();
+            const csrfMeta = document.querySelector('meta[name="_csrf"]')?.content || '';
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content || 'X-XSRF-TOKEN';
+            const csrf = csrfMeta || getCsrfTokenFromCookie();
             return {
                 'Content-Type': 'application/json', 'Accept': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-                ...(csrf ? { 'X-XSRF-TOKEN': csrf } : {})
+                ...(csrf ? { [csrfHeader]: csrf } : {})
             };
         }
 
-        function showToast(msg) {
-            const toast = document.getElementById('cart-toast');
+        function ensureCartToast() {
+            let toast = document.getElementById('cart-toast');
+            if (!toast && document.body) {
+                toast = document.createElement('div');
+                toast.id = 'cart-toast';
+                toast.setAttribute('aria-live', 'polite');
+                document.body.appendChild(toast);
+            }
+            return toast;
+        }
+
+        function showToast(msg, type = 'success') {
+            const toast = ensureCartToast();
+            if (!toast) return;
             toast.innerText = msg;
+            toast.classList.remove('toast-success', 'toast-error');
+            toast.classList.add(type === 'error' ? 'toast-error' : 'toast-success');
             toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 2500);
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function flashAddToCartButton() {
+            const btn = document.getElementById('btn-add-cart');
+            if (!btn) return;
+            const oldHtml = btn.innerHTML;
+            btn.classList.add('added-feedback');
+            btn.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M20 6L9 17l-5-5"></path>
+                </svg>
+                <span>ĐÃ THÊM VÀO GIỎ</span>
+            `;
+            if (addBtnFeedbackTimer) clearTimeout(addBtnFeedbackTimer);
+            addBtnFeedbackTimer = setTimeout(() => {
+                btn.classList.remove('added-feedback');
+                btn.innerHTML = oldHtml;
+            }, 1500);
         }
 
         function saveSelection() {
@@ -401,6 +440,13 @@
         }
 
         function initPage() {
+            const form = document.getElementById('productForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                });
+            }
+
             document.getElementById('selectedVariantId').value = '';
             const saved = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
             if (saved.color) { const r = document.querySelector(`input[name="color"][value="${saved.color}"]`); if (r) r.checked = true; }
@@ -473,6 +519,8 @@
                     if (matched.retailPrice != null && priceEl) priceEl.innerText = matched.retailPrice.toLocaleString('vi-VN') + '₫';
                     quantityInput.max = matched.stockQuantity;
                     if (parseInt(quantityInput.value) > matched.stockQuantity) quantityInput.value = matched.stockQuantity;
+                    btnAdd.disabled = false;
+                    btnBuy.disabled = false;
                     btnAdd.classList.remove('disabled-action-btn');
                     btnBuy.classList.remove('disabled-action-btn');
                     updateStockBadge(matched.stockQuantity);
@@ -480,35 +528,42 @@
                 }
             }
 
+            btnAdd.disabled = true;
+            btnBuy.disabled = true;
             btnAdd.classList.add('disabled-action-btn');
             btnBuy.classList.add('disabled-action-btn');
             updateStockBadge(null);
         }
 
-        function addToCart() {
+        function addToCart(event) {
+            if (event) { event.preventDefault(); event.stopPropagation(); }
             const variantId = document.getElementById('selectedVariantId').value;
             const quantity  = parseInt(document.getElementById('qty').value) || 1;
-            if (!variantId) { showToast("Vui lòng chọn màu và size!"); return; }
+            if (!variantId) { showToast("Vui lòng chọn màu và size!", 'error'); return false; }
             fetch('/cart/add', { method: 'POST', headers: getSecurityHeaders(), credentials: 'same-origin',
                 body: JSON.stringify({ productId: parseInt(productId), variantId: parseInt(variantId), quantity }) })
             .then(res => { if (res.status === 401 || res.status === 403) { window.location.href = '/login'; throw new Error('Unauthorized'); } if (!res.ok) throw new Error('Error'); return res.json(); })
-            .then(data => { if (data?.success) { updateCartBadge(); showToast(data.message || "Đã thêm vào giỏ hàng!"); } })
-            .catch(err => { if (err.message !== 'Unauthorized') showToast("Lỗi hệ thống!"); });
+            .then(data => { if (data?.success) { updateCartBadge(); flashAddToCartButton(); } })
+            .catch(err => { if (err.message !== 'Unauthorized') showToast("Lỗi hệ thống!", 'error'); });
+            return false;
         }
 
-        function buyNow() {
+        function buyNow(event) {
+            if (event) { event.preventDefault(); event.stopPropagation(); }
             const variantId = document.getElementById('selectedVariantId').value;
             const quantity  = parseInt(document.getElementById('qty').value) || 1;
-            if (!variantId) { showToast("Vui lòng chọn màu và size!"); return; }
+            if (!variantId) { showToast("Vui lòng chọn màu và size!", 'error'); return false; }
             fetch('/checkout/direct', { method: 'POST', headers: getSecurityHeaders(), credentials: 'same-origin',
                 body: JSON.stringify({ variantId: parseInt(variantId), quantity }) })
             .then(res => { if (res.status === 401 || res.status === 403) { window.location.href = '/login'; throw new Error('Unauthorized'); } if (!res.ok) throw new Error('Error'); return res.json(); })
             .then(data => { if (data?.success) window.location.href = '/checkout/direct'; })
-            .catch(err => { if (err.message !== 'Unauthorized') showToast("Lỗi hệ thống!"); });
+            .catch(err => { if (err.message !== 'Unauthorized') showToast("Lỗi hệ thống!", 'error'); });
+            return false;
         }
 
-        function toggleWishlist(btn) {
-            if (!productId) return;
+        function toggleWishlist(btn, event) {
+            if (event) { event.preventDefault(); event.stopPropagation(); }
+            if (!productId) return false;
             const svg = btn.querySelector('svg');
             fetch(`/wishlist/toggle/${productId}`, { method: 'POST', headers: getSecurityHeaders(), credentials: 'same-origin' })
             .then(res => { if (res.status === 401 || res.status === 403) { window.location.href = '/login'; throw new Error('Unauthorized'); } return res.json(); })
@@ -519,6 +574,7 @@
                 }
             })
             .catch(err => { if (err.message !== 'Unauthorized') console.error(err); });
+            return false;
         }
     </script>
 </section>
