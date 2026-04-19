@@ -76,8 +76,15 @@
 
                     <div class="form-group">
                         <label>Hình ảnh hiện tại</label>
-                        <div th:if="${product.imageUrl != null and !product.imageUrl.isEmpty()}" style="margin-bottom: 10px;">
-                            <img th:src="${product.imageUrl}" style="max-height: 150px; border-radius: 4px; border: 1px solid #ddd;" alt="Product Image">
+                        <div style="margin-bottom: 10px;">
+                            <img id="productImagePreview"
+                                 th:src="${product.imageUrl}"
+                                 th:style="${product.imageUrl != null and !#strings.isEmpty(product.imageUrl)} ? 'max-height: 150px; border-radius: 4px; border: 1px solid #ddd; display: block;' : 'max-height: 150px; border-radius: 4px; border: 1px solid #ddd; display: none;'"
+                                 alt="Product Image">
+                            <div id="productImageEmptyState"
+                                 th:style="${product.imageUrl != null and !#strings.isEmpty(product.imageUrl)} ? 'display: none; font-size: 12px; color: var(--muted);' : 'display: block; font-size: 12px; color: var(--muted);'">
+                                Chua co hinh anh
+                            </div>
                         </div>
                     </div>
 
@@ -94,7 +101,7 @@
 
                     <div class="form-group">
                         <label>Tải ảnh mới lên</label>
-                        <input type="file" name="imageFile" accept="image/*" style="display: block; width: 100%; border: 1px solid var(--border); border-radius: 4px; padding: 8px;">
+                        <input id="productImageFileInput" type="file" name="imageFile" accept="image/*" style="display: block; width: 100%; border: 1px solid var(--border); border-radius: 4px; padding: 8px;">
                         <small style="font-size: 11px; color: var(--muted);">
                             Nếu tải ảnh lên, hệ thống sẽ ưu tiên dùng ảnh tải lên thay vì URL.
                         </small>
@@ -195,6 +202,37 @@
             Hiện sản phẩm
         </button>
     </form>
+</div>
+
+<div layout:fragment="scripts">
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const fileInput = document.getElementById('productImageFileInput');
+            const preview = document.getElementById('productImagePreview');
+            const emptyState = document.getElementById('productImageEmptyState');
+
+            if (!fileInput || !preview) {
+                return;
+            }
+
+            fileInput.addEventListener('change', function (event) {
+                const file = event.target.files && event.target.files[0];
+                if (!file) {
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function (loadEvent) {
+                    preview.src = loadEvent.target.result;
+                    preview.style.display = 'block';
+                    if (emptyState) {
+                        emptyState.style.display = 'none';
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+        });
+    </script>
 </div>
 
 </body>
