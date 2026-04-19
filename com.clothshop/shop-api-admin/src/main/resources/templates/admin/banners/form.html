@@ -54,9 +54,15 @@
                 <label for="imageFile" class="form-label">Ảnh banner <span class="text-danger">*</span></label>
                 <div class="image-preview-container" style="margin-bottom: 12px;">
                     <img id="imagePreview"
-                         th:if="${banner.imageUrl != null}"
+                         th:if="${banner.imageUrl != null and !#strings.isEmpty(banner.imageUrl) and banner.imageUrl != 'undefined'}"
                          th:src="@{${banner.imageUrl}}"
-                          style="max-width: 100%; max-height: 200px;">
+                         alt="Banner preview"
+                         style="max-width: 100%; max-height: 200px; display: block;">
+                    <img id="imagePreviewPlaceholder"
+                         th:unless="${banner.imageUrl != null and !#strings.isEmpty(banner.imageUrl) and banner.imageUrl != 'undefined'}"
+                         src=""
+                         alt="Banner preview"
+                         style="max-width: 100%; max-height: 200px; display: none;">
                 </div>
                 <div class="form-control-file">
                     <input type="file"
@@ -64,7 +70,7 @@
                            id="imageFile"
                            name="file"
                            accept="image/*"
-                           th:required="${banner.imageUrl == null}">
+                           th:required="${banner.imageUrl == null or #strings.isEmpty(banner.imageUrl) or banner.imageUrl == 'undefined'}">
                     <small class="form-text text-muted">Định dạng: JPG, PNG, GIF. Kích thước tối đa: 5MB</small>
                 </div>
                 <script>
@@ -73,9 +79,11 @@
                         if (file) {
                             const reader = new FileReader();
                             reader.onload = function(event) {
-                                const preview = document.getElementById('imagePreview');
-                                preview.src = event.target.result;
-                                preview.style.display = 'block';
+                                const preview = document.getElementById('imagePreview') || document.getElementById('imagePreviewPlaceholder');
+                                if (preview) {
+                                    preview.src = event.target.result;
+                                    preview.style.display = 'block';
+                                }
                             };
                             reader.readAsDataURL(file);
                         }
@@ -136,7 +144,7 @@
                     <span th:if="${banner.id != null}">Cập nhật</span>
                     <span th:if="${banner.id == null}">Tạo banner</span>
                 </button>
-                <a th:href="@{/templates/admin/banners}" class="btn btn-secondary">
+                <a th:href="@{/admin/banners}" class="btn btn-secondary">
                     Hủy
                 </a>
             </div>

@@ -65,8 +65,8 @@ public class BannerService {
 
         // upload image (bắt buộc)
         if (file != null && !file.isEmpty()) {
-            String fileName = fileUploadUtil.upload(file, "banners");
-            banner.setImageUrl("/uploads/banners/" + fileName);
+            String imageUrl = fileUploadUtil.upload(file, "banners");
+            banner.setImageUrl(imageUrl);
         } else {
             throw new BusinessException(ErrorCode.VALIDATION_ERROR, "Ảnh banner là bắt buộc");
         }
@@ -94,8 +94,8 @@ public class BannerService {
 
         // update image nếu có
         if (file != null && !file.isEmpty()) {
-            String fileName = fileUploadUtil.upload(file, "banners");
-            banner.setImageUrl("/uploads/banners/" + fileName);
+            String imageUrl = fileUploadUtil.upload(file, "banners");
+            banner.setImageUrl(imageUrl);
         }
 
         bannerRepository.save(banner);
