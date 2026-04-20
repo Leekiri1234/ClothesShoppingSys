@@ -2,6 +2,7 @@ package com.clothshop.domain.config;
 
 import com.clothshop.domain.models.auth.*;
 import com.clothshop.domain.models.cms.*;
+import com.clothshop.domain.models.customer.*;
 import com.clothshop.domain.models.marketing.*;
 import com.clothshop.domain.models.order.*;
 import com.clothshop.domain.models.product.*;
@@ -9,6 +10,7 @@ import com.clothshop.domain.enums.*;
 import com.clothshop.domain.enums.OrderStatus;
 import com.clothshop.domain.repositories.auth.*;
 import com.clothshop.domain.repositories.cms.*;
+import com.clothshop.domain.repositories.customer.*;
 import com.clothshop.domain.repositories.marketing.*;
 import com.clothshop.domain.repositories.order.*;
 import com.clothshop.domain.repositories.product.*;
@@ -24,9 +26,11 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -65,8 +69,11 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final CustomerRepository customerRepository;
     private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
+    private final ProductFeedbackRepository productFeedbackRepository;
     private final ProductVariantRepository productVariantRepository;
     private final ProductImageRepository productImageRepository;
+    private final WishlistRepository wishlistRepository;
+    private final WishlistItemRepository wishlistItemRepository;
     private final CollectionRepository collectionRepository;
     private final CollectionItemRepository collectionItemRepository;
     private final VoucherRepository voucherRepository;
@@ -88,9 +95,12 @@ public class DatabaseSeeder implements CommandLineRunner {
     public void run(String... args) {
         if (roleRepository.count() > 0) {
             log.info("Base data already seeded. Checking supplemental banner/order/RMA data...");
+            seedSupplementalCustomers();
             seedCollections();
             seedBanners();
             seedVouchersAndOrders();
+            seedWishlists();
+            seedProductFeedbacks();
             seedRmaRequests();
             log.info("Supplemental seeding completed.");
             return;
@@ -105,6 +115,8 @@ public class DatabaseSeeder implements CommandLineRunner {
         seedCollections();
         seedFeaturedProducts();
         seedVouchersAndOrders();
+        seedWishlists();
+        seedProductFeedbacks();
         seedBanners();
         seedFlashSales();
         seedRmaRequests();
@@ -251,7 +263,139 @@ public class DatabaseSeeder implements CommandLineRunner {
         customer3.setCreatedBy("SYSTEM");
         customerRepository.save(customer3);
 
-        log.info("Accounts seeded: 4 staff (all roles), 3 customers");
+        // 8-17. Additional customers (customer4 -> customer13)
+        for (CustomerSeed seed : buildAdditionalCustomerSeeds()) {
+            String username = seed.username();
+            String email = seed.email();
+
+            Account customerAccount = createAccount(username, "customer@123", email,
+                AccountType.CUSTOMER, AccountStatus.ACTIVE);
+            accountRepository.save(customerAccount);
+
+            Customer customer = new Customer();
+            customer.setFullName(seed.fullName());
+            customer.setEmail(email);
+            customer.setPhoneNumber(seed.phoneNumber());
+            customer.setAddress(seed.address());
+            customer.setAccount(customerAccount);
+            customer.setCreatedBy("SYSTEM");
+            customerRepository.save(customer);
+        }
+
+        log.info("Accounts seeded: 4 staff (all roles), 13 customers");
+    }
+
+    private void seedSupplementalCustomers() {
+        log.info("Seeding supplemental customers (idempotent upsert)...");
+
+        List<CustomerSeed> customerSeeds = new java.util.ArrayList<>();
+        customerSeeds.add(new CustomerSeed("customer", "customer@email.com", "Nguyen Van A", "0909876543",
+            "123 Nguyen Hue, District 1, Ho Chi Minh City"));
+        customerSeeds.add(new CustomerSeed("customer2", "customer2@email.com", "Tran Thi B", "0908765432",
+            "456 Le Loi, District 3, Ho Chi Minh City"));
+        customerSeeds.add(new CustomerSeed("customer3", "customer3@email.com", "Le Van C", "0907654321",
+            "789 Tran Hung Dao, District 5, Ho Chi Minh City"));
+        customerSeeds.addAll(buildAdditionalCustomerSeeds());
+
+        int accountsCreated = 0;
+        int customersCreated = 0;
+        int customersRepaired = 0;
+
+        for (CustomerSeed seed : customerSeeds) {
+            Account account = accountRepository.findByUsername(seed.username())
+                .orElseGet(() -> {
+                    Account created = createAccount(seed.username(), "customer@123", seed.email(),
+                        AccountType.CUSTOMER, AccountStatus.ACTIVE);
+                    return accountRepository.save(created);
+                });
+
+            if (account.getId() != null && account.getCreatedBy() != null && "SYSTEM".equals(account.getCreatedBy())
+                && seed.username().equals(account.getUsername()) && account.getEmail() != null && account.getEmail().equals(seed.email())
+                && account.getAccountType() == AccountType.CUSTOMER && account.getAccountStatus() == AccountStatus.ACTIVE
+                && Boolean.TRUE.equals(account.getIsActive())) {
+                // No-op: seed account already correct.
+            } else {
+                if (account.getAccountType() != AccountType.CUSTOMER) {
+                    account.setAccountType(AccountType.CUSTOMER);
+                }
+                if (account.getAccountStatus() != AccountStatus.ACTIVE) {
+                    account.setAccountStatus(AccountStatus.ACTIVE);
+                }
+                if (!Boolean.TRUE.equals(account.getIsActive())) {
+                    account.setIsActive(true);
+                }
+                if (account.getEmail() == null || account.getEmail().isBlank()) {
+                    account.setEmail(seed.email());
+                }
+                if (account.getCreatedBy() == null) {
+                    account.setCreatedBy("SYSTEM");
+                }
+                accountRepository.save(account);
+            }
+
+            if (account.getCustomer() == null) {
+                Customer customer = customerRepository.findByEmailOrUsername(seed.email(), seed.username())
+                    .orElseGet(Customer::new);
+
+                boolean isNew = customer.getId() == null;
+                customer.setFullName(seed.fullName());
+                customer.setEmail(seed.email());
+                customer.setPhoneNumber(seed.phoneNumber());
+                customer.setAddress(seed.address());
+                customer.setAccount(account);
+                customer.setIsActive(true);
+                if (customer.getCreatedBy() == null) {
+                    customer.setCreatedBy("SYSTEM");
+                }
+                customerRepository.save(customer);
+
+                if (isNew) {
+                    customersCreated++;
+                } else {
+                    customersRepaired++;
+                }
+            } else {
+                Customer customer = account.getCustomer();
+                boolean changed = false;
+
+                if (!Boolean.TRUE.equals(customer.getIsActive())) {
+                    customer.setIsActive(true);
+                    changed = true;
+                }
+                if (customer.getFullName() == null || customer.getFullName().isBlank()
+                    || customer.getFullName().matches("(?i)^customer\\s*\\d+$")) {
+                    customer.setFullName(seed.fullName());
+                    changed = true;
+                }
+                if (customer.getEmail() == null || customer.getEmail().isBlank()) {
+                    customer.setEmail(seed.email());
+                    changed = true;
+                }
+                if (customer.getPhoneNumber() == null || customer.getPhoneNumber().isBlank()) {
+                    customer.setPhoneNumber(seed.phoneNumber());
+                    changed = true;
+                }
+                if (customer.getAddress() == null || customer.getAddress().isBlank()) {
+                    customer.setAddress(seed.address());
+                    changed = true;
+                }
+                if (changed) {
+                    customerRepository.save(customer);
+                    customersRepaired++;
+                }
+            }
+
+            if (account.getId() != null && account.getCreatedAt() != null
+                && account.getCreatedBy() != null && "SYSTEM".equals(account.getCreatedBy())
+                && account.getUsername().equals(seed.username())) {
+                // Existing seeded account.
+            } else if (account.getUsername().equals(seed.username())) {
+                accountsCreated++;
+            }
+        }
+
+        log.info("Supplemental customers seeded: accounts created {}, customers created {}, customers repaired {}",
+            accountsCreated, customersCreated, customersRepaired);
     }
 
     /**
@@ -1068,6 +1212,228 @@ public class DatabaseSeeder implements CommandLineRunner {
         return discount;
     }
 
+    private void seedWishlists() {
+        log.info("Seeding wishlists...");
+
+        final int targetWishlistItems = 36;
+        final String seededBy = "WISHLIST_SEEDER";
+
+        List<Customer> customers = customerRepository.findAll().stream()
+            .sorted(Comparator.comparing(Customer::getId))
+            .toList();
+        List<Product> products = productRepository.findAll().stream()
+            .filter(p -> Boolean.TRUE.equals(p.getIsActive()))
+            .sorted(Comparator.comparing(Product::getId))
+            .toList();
+
+        if (customers.isEmpty() || products.isEmpty()) {
+            log.warn("Not enough customers/products to seed wishlists. Skipping wishlist seeding.");
+            return;
+        }
+
+        List<WishlistItem> existingWishlistItems = wishlistItemRepository.findAll();
+        long seededActiveWishlistItems = existingWishlistItems.stream()
+            .filter(i -> Boolean.TRUE.equals(i.getIsActive()) && seededBy.equals(i.getCreatedBy()))
+            .count();
+
+        if (seededActiveWishlistItems >= targetWishlistItems) {
+            log.info("Seeded wishlist items already present: {} active items. Skipping wishlist seeding.",
+                seededActiveWishlistItems);
+            return;
+        }
+
+        Map<Long, Wishlist> wishlistByCustomerId = wishlistRepository.findAll().stream()
+            .filter(w -> w.getCustomer() != null && w.getCustomer().getId() != null)
+            .collect(Collectors.toMap(w -> w.getCustomer().getId(), w -> w, (left, right) -> left, HashMap::new));
+
+        List<Product> hottestProducts = products.subList(0, Math.min(3, products.size()));
+        List<Product> mediumProducts = products.subList(Math.min(3, products.size()), Math.min(7, products.size()));
+        List<Product> tailProducts = products.subList(Math.min(7, products.size()), products.size());
+
+        List<Product> weightedProducts = new java.util.ArrayList<>();
+        for (Product product : hottestProducts) {
+            for (int w = 0; w < 7; w++) {
+                weightedProducts.add(product);
+            }
+        }
+        for (Product product : mediumProducts) {
+            for (int w = 0; w < 3; w++) {
+                weightedProducts.add(product);
+            }
+        }
+        weightedProducts.addAll(tailProducts);
+        if (weightedProducts.isEmpty()) {
+            weightedProducts.addAll(products);
+        }
+
+        int createdOrReactivated = 0;
+        int needToCreate = (int) (targetWishlistItems - seededActiveWishlistItems);
+        int maxAttempts = customers.size() * products.size();
+        LocalDateTime startAt = LocalDateTime.now().minusDays(29);
+
+        for (int attempt = 0; attempt < maxAttempts && createdOrReactivated < needToCreate; attempt++) {
+            Customer customer = customers.get(attempt % customers.size());
+            Product product = weightedProducts.get((attempt * 7 + 3) % weightedProducts.size());
+            LocalDateTime wishlistedAt = startAt
+                .plusHours((attempt * 20L) % (30L * 24L))
+                .plusMinutes((attempt * 11L) % 60L);
+
+            Wishlist wishlist = getOrCreateWishlistForCustomer(customer, wishlistByCustomerId, seededBy);
+            WishlistItem existing = wishlistItemRepository.findByWishlistIdAndProductId(wishlist.getId(), product.getId());
+
+            if (existing == null) {
+                WishlistItem item = new WishlistItem();
+                item.setWishlist(wishlist);
+                item.setProduct(product);
+                item.setCreatedBy(seededBy);
+                item = wishlistItemRepository.save(item);
+                jdbcTemplate.update("UPDATE wishlist_items SET created_at = ?, updated_at = ? WHERE item_id = ?",
+                    wishlistedAt, wishlistedAt, item.getId());
+                createdOrReactivated++;
+                continue;
+            }
+
+            if (!Boolean.TRUE.equals(existing.getIsActive())) {
+                existing.setIsActive(true);
+                existing.setUpdatedBy(seededBy);
+                existing = wishlistItemRepository.save(existing);
+                jdbcTemplate.update("UPDATE wishlist_items SET created_at = ?, updated_at = ? WHERE item_id = ?",
+                    wishlistedAt, wishlistedAt, existing.getId());
+                createdOrReactivated++;
+            }
+        }
+
+        if (createdOrReactivated < needToCreate) {
+            log.warn("Only seeded {} wishlist item(s). Needed {} but unique customer-product pairs were not enough.",
+                createdOrReactivated, needToCreate);
+        }
+
+        log.info("Wishlist seeded: {} new/reactivated items, {} active items target {}",
+            createdOrReactivated,
+            seededActiveWishlistItems + createdOrReactivated,
+            targetWishlistItems);
+    }
+
+    private Wishlist getOrCreateWishlistForCustomer(Customer customer,
+                                                    Map<Long, Wishlist> wishlistByCustomerId,
+                                                    String createdBy) {
+        Wishlist existing = wishlistByCustomerId.get(customer.getId());
+        if (existing != null) {
+            return existing;
+        }
+
+        Wishlist wishlist = new Wishlist();
+        wishlist.setCustomer(customer);
+        wishlist.setCreatedBy(createdBy);
+        wishlist = wishlistRepository.save(wishlist);
+        wishlistByCustomerId.put(customer.getId(), wishlist);
+        return wishlist;
+    }
+
+    private void seedProductFeedbacks() {
+        log.info("Seeding product feedback...");
+
+        final int targetSeedReviews = 17;
+        final String seededBy = "REVIEW_SEEDER";
+
+        List<ProductFeedback> existingFeedbacks = productFeedbackRepository.findAll();
+        long alreadySeeded = existingFeedbacks.stream()
+            .filter(f -> seededBy.equals(f.getCreatedBy()))
+            .count();
+
+        if (alreadySeeded >= targetSeedReviews) {
+            log.info("Seeded reviews already present: {}. Skipping feedback seeding.", alreadySeeded);
+            return;
+        }
+
+        Set<String> existingCustomerProductPairs = existingFeedbacks.stream()
+            .filter(f -> f.getCustomer() != null && f.getCustomer().getId() != null
+                && f.getProduct() != null && f.getProduct().getId() != null)
+            .map(f -> f.getCustomer().getId() + "-" + f.getProduct().getId())
+            .collect(Collectors.toSet());
+
+        Map<String, OrderItem> purchasedPairs = new LinkedHashMap<>();
+        for (OrderItem item : orderItemRepository.findAll()) {
+            if (item.getOrder() == null || item.getOrder().getCustomer() == null || item.getOrder().getCustomer().getId() == null
+                || item.getVariant() == null || item.getVariant().getProduct() == null || item.getVariant().getProduct().getId() == null) {
+                continue;
+            }
+
+            String pairKey = item.getOrder().getCustomer().getId() + "-" + item.getVariant().getProduct().getId();
+            purchasedPairs.putIfAbsent(pairKey, item);
+        }
+
+        if (purchasedPairs.isEmpty()) {
+            log.warn("No purchased product pairs found. Skipping review seeding.");
+            return;
+        }
+
+        List<String> sampleComments = List.of(
+            "Chất vải đẹp, mặc rất thoải mái.",
+            "Đường may chắc chắn, form chuẩn như mô tả.",
+            "Màu sắc giống ảnh, giao hàng nhanh.",
+            "Đóng gói cẩn thận, sản phẩm đáng tiền.",
+            "Mặc lên tôn dáng, sẽ ủng hộ thêm.",
+            "Chất liệu ổn trong tầm giá.",
+            "Shop tư vấn nhiệt tình, size vừa khít.",
+            "Sản phẩm tốt, không có chỉ thừa.",
+            "Giặt lần đầu không bị ra màu.",
+            "Rất hài lòng, đúng nhu cầu sử dụng.",
+            "Kiểu dáng đẹp, mặc đi làm hay đi chơi đều hợp.",
+            "Giá hợp lý, chất lượng vượt mong đợi.",
+            "Shop làm ăn chán, giao hàng quá trễ và thái độ khó chịu.",
+            "Chất lượng quá tệ, mặc 1 lần đã xù lông.",
+            "Ảnh một kiểu, nhận hàng một nẻo, rất bực mình.",
+            "Đồ như vậy mà cũng bán được à, thất vọng thật sự.",
+            "May ẩu, chỉ thừa nhiều, trải nghiệm quá tệ."
+        );
+        List<Integer> sampleRatings = List.of(5, 5, 4, 5, 4, 4, 5, 5, 4, 5, 4, 5, 2, 1, 1, 2, 1);
+        List<String> sampleStatuses = List.of(
+            "APPROVED", "APPROVED", "APPROVED", "APPROVED", "APPROVED", "APPROVED",
+            "APPROVED", "APPROVED", "APPROVED", "APPROVED", "APPROVED", "APPROVED",
+            "APPROVED", "HIDDEN", "HIDDEN", "APPROVED", "HIDDEN"
+        );
+
+        int needToCreate = (int) (targetSeedReviews - alreadySeeded);
+        int created = 0;
+        int templateIndex = (int) alreadySeeded;
+
+        for (Map.Entry<String, OrderItem> entry : purchasedPairs.entrySet()) {
+            if (created >= needToCreate) {
+                break;
+            }
+
+            if (existingCustomerProductPairs.contains(entry.getKey())) {
+                continue;
+            }
+
+            OrderItem item = entry.getValue();
+            ProductFeedback feedback = new ProductFeedback();
+            feedback.setProduct(item.getVariant().getProduct());
+            feedback.setCustomer(item.getOrder().getCustomer());
+            feedback.setOrder(item.getOrder());
+            feedback.setRating(sampleRatings.get(templateIndex % sampleRatings.size()));
+            feedback.setComment(sampleComments.get(templateIndex % sampleComments.size()));
+            String status = sampleStatuses.get(templateIndex % sampleStatuses.size());
+            feedback.setFeedbackStatus(status);
+            feedback.setHideReason("HIDDEN".equals(status) ? "Nội dung không phù hợp hiển thị công khai" : null);
+            feedback.setModeratedAt(LocalDateTime.now().minusDays(templateIndex % 7));
+            feedback.setModeratedBy("system");
+            feedback.setCreatedBy(seededBy);
+
+            productFeedbackRepository.save(feedback);
+            existingCustomerProductPairs.add(entry.getKey());
+            created++;
+            templateIndex++;
+        }
+
+        if (created < needToCreate) {
+            log.warn("Only seeded {} review(s). Needed {} but not enough unique purchased pairs.", created, needToCreate);
+        }
+
+        log.info("Product feedback seeded: {} new review(s), {} seeded total", created, alreadySeeded + created);
+    }
+
     private void seedBanners() {
         log.info("Seeding banners...");
 
@@ -1333,4 +1699,22 @@ public class DatabaseSeeder implements CommandLineRunner {
     }
 
     private record ItemSpec(ProductVariant variant, int quantity) { }
+
+    private List<CustomerSeed> buildAdditionalCustomerSeeds() {
+        return List.of(
+            new CustomerSeed("customer4", "customer4@email.com", "Nguyen Thi E", "0910000004", "12 Le Loi, District 1, Ho Chi Minh City"),
+            new CustomerSeed("customer5", "customer5@email.com", "Pham Van O", "0910000005", "88 Nguyen Trai, District 5, Ho Chi Minh City"),
+            new CustomerSeed("customer6", "customer6@email.com", "Bui Thi T", "0910000006", "21 Cach Mang Thang 8, District 3, Ho Chi Minh City"),
+            new CustomerSeed("customer7", "customer7@email.com", "Do Van H", "0910000007", "305 Vo Van Tan, District 3, Ho Chi Minh City"),
+            new CustomerSeed("customer8", "customer8@email.com", "Le Thi M", "0910000008", "79 Dien Bien Phu, Binh Thanh, Ho Chi Minh City"),
+            new CustomerSeed("customer9", "customer9@email.com", "Tran Van K", "0910000009", "145 Hai Ba Trung, District 1, Ho Chi Minh City"),
+            new CustomerSeed("customer10", "customer10@email.com", "Hoang Thi N", "0910000010", "66 Pham Viet Chanh, Binh Thanh, Ho Chi Minh City"),
+            new CustomerSeed("customer11", "customer11@email.com", "Vo Van D", "0910000011", "9 Ly Tu Trong, District 1, Ho Chi Minh City"),
+            new CustomerSeed("customer12", "customer12@email.com", "Dang Thi P", "0910000012", "41 Tran Quang Khai, District 1, Ho Chi Minh City"),
+            new CustomerSeed("customer13", "customer13@email.com", "Ngo Van Q", "0910000013", "120 Hoang Sa, Phu Nhuan, Ho Chi Minh City")
+        );
+    }
+
+    private record CustomerSeed(String username, String email, String fullName,
+                                String phoneNumber, String address) { }
 }
