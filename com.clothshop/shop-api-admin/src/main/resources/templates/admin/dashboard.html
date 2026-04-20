@@ -19,7 +19,7 @@
                 </svg>
             </div>
             <div class="stat-body">
-                <div class="stat-label">Doanh thu hôm nay</div>
+                <div class="stat-label">Doanh thu 7 ngày qua</div>
                 <div class="stat-value" th:text="${#numbers.formatDecimal(todayRevenue, 0, 'COMMA', 0, 'POINT')} + '₫'">0₫</div>
             </div>
         </div>
@@ -33,7 +33,7 @@
                 </svg>
             </div>
             <div class="stat-body">
-                <div class="stat-label">Đơn hàng mới</div>
+                <div class="stat-label">Đơn hàng 7 ngày qua</div>
                 <div class="stat-value" th:text="${todayOrders}">0</div>
             </div>
         </div>
@@ -60,7 +60,7 @@
                 </svg>
             </div>
             <div class="stat-body">
-                <div class="stat-label">Sản phẩm</div>
+                <div class="stat-label">Tổng sản phẩm đã bán</div>
                 <div class="stat-value" th:text="${totalProducts}">0</div>
             </div>
         </div>
@@ -69,7 +69,7 @@
     <div class="dashboard-grid">
         <div class="dashboard-card chart-card">
             <div class="card-header">
-                <h3>Doanh thu 7 ngày qua</h3>
+                <h3 id="chartTitle">Doanh thu 7 ngày qua</h3>
                 <div class="date-range-selector">
                     <button class="range-btn active" data-period="weekly">7 ngày</button>
                     <button class="range-btn" data-period="monthly">30 ngày</button>
@@ -281,6 +281,16 @@
                     document.querySelectorAll('.range-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                     loadApiChart(this.dataset.period);
+
+                    const titleEl = document.getElementById('chartTitle');
+                    if (titleEl) {
+                        const periodMap = {
+                            'weekly': '7 ngày',
+                            'monthly': '30 ngày',
+                            'quarterly': '90 ngày'
+                        };
+                        titleEl.innerText = 'Doanh thu ' + periodMap[this.dataset.period] + ' qua';
+                    }
                 });
             });
         });
