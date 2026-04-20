@@ -165,11 +165,12 @@
                                 <span style="color: var(--muted); margin-left: 6px;" th:text="${review.rating} + '/5'">5/5</span>
                             </div>
                             <span class="badge"
-                                  th:classappend="${review.status == 'APPROVED' ? 'badge-success' : (review.status == 'HIDDEN' ? 'badge-danger' : 'badge-warning')}"
-                                  th:text="${review.status}">APPROVED</span>
+                                  th:classappend="${review.status == 'APPROVED' ? 'badge-success' : 'badge-danger'}"
+                                  th:text="${review.status == 'APPROVED' ? 'Hiển thị' : 'Đã ẩn'}">Hiển thị</span>
                         </div>
 
                         <p style="margin: 0 0 10px 0; color: var(--text-secondary);" th:text="${review.comment}">Nội dung đánh giá</p>
+                        <small th:if="${review.hideReason != null and !#strings.isEmpty(review.hideReason)}" style="color: var(--muted); display: block; margin-top: 6px; margin-bottom: 10px;" th:text="'Lý do ẩn: ' + ${review.hideReason}">Lý do ẩn</small>
 
                         <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                             <form th:if="${review.status != 'HIDDEN'}"
@@ -178,14 +179,14 @@
                                   style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                                 <input type="text" name="reason" class="filter-input" placeholder="Lý do ẩn" required style="min-width: 180px;">
-                                <button type="submit" class="btn btn-xs btn-outline">Ẩn</button>
+                                <button type="submit" class="btn btn-xs btn-outline">Ẩn đánh giá</button>
                             </form>
 
                             <form th:if="${review.status == 'HIDDEN'}"
                                   th:action="@{/admin/products/{productId}/reviews/{reviewId}/show(productId=${product.productId}, reviewId=${review.reviewId})}"
                                   method="post">
                                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                                <button type="submit" class="btn btn-xs btn-primary">Hiện</button>
+                                <button type="submit" class="btn btn-xs btn-primary">Khôi phục hiển thị</button>
                             </form>
                         </div>
                     </div>

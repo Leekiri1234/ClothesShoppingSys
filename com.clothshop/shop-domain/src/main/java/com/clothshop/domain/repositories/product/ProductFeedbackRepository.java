@@ -25,6 +25,8 @@ public interface ProductFeedbackRepository extends JpaRepository<ProductFeedback
 
     Page<ProductFeedback> findByProductIdAndFeedbackStatusInOrderByCreatedAtDesc(Long productId, Collection<String> statuses, Pageable pageable);
 
+    Page<ProductFeedback> findByProductIdAndRatingAndFeedbackStatusInOrderByCreatedAtDesc(Long productId, Integer rating, Collection<String> statuses, Pageable pageable);
+
     List<ProductFeedback> findByProductIdOrderByCreatedAtDesc(Long productId);
 
     boolean existsByCustomerAndProduct(Customer customer, Product product);
@@ -36,4 +38,14 @@ public interface ProductFeedbackRepository extends JpaRepository<ProductFeedback
     Optional<ProductFeedback> findByIdAndIsActiveTrue(Long id);
 
     Optional<ProductFeedback> findByIdAndProductIdAndIsActiveTrue(Long id, Long productId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT pf FROM ProductFeedback pf WHERE " +
+           "(:status IS NULL OR pf.feedbackStatus = :status) AND " +
+           "(:productId IS NULL OR pf.product.id = :productId) AND " +
+           "(:rating IS NULL OR pf.rating = :rating) " +
+           "ORDER BY pf.createdAt DESC")
+    Page<ProductFeedback> searchAdminReviews(@org.springframework.data.repository.query.Param("status") String status,
+                                             @org.springframework.data.repository.query.Param("productId") Long productId,
+                                             @org.springframework.data.repository.query.Param("rating") Integer rating,
+                                             Pageable pageable);
 }

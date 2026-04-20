@@ -6,9 +6,9 @@
     <title>Kiểm duyệt đánh giá</title>
 </head>
 
-<th:block layout:fragment="page-title">
+<h1 layout:fragment="page-title" class="page-title">
     Đánh giá khách hàng
-</th:block>
+</h1>
 
 <div layout:fragment="content">
     <div class="dashboard-card" style="margin-bottom: 20px;">
@@ -28,6 +28,16 @@
                                 th:value="${st}"
                                 th:text="${st}"
                                 th:selected="${selectedStatus == st}"></option>
+                    </select>
+                </div>
+                <div style="min-width: 220px;">
+                    <select class="filter-select" name="rating" style="width: 100%;">
+                        <option value="">Tất cả số sao</option>
+                        <option value="5" th:selected="${selectedRating == 5}">5 sao</option>
+                        <option value="4" th:selected="${selectedRating == 4}">4 sao</option>
+                        <option value="3" th:selected="${selectedRating == 3}">3 sao</option>
+                        <option value="2" th:selected="${selectedRating == 2}">2 sao</option>
+                        <option value="1" th:selected="${selectedRating == 1}">1 sao</option>
                     </select>
                 </div>
                 <div style="display: flex; gap: 8px;">
@@ -55,7 +65,7 @@
                 <td th:text="${review.productName}">Product</td>
                 <td th:text="${review.customerName}">Customer</td>
                 <td th:text="${review.rating}">5</td>
-                <td>
+                <td style="max-width: 300px; word-wrap: break-word; white-space: normal;">
                     <div th:text="${review.comment}">Comment</div>
                     <small th:if="${review.hideReason != null and !#strings.isEmpty(review.hideReason)}"
                            style="color: var(--muted); display: block; margin-top: 6px;"
@@ -65,31 +75,35 @@
                 </td>
                 <td>
                     <span class="badge"
-                          th:classappend="${review.status == 'APPROVED' ? 'badge-success' : (review.status == 'HIDDEN' ? 'badge-danger' : 'badge-warning')}"
-                          th:text="${review.status}">
-                        PENDING
+                          th:classappend="${review.status == 'APPROVED' ? 'badge-success' : 'badge-danger'}"
+                          th:text="${review.status == 'APPROVED' ? 'Hiển thị' : 'Đã ẩn'}">
+                        Hiển thị
                     </span>
                 </td>
                 <td>
                     <div style="display: flex; flex-direction: column; gap: 8px;">
-                        <form th:action="@{/admin/reviews/{id}/approve(id=${review.reviewId})}" method="post"
+                        <form th:if="${review.status == 'HIDDEN'}"
+                              th:action="@{/admin/reviews/{id}/approve(id=${review.reviewId})}" method="post"
                               style="display: inline-flex; gap: 8px; align-items: center;">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                             <input type="hidden" name="status" th:value="${selectedStatus}"/>
                             <input type="hidden" name="productId" th:value="${selectedProductId}"/>
+                            <input type="hidden" name="rating" th:value="${selectedRating}"/>
                             <input type="hidden" name="page" th:value="${reviews.number}"/>
-                            <button type="submit" class="btn btn-sm btn-primary">Approve</button>
+                            <button type="submit" class="btn btn-sm btn-primary">Khôi phục hiển thị</button>
                         </form>
 
-                        <form th:action="@{/admin/reviews/{id}/hide(id=${review.reviewId})}" method="post"
+                        <form th:if="${review.status == 'APPROVED'}"
+                              th:action="@{/admin/reviews/{id}/hide(id=${review.reviewId})}" method="post"
                               style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
                             <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
                             <input type="hidden" name="status" th:value="${selectedStatus}"/>
                             <input type="hidden" name="productId" th:value="${selectedProductId}"/>
+                            <input type="hidden" name="rating" th:value="${selectedRating}"/>
                             <input type="hidden" name="page" th:value="${reviews.number}"/>
                             <input type="text" name="reason" class="filter-input"
-                                   placeholder="Lý do ẩn" style="flex: 1; min-width: 140px;">
-                            <button type="submit" class="btn btn-sm btn-outline">Hide</button>
+                                   placeholder="Lý do ẩn" style="flex: 1; min-width: 140px;" required>
+                            <button type="submit" class="btn btn-sm btn-outline">Ẩn đánh giá</button>
                         </form>
                     </div>
                 </td>
@@ -103,20 +117,20 @@
         <div th:if="${reviews.totalPages > 1}" class="pagination">
             <button class="page-btn"
                     th:disabled="${reviews.first}"
-                    th:onclick="'window.location.href=\'' + @{/admin/reviews(page=${reviews.number - 1}, status=${selectedStatus}, productId=${selectedProductId})} + '\''">
+                    th:onclick="'window.location.href=\'' + @{/admin/reviews(page=${reviews.number - 1}, status=${selectedStatus}, productId=${selectedProductId}, rating=${selectedRating})} + '\''">
                 ‹
             </button>
             <th:block th:each="i : ${#numbers.sequence(0, reviews.totalPages - 1)}">
                 <button class="page-btn"
                         th:classappend="${i == reviews.number} ? 'active'"
                         th:text="${i + 1}"
-                        th:onclick="'window.location.href=\'' + @{/admin/reviews(page=${i}, status=${selectedStatus}, productId=${selectedProductId})} + '\''">
+                        th:onclick="'window.location.href=\'' + @{/admin/reviews(page=${i}, status=${selectedStatus}, productId=${selectedProductId}, rating=${selectedRating})} + '\''">
                     1
                 </button>
             </th:block>
             <button class="page-btn"
                     th:disabled="${reviews.last}"
-                    th:onclick="'window.location.href=\'' + @{/admin/reviews(page=${reviews.number + 1}, status=${selectedStatus}, productId=${selectedProductId})} + '\''">
+                    th:onclick="'window.location.href=\'' + @{/admin/reviews(page=${reviews.number + 1}, status=${selectedStatus}, productId=${selectedProductId}, rating=${selectedRating})} + '\''">
                 ›
             </button>
         </div>

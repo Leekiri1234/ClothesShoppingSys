@@ -2,7 +2,7 @@ package com.clothshop.admin.services;
 
 import com.clothshop.admin.mappers.ReviewModerationMapper;
 import com.clothshop.admin.dtos.response.review.ReviewModerationResponse;
-import com.clothshop.common.exceptions.BusinessException;
+import com.clothshop.common.exceptions  .BusinessException;
 import com.clothshop.common.exceptions.ErrorCode;
 import com.clothshop.domain.models.product.ProductFeedback;
 import com.clothshop.domain.repositories.product.ProductFeedbackRepository;
@@ -21,7 +21,6 @@ import java.util.List;
 @Slf4j
 public class ReviewModerationService {
 
-    public static final String STATUS_PENDING = "PENDING";
     public static final String STATUS_APPROVED = "APPROVED";
     public static final String STATUS_HIDDEN = "HIDDEN";
 
@@ -30,23 +29,13 @@ public class ReviewModerationService {
 
     @Transactional(readOnly = true)
     public Page<ReviewModerationResponse> getReviews(String status, Pageable pageable) {
-        return getReviews(status, null, pageable);
+        return getReviews(status, null, null, pageable);
     }
 
     @Transactional(readOnly = true)
-    public Page<ReviewModerationResponse> getReviews(String status, Long productId, Pageable pageable) {
+    public Page<ReviewModerationResponse> getReviews(String status, Long productId, Integer rating, Pageable pageable) {
         String normalizedStatus = (status == null || status.isBlank()) ? null : status.trim().toUpperCase();
-        Page<ProductFeedback> reviewPage;
-
-        if (productId == null) {
-            reviewPage = (normalizedStatus == null)
-                    ? productFeedbackRepository.findAllByOrderByCreatedAtDesc(pageable)
-                    : productFeedbackRepository.findByFeedbackStatusOrderByCreatedAtDesc(normalizedStatus, pageable);
-        } else {
-            reviewPage = (normalizedStatus == null)
-                    ? productFeedbackRepository.findByProductIdOrderByCreatedAtDesc(productId, pageable)
-                    : productFeedbackRepository.findByProductIdAndFeedbackStatusOrderByCreatedAtDesc(productId, normalizedStatus, pageable);
-        }
+        Page<ProductFeedback> reviewPage = productFeedbackRepository.searchAdminReviews(normalizedStatus, productId, rating, pageable);
 
         return reviewPage.map(reviewModerationMapper::toResponse);
     }

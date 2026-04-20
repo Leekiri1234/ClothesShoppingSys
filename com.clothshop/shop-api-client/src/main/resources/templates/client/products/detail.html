@@ -264,6 +264,18 @@
                         <span class="review-date" th:text="${#temporals.format(review.reviewDate, 'dd/MM/yyyy')}">01/01/2025</span>
                     </div>
                     <div class="review-comment" th:text="${review.comment}">Nội dung đánh giá...</div>
+
+                    <!-- reason for hiding review -->
+                    <div th:if="${review.hidden and review.hideReason != null and !#strings.isEmpty(review.hideReason)}"
+                         class="review-hide-reason"
+                         style="color: var(--muted); font-size: 13px; margin-top: 8px; font-style: italic; background: #fff0f0; padding: 6px 12px; border-left: 3px solid #c0392b;">
+                        <svg style="width: 14px; height: 14px; display: inline-block; vertical-align: middle; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        Lý do ẩn: <span th:text="${review.hideReason}">Lý do ẩn từ admin</span>
+                    </div>
                 </div>
             </div>
 
