@@ -29,14 +29,16 @@ public class ReviewModerationController {
     public String listReviews(@RequestParam(required = false) String status,
                               @RequestParam(required = false) Long productId,
                               @RequestParam(required = false) Integer rating,
+                              @RequestParam(required = false) String keyword,
                               @PageableDefault(size = 10, sort = "createdAt", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable,
                               Model model) {
-        Page<ReviewModerationResponse> reviewPage = reviewModerationService.getReviews(status, productId, rating, pageable);
+        Page<ReviewModerationResponse> reviewPage = reviewModerationService.getReviews(status, productId, rating, keyword, pageable);
 
         model.addAttribute("reviews", reviewPage);
         model.addAttribute("selectedStatus", status);
         model.addAttribute("selectedProductId", productId);
         model.addAttribute("selectedRating", rating);
+        model.addAttribute("selectedKeyword", keyword);
         model.addAttribute("reviewStatuses", new String[]{
                 ReviewModerationService.STATUS_APPROVED,
                 ReviewModerationService.STATUS_HIDDEN
@@ -49,6 +51,7 @@ public class ReviewModerationController {
                                 @RequestParam(required = false) String status,
                                 @RequestParam(required = false) Long productId,
                                 @RequestParam(required = false) Integer rating,
+                                @RequestParam(required = false) String keyword,
                                 @RequestParam(required = false) Integer page,
                                 Authentication authentication,
                                 RedirectAttributes redirectAttributes) {
@@ -58,7 +61,7 @@ public class ReviewModerationController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return buildRedirect(status, productId, rating, page);
+        return buildRedirect(status, productId, rating, keyword, page);
     }
 
     @PostMapping("/{id}/hide")
@@ -67,6 +70,7 @@ public class ReviewModerationController {
                              @RequestParam(required = false) String status,
                              @RequestParam(required = false) Long productId,
                              @RequestParam(required = false) Integer rating,
+                             @RequestParam(required = false) String keyword,
                              @RequestParam(required = false) Integer page,
                              Authentication authentication,
                              RedirectAttributes redirectAttributes) {
@@ -76,10 +80,10 @@ public class ReviewModerationController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("error", e.getMessage());
         }
-        return buildRedirect(status, productId, rating, page);
+        return buildRedirect(status, productId, rating, keyword, page);
     }
 
-    private String buildRedirect(String status, Long productId, Integer rating, Integer page) {
+    private String buildRedirect(String status, Long productId, Integer rating, String keyword, Integer page) {
         StringBuilder redirect = new StringBuilder("redirect:/admin/reviews");
         boolean hasQuery = false;
 
@@ -90,6 +94,11 @@ public class ReviewModerationController {
 
         if (status != null && !status.isBlank()) {
             redirect.append(hasQuery ? "&" : "?").append("status=").append(status);
+            hasQuery = true;
+        }
+
+        if (keyword != null && !keyword.isBlank()) {
+            redirect.append(hasQuery ? "&" : "?").append("keyword=").append(keyword);
             hasQuery = true;
         }
 

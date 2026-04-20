@@ -29,13 +29,14 @@ public class ReviewModerationService {
 
     @Transactional(readOnly = true)
     public Page<ReviewModerationResponse> getReviews(String status, Pageable pageable) {
-        return getReviews(status, null, null, pageable);
+        return getReviews(status, null, null, null, pageable);
     }
 
     @Transactional(readOnly = true)
-    public Page<ReviewModerationResponse> getReviews(String status, Long productId, Integer rating, Pageable pageable) {
+    public Page<ReviewModerationResponse> getReviews(String status, Long productId, Integer rating, String keyword, Pageable pageable) {
         String normalizedStatus = (status == null || status.isBlank()) ? null : status.trim().toUpperCase();
-        Page<ProductFeedback> reviewPage = productFeedbackRepository.searchAdminReviews(normalizedStatus, productId, rating, pageable);
+        String normalizedKeyword = (keyword == null || keyword.isBlank()) ? null : keyword.trim();
+        Page<ProductFeedback> reviewPage = productFeedbackRepository.searchAdminReviews(normalizedStatus, productId, rating, normalizedKeyword, pageable);
 
         return reviewPage.map(reviewModerationMapper::toResponse);
     }
