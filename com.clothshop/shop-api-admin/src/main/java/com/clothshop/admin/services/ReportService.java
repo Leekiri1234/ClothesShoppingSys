@@ -7,6 +7,7 @@ import com.clothshop.admin.dtos.response.SalesReportResponse;
 import com.clothshop.domain.models.order.Order;
 import com.clothshop.domain.models.product.Product;
 import com.clothshop.domain.enums.OrderStatus;
+import com.clothshop.domain.repositories.auth.CustomerRepository;
 import com.clothshop.domain.repositories.order.OrderRepository;
 import com.clothshop.domain.projections.DailyRevenueSummary;
 import com.clothshop.domain.projections.ProductSalesSummary;
@@ -29,6 +30,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ReportService {
     private final OrderRepository orderRepository;
+    private final CustomerRepository customerRepository;
     private final FeaturedProductService featuredProductService;
     private static final LocalDate HISTORIC_TOP_PRODUCT_START = LocalDate.of(2000, 1, 1);
     private static final List<OrderStatus> SALES_STATUSES = List.of(
@@ -339,8 +341,7 @@ public class ReportService {
     }
 
     private long fetchLifetimeCustomerCount() {
-        Long count = orderRepository.countDistinctCustomers();
-        return count != null ? count : 0L;
+        return customerRepository.countByIsActiveTrue();
     }
 
     private long fetchLifetimeProductCount() {

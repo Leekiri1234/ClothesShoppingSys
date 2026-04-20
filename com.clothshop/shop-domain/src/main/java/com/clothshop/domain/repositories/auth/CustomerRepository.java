@@ -14,6 +14,8 @@ import java.util.Optional;
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
+    long countByIsActiveTrue();
+
     // Tìm kiếm khách hàng theo Email hoặc Tên đăng nhập của Account
     @Query("SELECT c FROM Customer c JOIN c.account a WHERE a.email = :email OR a.username = :username")
     Optional<Customer> findByEmailOrUsername(@Param("email") String email, @Param("username") String username);
