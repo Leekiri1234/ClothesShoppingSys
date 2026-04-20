@@ -25,10 +25,17 @@ public class RmaAdminController {
      * URL: GET /admin/rma?pageNumber=0&pageSize=10
      */
     @GetMapping
-    public String listRmaRequests(PagingRequest pagingRequest, Model model) {
-        model.addAttribute("rmaPage", rmaService.getAllRmaRequests(pagingRequest));
-        // Thêm pagingRequest vào model để giữ trạng thái sort/size trên giao diện
+    public String listRmaRequests(
+            @RequestParam(required = false) String searchKeyword,
+            @RequestParam(required = false) com.clothshop.domain.enums.RmaStatus status,
+            PagingRequest pagingRequest,
+            Model model) {
+        model.addAttribute("rmaPage", rmaService.getAllRmaRequests(searchKeyword, status, pagingRequest));
+        // Thêm các tham số vào model để giữ trạng thái trên giao diện
         model.addAttribute("pagingRequest", pagingRequest);
+        model.addAttribute("searchKeyword", searchKeyword);
+        model.addAttribute("status", status);
+        model.addAttribute("statuses", com.clothshop.domain.enums.RmaStatus.values());
         return "admin/rma/list";
     }
 

@@ -42,14 +42,23 @@ public class RmaAdminService {
     private final AdminNotificationService notificationService;
 
     @Transactional(readOnly = true)
-    public PageResponse<RmaAdminResponse> getAllRmaRequests(PagingRequest pagingRequest) {
+    public PageResponse<RmaAdminResponse> getAllRmaRequests(String searchKeyword, RmaStatus status, PagingRequest pagingRequest) {
         pagingRequest.validate();
 
         Sort sort = Sort.by(Sort.Direction.fromString(pagingRequest.getSortDirection()),
                 pagingRequest.getSortBy() != null ? pagingRequest.getSortBy() : "createdAt");
         Pageable pageable = PageRequest.of(pagingRequest.getPageNumber(), pagingRequest.getPageSize(), sort);
 
-        Page<RmaRequest> rmaPage = rmaRepository.findAll(pageable);
+        Page<RmaRequest> rmaPage;
+        if ((searchKeyword != null && !searchKeyword.isBlank()) || status != null) {
+            rmaPage = rmaRepository.findWithFilters(
+                    searchKeyword != null && !searchKeyword.isBlank() ? "%" + searchKeyword.toLowerCase() + "%" : null,
+                    status,
+                    pageable);
+        } else {
+            rmaPage = rmaRepository.findAll(pageable);
+        }
+
         List<RmaAdminResponse> content = rmaMapper.toResponseList(rmaPage.getContent());
 
         return PageResponse.<RmaAdminResponse>builder()

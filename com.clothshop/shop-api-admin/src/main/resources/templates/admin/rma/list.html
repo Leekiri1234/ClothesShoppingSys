@@ -13,6 +13,26 @@
         </div>
 
         <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <form th:action="@{/admin/rma}" method="get" class="form-inline">
+                    <input type="text" class="form-control mb-2 mr-sm-2" style="width: 300px;" name="searchKeyword" th:value="${searchKeyword}" placeholder="Tìm theo mã đơn, khách hàng...">
+
+                    <select class="form-control mb-2 mr-sm-2" name="status">
+                        <option value="">-- Tất cả trạng thái --</option>
+                        <option th:each="st : ${statuses}"
+                                th:value="${st}"
+                                th:text="${st.displayName}"
+                                th:selected="${status != null and status.name() == st.name()}">
+                        </option>
+                    </select>
+
+                    <input type="hidden" name="pageNumber" value="0"/>
+                    <input type="hidden" name="pageSize" th:value="${pagingRequest.pageSize}"/>
+
+                    <button type="submit" class="btn btn-primary mb-2 mr-sm-2"><i class="fas fa-search"></i> Tìm kiếm</button>
+                    <a th:href="@{/admin/rma}" class="btn btn-secondary mb-2">Xóa lọc</a>
+                </form>
+            </div>
             <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-bordered" width="100%" cellspacing="0">
@@ -66,14 +86,14 @@
                 <nav th:if="${rmaPage.totalPages > 1}" aria-label="Page navigation">
                     <ul class="pagination justify-content-center">
                         <li class="page-item" th:classappend="${rmaPage.pageNumber == 0} ? 'disabled'">
-                            <a class="page-link" th:href="@{/admin/rma(pageNumber=${rmaPage.pageNumber - 1})}">Trước</a>
+                            <a class="page-link" th:href="@{/admin/rma(pageNumber=${rmaPage.pageNumber - 1}, searchKeyword=${searchKeyword}, status=${status})}">Trước</a>
                         </li>
                         <li class="page-item" th:each="i : ${#numbers.sequence(0, rmaPage.totalPages - 1)}"
                             th:classappend="${i == rmaPage.pageNumber} ? 'active'">
-                            <a class="page-link" th:href="@{/admin/rma(pageNumber=${i})}" th:text="${i + 1}"></a>
+                            <a class="page-link" th:href="@{/admin/rma(pageNumber=${i}, searchKeyword=${searchKeyword}, status=${status})}" th:text="${i + 1}"></a>
                         </li>
                         <li class="page-item" th:classappend="${rmaPage.pageNumber == rmaPage.totalPages - 1} ? 'disabled'">
-                            <a class="page-link" th:href="@{/admin/rma(pageNumber=${rmaPage.pageNumber + 1})}">Sau</a>
+                            <a class="page-link" th:href="@{/admin/rma(pageNumber=${rmaPage.pageNumber + 1}, searchKeyword=${searchKeyword}, status=${status})}">Sau</a>
                         </li>
                     </ul>
                 </nav>

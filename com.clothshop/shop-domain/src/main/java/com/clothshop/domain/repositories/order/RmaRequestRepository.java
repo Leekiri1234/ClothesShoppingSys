@@ -30,6 +30,12 @@ public interface RmaRequestRepository extends JpaRepository<RmaRequest, Long>, J
     @EntityGraph(attributePaths = {"order", "customer"})
     Page<RmaRequest> findByStatus(RmaStatus status, Pageable pageable);
 
+    @Query("SELECT r FROM RmaRequest r WHERE " +
+           "(:keyword IS NULL OR LOWER(r.order.orderInvoice) LIKE :keyword OR LOWER(r.customer.fullName) LIKE :keyword) " +
+           "AND (:status IS NULL OR r.status = :status)")
+    @EntityGraph(attributePaths = {"order", "customer"})
+    Page<RmaRequest> findWithFilters(@Param("keyword") String keyword, @Param("status") RmaStatus status, Pageable pageable);
+
     /**
      * Tìm các yêu cầu RMA theo mã hóa đơn (orderInvoice).
      */
