@@ -24,6 +24,7 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -87,6 +88,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     public void run(String... args) {
         if (roleRepository.count() > 0) {
             log.info("Base data already seeded. Checking supplemental banner/order/RMA data...");
+            seedCollections();
             seedBanners();
             seedVouchersAndOrders();
             seedRmaRequests();
@@ -519,59 +521,96 @@ public class DatabaseSeeder implements CommandLineRunner {
     private void seedCollections() {
         log.info("Seeding collections...");
 
-        // Get all products for assignment
-        List<Product> allProducts = productRepository.findAll();
+        // Map product by slug so seeding does not depend on DB row order.
+        Map<String, Product> productsBySlug = productRepository.findAll().stream()
+            .collect(Collectors.toMap(Product::getProductSlug, p -> p, (left, right) -> left, HashMap::new));
 
-        if (allProducts.size() < 10) {
+        if (productsBySlug.size() < 10) {
             log.warn("Not enough products to create collections. Skipping collection seeding.");
             return;
         }
 
-        // Collection 1: Summer Collection
-        Collection summerCollection = new Collection();
-        summerCollection.setName("Summer Collection 2024");
-        summerCollection.setSlug("summer-collection-2024"); // Will be updated with ID after save
-        summerCollection.setDescription("Fresh and vibrant styles for the summer season");
-        summerCollection.setCreatedBy("admin");
-        summerCollection = collectionRepository.save(summerCollection);
+        upsertCollectionWithProducts(
+            "Summer Collection 2024",
+            "summer-collection-2024",
+            "Fresh and vibrant styles for the summer season",
+            "https://images.unsplash.com/photo-1475180098004-ca77a66827be?w=1200",
+            List.of("classic-white-t-shirt", "floral-summer-dress", "cotton-polo-shirt", "linen-shorts", "graphic-print-t-shirt"),
+            productsBySlug
+        );
 
-        // Update slug with Shopee-style ID suffix
-        summerCollection.setSlug("summer-collection-2024-c." + summerCollection.getId());
-        summerCollection = collectionRepository.save(summerCollection);
+        upsertCollectionWithProducts(
+            "Winter Essentials 2024",
+            "winter-essentials-2024",
+            "Stay warm and stylish with our winter collection",
+            "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200",
+            List.of("black-leather-jacket", "hooded-sweatshirt", "knit-cardigan", "casual-blazer", "slim-fit-denim-jeans"),
+            productsBySlug
+        );
 
-        // Add 5 products to Summer Collection
-        // Classic White T-Shirt, Floral Summer Dress, Cotton Polo Shirt, Linen Shorts, Graphic Print T-Shirt
-        addProductToCollection(summerCollection, allProducts.get(0), 1); // Classic White T-Shirt
-        addProductToCollection(summerCollection, allProducts.get(2), 2); // Floral Summer Dress
-        addProductToCollection(summerCollection, allProducts.get(4), 3); // Cotton Polo Shirt
-        addProductToCollection(summerCollection, allProducts.get(11), 4); // Linen Shorts
-        addProductToCollection(summerCollection, allProducts.get(8), 5); // Graphic Print T-Shirt
+        // New seeded collection #3 with thumbnail.
+        upsertCollectionWithProducts(
+            "Office Smart 2024",
+            "office-smart-2024",
+            "Smart office-ready outfits for weekdays",
+            "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=1200",
+            List.of("casual-blazer", "cotton-polo-shirt", "slim-fit-denim-jeans", "high-waist-skinny-jeans", "knit-cardigan"),
+            productsBySlug
+        );
 
-        log.info("Created Summer Collection with 5 products");
+        // New seeded collection #4 with thumbnail.
+        upsertCollectionWithProducts(
+            "Weekend Comfort 2024",
+            "weekend-comfort-2024",
+            "Relaxed and comfy picks for your weekend",
+            "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200",
+            List.of("hooded-sweatshirt", "graphic-print-t-shirt", "linen-shorts", "casual-chinos", "striped-maxi-dress"),
+            productsBySlug
+        );
 
-        // Collection 2: Winter Essentials
-        Collection winterCollection = new Collection();
-        winterCollection.setName("Winter Essentials 2024");
-        winterCollection.setSlug("winter-essentials-2024"); // Will be updated with ID after save
-        winterCollection.setDescription("Stay warm and stylish with our winter collection");
-        winterCollection.setCreatedBy("admin");
-        winterCollection = collectionRepository.save(winterCollection);
+        log.info("Collections seeded/updated: 4 collections with thumbnail + products");
+    }
 
-        // Update slug with Shopee-style ID suffix
-        winterCollection.setSlug("winter-essentials-2024-c." + winterCollection.getId());
-        winterCollection = collectionRepository.save(winterCollection);
+    private void upsertCollectionWithProducts(String name,
+                                              String baseSlug,
+                                              String description,
+                                              String imageUrl,
+                                              List<String> productSlugs,
+                                              Map<String, Product> productsBySlug) {
+        Collection collection = collectionRepository.findAll().stream()
+            .filter(c -> c.getName() != null && c.getName().equalsIgnoreCase(name))
+            .findFirst()
+            .orElseGet(() -> {
+                Collection c = new Collection();
+                c.setName(name);
+                c.setSlug(baseSlug);
+                c.setCreatedBy("admin");
+                return collectionRepository.save(c);
+            });
 
-        // Add 5 products to Winter Collection
-        // Black Leather Jacket, Hooded Sweatshirt, Knit Cardigan, Casual Blazer, Slim Fit Denim Jeans
-        addProductToCollection(winterCollection, allProducts.get(3), 1); // Black Leather Jacket
-        addProductToCollection(winterCollection, allProducts.get(10), 2); // Hooded Sweatshirt
-        addProductToCollection(winterCollection, allProducts.get(7), 3); // Knit Cardigan
-        addProductToCollection(winterCollection, allProducts.get(11), 4); // Casual Blazer
-        addProductToCollection(winterCollection, allProducts.get(1), 5); // Slim Fit Denim Jeans
+        collection.setName(name);
+        collection.setDescription(description);
+        collection.setImageUrl(imageUrl);
+        collection.setSlug(baseSlug + "-c." + collection.getId());
+        collection = collectionRepository.save(collection);
 
-        log.info("Created Winter Collection with 5 products");
+        List<Long> existingProductIds = collectionItemRepository.findProductIdsByCollectionId(collection.getId());
+        int nextOrder = collectionItemRepository.findMaxDisplayOrderByCollectionId(collection.getId()).orElse(0) + 1;
 
-        log.info("Collections seeded: 2 collections with 5 products each");
+        for (String productSlug : productSlugs) {
+            Product product = productsBySlug.get(productSlug);
+            if (product == null) {
+                log.warn("Product slug {} not found. Skipping assignment for collection {}", productSlug, name);
+                continue;
+            }
+
+            if (!existingProductIds.contains(product.getId())) {
+                addProductToCollection(collection, product, nextOrder++);
+                existingProductIds.add(product.getId());
+            }
+        }
+
+        log.info("Seeded collection '{}' with thumbnail and {} configured products", name, productSlugs.size());
     }
 
     /**
