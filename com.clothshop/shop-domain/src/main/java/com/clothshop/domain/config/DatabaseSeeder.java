@@ -27,6 +27,7 @@ import java.util.Comparator;
 import java.util.Map;
 import java.util.List;
 import java.util.stream.Collectors;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * Database Seeder - Seeds initial data for development/testing.
@@ -79,6 +80,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     private final BannerRepository bannerRepository;
     private final FlashSaleRepository flashSaleRepository;
     private final FlashSaleItemRepository flashSaleItemRepository;
+    private final JdbcTemplate jdbcTemplate;
 
     @Override
     @Transactional
@@ -654,7 +656,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         Customer customer = customers.get(0);
 
         createOrderWithVoucherIfMissing(
-            "INV-1001",
+            "ORD-1710000001001",
             customer,
             PaymentMethod.COD,
             OrderStatus.PENDING,
@@ -664,7 +666,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         );
 
         createOrderWithVoucherIfMissing(
-            "INV-1002",
+            "ORD-1710000001002",
             customer,
             PaymentMethod.MOMO,
             OrderStatus.CONFIRMED,
@@ -674,7 +676,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         );
 
         createOrderWithVoucherIfMissing(
-            "INV-1003",
+            "ORD-1710000001003",
             customer,
             PaymentMethod.VNPAY,
             OrderStatus.SHIPPING,
@@ -684,7 +686,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         );
 
         createOrderWithVoucherIfMissing(
-            "INV-1004",
+            "ORD-1710000001004",
             customer,
             PaymentMethod.BANK_TRANSFER,
             OrderStatus.DELIVERED,
@@ -694,7 +696,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         );
 
         createOrderWithVoucherIfMissing(
-            "INV-1005",
+            "ORD-1710000001005",
             customer,
             PaymentMethod.COD,
             OrderStatus.CANCELLED,
@@ -704,7 +706,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         );
 
         createOrderWithVoucherIfMissing(
-            "INV-1006",
+            "ORD-1710000001006",
             customers.get(1),
             PaymentMethod.MOMO,
             OrderStatus.PENDING,
@@ -714,7 +716,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         );
 
         createOrderWithVoucherIfMissing(
-            "INV-1007",
+            "ORD-1710000001007",
             customers.get(2),
             PaymentMethod.BANK_TRANSFER,
             OrderStatus.PENDING,
@@ -724,7 +726,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         );
 
         createOrderWithVoucherIfMissing(
-            "INV-1008",
+            "ORD-1710000001008",
             customers.get(0),
             PaymentMethod.VNPAY,
             OrderStatus.COMPLETED,
@@ -733,7 +735,65 @@ public class DatabaseSeeder implements CommandLineRunner {
             "Completed successfully"
         );
 
-        log.info("Vouchers and orders seeded: 3 vouchers, 8 client orders");
+        seedMissingOrdersPastMonth(customers, variants, List.of(percentVoucher, fixedVoucher));
+
+        log.info("Vouchers and orders seeded: 3 vouchers, client orders generated");
+    }
+
+    private void seedMissingOrdersPastMonth(List<Customer> customers, List<ProductVariant> variants, List<Voucher> vouchers) {
+        long currentOrderCount = orderRepository.count();
+        int targetOrders = 100;
+        if (currentOrderCount >= targetOrders) {
+            log.info("Sufficient orders already exist. Skipping generating {} orders.", targetOrders);
+            return;
+        }
+
+        int ordersToGenerate = targetOrders - (int) currentOrderCount;
+        log.info("Generating {} orders over the past month...", ordersToGenerate);
+
+        java.util.Random random = new java.util.Random();
+        LocalDateTime startTime = LocalDateTime.now().minusDays(30);
+        long stepMinutes = (30L * 24 * 60) / ordersToGenerate;
+
+        for (int i = 0; i < ordersToGenerate; i++) {
+            LocalDateTime generatedDate = startTime.plusMinutes(i * stepMinutes).plusMinutes(random.nextInt(60));
+            if (generatedDate.isAfter(LocalDateTime.now())) {
+                generatedDate = LocalDateTime.now().minusMinutes(1);
+            }
+
+            // Consistent and realistic ORD-timestamp format
+            String invoice = "ORD-" + generatedDate.toInstant(java.time.ZoneOffset.UTC).toEpochMilli();
+            Customer cust = customers.get(random.nextInt(customers.size()));
+            PaymentMethod pm = PaymentMethod.values()[random.nextInt(PaymentMethod.values().length)];
+
+            // Bias towards completed/delivered statuses
+            OrderStatus[] statuses = {OrderStatus.DELIVERED, OrderStatus.COMPLETED, OrderStatus.SHIPPING, OrderStatus.PENDING, OrderStatus.CANCELLED};
+            OrderStatus status = statuses[random.nextInt(statuses.length)];
+            // Increase chance of delivered and completed
+            if (random.nextBoolean()) {
+                status = random.nextBoolean() ? OrderStatus.DELIVERED : OrderStatus.COMPLETED;
+            }
+
+            int numItems = random.nextInt(3) + 1;
+            List<ItemSpec> items = new java.util.ArrayList<>();
+            for (int j = 0; j < numItems; j++) {
+                ProductVariant pv = variants.get(random.nextInt(variants.size()));
+                items.add(new ItemSpec(pv, random.nextInt(2) + 1));
+            }
+
+            Voucher v = random.nextBoolean() ? vouchers.get(random.nextInt(vouchers.size())) : null;
+
+            createOrderWithVoucherAndDate(
+                invoice,
+                cust,
+                pm,
+                status,
+                items,
+                v,
+                "Generated order",
+                generatedDate
+            );
+        }
     }
 
     private void createOrderWithVoucherIfMissing(String invoice, Customer customer, PaymentMethod paymentMethod,
@@ -849,6 +909,11 @@ public class DatabaseSeeder implements CommandLineRunner {
 
     private void createOrderWithVoucher(String invoice, Customer customer, PaymentMethod paymentMethod,
                                         OrderStatus status, List<ItemSpec> items, Voucher voucher, String note) {
+        createOrderWithVoucherAndDate(invoice, customer, paymentMethod, status, items, voucher, note, LocalDateTime.now());
+    }
+
+    private void createOrderWithVoucherAndDate(String invoice, Customer customer, PaymentMethod paymentMethod,
+                                        OrderStatus status, List<ItemSpec> items, Voucher voucher, String note, LocalDateTime createdAt) {
         BigDecimal totalAmount = BigDecimal.ZERO;
         int totalQty = 0;
 
@@ -876,6 +941,8 @@ public class DatabaseSeeder implements CommandLineRunner {
             .createdBy("SYSTEM")
             .build();
 
+        order.setCreatedAt(createdAt);
+
         List<OrderItem> orderItems = items.stream()
             .map(item -> OrderItem.builder()
                 .order(order)
@@ -892,7 +959,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .oldStatus(null) // Đơn mới nên status cũ là null
                 .newStatus(status)
                 .note(note)
-                .changedAt(LocalDateTime.now()) // Thêm trường changedAt nếu Entity yêu cầu
+                .changedAt(createdAt) // Thêm trường changedAt nếu Entity yêu cầu
                 .createdBy("SYSTEM")
                 .build();
         order.setStatusHistory(List.of(history));
@@ -907,7 +974,7 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .amount(finalPrice.setScale(2, RoundingMode.HALF_UP))
                 .status(paymentStatus)
                 .verifiedBy(null) // Dùng verifiedBy thay vì processedBy theo ERD
-                .verifiedAt(paymentStatus == PaymentStatus.PAID ? LocalDateTime.now() : null)
+                .verifiedAt(paymentStatus == PaymentStatus.PAID ? createdAt : null)
                 .createdBy("SYSTEM")
                 .build();
         order.setPayment(payment);
@@ -916,6 +983,12 @@ public class DatabaseSeeder implements CommandLineRunner {
         orderItemRepository.saveAll(orderItems);
         orderStatusHistoryRepository.save(history);
         paymentRepository.save(payment);
+
+        // Update createdAt via JDBC to bypass JPA @CreationTimestamp updatable=false
+        jdbcTemplate.update("UPDATE orders SET created_at = ? WHERE order_id = ?", createdAt, savedOrder.getId());
+        jdbcTemplate.update("UPDATE order_items SET created_at = ? WHERE order_id = ?", createdAt, savedOrder.getId());
+        jdbcTemplate.update("UPDATE order_status_history SET created_at = ?, changed_at = ? WHERE history_id = ?", createdAt, createdAt, history.getId());
+        jdbcTemplate.update("UPDATE payments SET created_at = ? WHERE payment_id = ?", createdAt, payment.getId());
 
         if (voucher != null) {
             voucher.setCurrentUsage((voucher.getCurrentUsage() == null ? 0 : voucher.getCurrentUsage()) + 1);
@@ -928,7 +1001,8 @@ public class DatabaseSeeder implements CommandLineRunner {
                 .discountAmount(discount.setScale(2, RoundingMode.HALF_UP))
                 .createdBy("SYSTEM")
                 .build();
-            voucherRedemptionRepository.save(redemption);
+            redemption = voucherRedemptionRepository.save(redemption);
+            jdbcTemplate.update("UPDATE voucher_redemptions SET created_at = ? WHERE redemption_id = ?", createdAt, redemption.getId());
         }
     }
 
@@ -1078,6 +1152,8 @@ public class DatabaseSeeder implements CommandLineRunner {
             seeded++;
         }
 
+        seedMissingRmaRequests(deliveredOrders);
+
         if (seeded < 3) {
             log.warn("Chi co {} don DELIVERED khac nhau de seed RMA. De co 3 mau RMA, can it nhat 3 don DELIVERED distinct.", seeded);
         }
@@ -1103,6 +1179,85 @@ public class DatabaseSeeder implements CommandLineRunner {
 
                     log.warn("Removed {} duplicate RMA rows for orderId={}", duplicates.size(), list.get(0).getOrder().getId());
                 });
+    }
+
+    private void seedMissingRmaRequests(List<Order> deliveredOrders) {
+        long currentRmaCount = rmaRequestRepository.count();
+        int targetRma = 10;
+        if (currentRmaCount >= targetRma) {
+            log.info("Sufficient RMA requests already exist. Skipping.");
+            return;
+        }
+
+        int rmasToGenerate = targetRma - (int) currentRmaCount;
+        log.info("Generating {} RMA requests...", rmasToGenerate);
+
+        java.util.Random random = new java.util.Random();
+
+        // Sort delivered orders by creation date so we can spread RMAs across the timeline
+        List<Order> sortedDelivered = new java.util.ArrayList<>(deliveredOrders);
+        sortedDelivered.sort(Comparator.comparing(o -> o.getCreatedAt() != null ? o.getCreatedAt() : LocalDateTime.now().minusDays(30)));
+
+        int step = Math.max(1, sortedDelivered.size() / rmasToGenerate);
+
+        int generated = 0;
+        for (int i = 0; i < sortedDelivered.size() && generated < rmasToGenerate; i += step) {
+            Order order = sortedDelivered.get(i);
+            // Skip if this order already has an RMA
+            boolean exists = rmaRequestRepository.findAll().stream()
+                    .anyMatch(r -> r.getOrder() != null && r.getOrder().getId() != null && r.getOrder().getId().equals(order.getId()));
+            if (exists) {
+                continue;
+            }
+
+            RmaType[] types = RmaType.values();
+            RmaType type = types[random.nextInt(types.length)];
+
+            RmaStatus[] statuses = RmaStatus.values();
+            RmaStatus status = statuses[random.nextInt(statuses.length)];
+
+            String[] reasons = {
+                "Sản phẩm bị lỗi kỹ thuật.",
+                "Giao sai mặt hàng đã đặt.",
+                "Kích thước không vừa.",
+                "Sản phẩm không giống hình ảnh.",
+                "Hư hỏng trong quá trình vận chuyển."
+            };
+            String reason = reasons[random.nextInt(reasons.length)];
+
+            LocalDateTime orderDate = order.getCreatedAt() != null ? order.getCreatedAt() : LocalDateTime.now().minusDays(30);
+            LocalDateTime createdAt = orderDate.plusHours(24 + random.nextInt(48)); // 1-3 days after order
+            if (createdAt.isAfter(LocalDateTime.now())) {
+                createdAt = LocalDateTime.now().minusHours(1);
+            }
+
+            RmaRequest.RmaRequestBuilder<?, ?> builder = RmaRequest.builder()
+                .order(order)
+                .customer(order.getCustomer())
+                .rmaType(type)
+                .status(status)
+                .reason(reason)
+                .evidenceImages("https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=400")
+                .createdBy(order.getCustomer().getFullName());
+
+            if (status == RmaStatus.APPROVED || status == RmaStatus.COMPLETED || status == RmaStatus.REJECTED) {
+                builder.adminNote("Đã kiểm tra yêu cầu.");
+            }
+            if (status == RmaStatus.COMPLETED && type == RmaType.RETURN) {
+                builder.refundAmount(order.getTotalPrice());
+                builder.processedAt(createdAt.plusHours(12 + random.nextInt(24)));
+            }
+
+            RmaRequest request = builder.build();
+            request.setCreatedAt(createdAt);
+
+            request = rmaRequestRepository.save(request);
+
+            // Update createdAt via JDBC to bypass JPA
+            jdbcTemplate.update("UPDATE rma_requests SET created_at = ? WHERE rma_id = ?", createdAt, request.getId());
+
+            generated++;
+        }
     }
 
     private boolean seedRmaIfMissing(Order order, RmaType type, RmaStatus status, String reason,
