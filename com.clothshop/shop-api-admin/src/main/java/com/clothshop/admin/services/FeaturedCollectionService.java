@@ -55,14 +55,10 @@ public class FeaturedCollectionService {
             // USAGE 1: Dùng Mapper để map Request sang Entity thay vì dùng Builder thủ công
             collection = collectionMapper.toEntity(request);
             collection.setSlug(baseSlug);
-            if (request.getIsActive() == null) collection.setIsActive(true);
-
             if (request.getIsActive() == null) {
                 collection.setIsActive(true);
             }
 
-            // Xử lý upload ảnh cho bộ sưu tập mới
-            handleImageUpload(request, collection);
 
             // Save lần 1 để DB sinh ra ID
             collection = collectionRepository.save(collection);
